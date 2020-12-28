@@ -1,0 +1,68 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE             VFT_DLL
+#define VER_FILESUBTYPE          VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR  "PSPdisp SideShow Device"
+#define VER_INTERNALNAME_STR     "PSPdisp SideShow Device"
+#define VER_ORIGINALFILENAME_STR "PSPdispSideShow.dll"
+
+#define VER_LANGNEUTRAL
+#define VER_LEGALCOPYRIGHT_YEARS    "2010"
+#define VER_LEGALCOPYRIGHT_STR	    "Copyright (c) JJS"
+#define VER_PRODUCTNAME_STR         "PSPdisp"
+#define VER_PRODUCTVERSION          0,5,00,000
+#define VER_FILEVERSION             VER_PRODUCTVERSION
+#define VER_PRODUCTVERSION_STR      "0.5"
+#define VER_FILEVERSION_STR         VER_PRODUCTVERSION_STR
+#define VER_COMPANYNAME_STR         "JJS"
+
+#include <common.ver>
+
+#include "resource.h"
+
+
+// default theme
+BG_BMP                 BITMAP "..\\RES\\BG.BMP"
+HOME_ICON_BG_BMP       BITMAP "..\\RES\\HomeIconBG.BMP"
+HILIGHT_CENTER_BMP     BITMAP "..\\RES\\HilightCenter.BMP"
+TITLEBAR_BMP           BITMAP "..\\RES\\Titlebar.BMP"
+MENU_ITEM_BMP          BITMAP "..\\RES\\MenuItem.BMP"
+SELECTED_MENU_ITEM_BMP BITMAP "..\\RES\\SelectedMenuItem.BMP"
+THICK_LINE_BMP         BITMAP "..\\RES\\ThickLine.BMP"
+POPUP_FRAME_BMP        BITMAP "..\\RES\\PopupFrame.BMP"
+POPUP_TITLEBAR_BMP     BITMAP "..\\RES\\PopupTitlebar.BMP"
+SCROLLBAR_BMP          BITMAP "..\\RES\\Scrollbar.BMP"
+BUTTON_BMP             BITMAP "..\\RES\\Button.bmp"
+STATUSBAR_BMP          BITMAP "..\\RES\\Statusbar.bmp"
+
+// Graphite theme
+GRAPHITE_BG_BMP                 BITMAP "..\\RES\\Graphite_BG.BMP"
+GRAPHITE_HOME_ICON_BG_BMP       BITMAP "..\\RES\\Graphite_HomeIconBG.BMP"
+GRAPHITE_HILIGHT_CENTER_BMP     BITMAP "..\\RES\\Graphite_HilightCenter.BMP"
+GRAPHITE_TITLEBAR_BMP           BITMAP "..\\RES\\Graphite_Titlebar.BMP"
+GRAPHITE_MENU_ITEM_BMP          BITMAP "..\\RES\\Graphite_MenuItem.BMP"
+GRAPHITE_SELECTED_MENU_ITEM_BMP BITMAP "..\\RES\\Graphite_SelectedMenuItem.BMP"
+GRAPHITE_THICK_LINE_BMP         BITMAP "..\\RES\\Graphite_ThickLine.BMP"
+GRAPHITE_POPUP_FRAME_BMP        BITMAP "..\\RES\\Graphite_PopupFrame.BMP"
+GRAPHITE_POPUP_TITLEBAR_BMP     BITMAP "..\\RES\\Graphite_PopupTitlebar.BMP"
+GRAPHITE_SCROLLBAR_BMP          BITMAP "..\\RES\\Graphite_Scrollbar.BMP"
+GRAPHITE_BUTTON_BMP             BITMAP "..\\RES\\Graphite_Button.bmp"
+GRAPHITE_STATUSBAR_BMP          BITMAP "..\\RES\\Graphite_Statusbar.bmp"
+
+STRINGTABLE
+BEGIN
+    IDS_FONT_NAME                 L"Segoe UI"
+    IDS_NO_GADGET_MESSAGE         L"There are currently no Windows\nSideShow gadgets enabled for this\ndevice. SideShow gadgets can be\nenabled in Windows SideShow in\nControl Panel."
+    IDS_MENU_ITEM_HOME            L"Home"
+    IDS_MENU_ITEM_BACK            L"Back"
+    IDS_MENU_ITEM_SELECT_USER     L"Select User"
+    IDS_SELECT_USER_TITLE         L"SideShow User Selection"
+    IDS_MENU_ITEM_CONFIGURE       L"Configure"
+    IDS_MENU_ITEM_QUIT            L"Exit SideShow Mode"
+    IDS_MENU_ITEM_SELECT_THEME    L"Select Theme"
+    IDS_THEME_NAME_DEFAULT	  L"Silver"
+    IDS_THEME_NAME_GRAPHITE       L"Graphite"
+    IDS_THEME_TEXT_COLOR_DEFAULT  L"000000"
+    IDS_THEME_TEXT_COLOR_GRAPHITE L"FFFFFF"
+END

@@ -1,0 +1,44 @@
+#define IDS_FONT_NAME                   1001
+#define IDS_NO_GADGET_MESSAGE           1002
+#define IDS_MENU_ITEM_HOME              1003
+#define IDS_MENU_ITEM_BACK              1004
+#define IDS_MENU_ITEM_SELECT_USER       1005
+#define IDS_SELECT_USER_TITLE           1006
+#define IDS_MENU_ITEM_CONFIGURE         1007
+#define IDS_MENU_ITEM_SELECT_THEME      1008
+#define IDS_MENU_ITEM_QUIT              1009
+// # of themes available
+#define THEME_COUNT			2
+// offset to increment IDs for each additional theme
+#define THEME_OFFSET			100
+// default theme
+#define BG_BMP                          2001
+#define HOME_ICON_BG_BMP		2002
+#define HILIGHT_CENTER_BMP     		2003
+#define TITLEBAR_BMP           		2004
+#define MENU_ITEM_BMP          		2005
+#define SELECTED_MENU_ITEM_BMP 		2006
+#define THICK_LINE_BMP         		2007
+#define POPUP_FRAME_BMP        		2008
+#define POPUP_TITLEBAR_BMP     		2009
+#define SCROLLBAR_BMP          		2010
+#define BUTTON_BMP             		2011
+#define STATUSBAR_BMP          		2012
+#define IDS_THEME_NAME_DEFAULT		2013
+#define IDS_THEME_TEXT_COLOR_DEFAULT    2014
+// GRAPHITE theme
+#define GRAPHITE_BG_BMP                 2101
+#define GRAPHITE_HOME_ICON_BG_BMP	    2102
+#define GRAPHITE_HILIGHT_CENTER_BMP     2103
+#define GRAPHITE_TITLEBAR_BMP           2104
+#define GRAPHITE_MENU_ITEM_BMP          2105
+#define GRAPHITE_SELECTED_MENU_ITEM_BMP 2106
+#define GRAPHITE_THICK_LINE_BMP         2107
+#define GRAPHITE_POPUP_FRAME_BMP        2108
+#define GRAPHITE_POPUP_TITLEBAR_BMP     2109
+#define GRAPHITE_SCROLLBAR_BMP          2110
+#define GRAPHITE_BUTTON_BMP             2111
+#define GRAPHITE_STATUSBAR_BMP          2112
+#define IDS_THEME_NAME_GRAPHITE		    2113
+#define IDS_THEME_TEXT_COLOR_GRAPHITE   2114
+// Next theme starts at 		2201

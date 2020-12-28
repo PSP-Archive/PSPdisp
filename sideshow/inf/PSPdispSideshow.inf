@@ -1,0 +1,96 @@
+; derieved from the nodevice sample inf
+
+[Version]
+Signature   = "$Windows NT$"
+ClassGuid   = {997B5D8D-C442-4F2E-BAF3-9C8E671E9E21}
+Provider    = %JJS%
+DriverVer   = 07/01/2009,0.3.0.0
+
+; =================== Manufacturer/Models sections ===================
+
+[Manufacturer]
+%JJS%                            = PSPdispSideShow,NTx86
+
+[PSPdispSideShow.NTx86]
+%Device.DeviceDesc%              = Device_Install,PSPdispSideShowDevice
+
+; ====================================================================
+
+[Device_Install]
+CopyFiles   = UMDriverCopy
+AddProperty = DriverPropertiesSection
+
+[Device_Install.HW]
+AddReg      = DeviceParametersSection
+
+[Device_Install.CoInstallers]
+AddReg      = WUDF_CoInstallers_AddReg
+
+[Device_Install.Wdf]
+UmdfService = PSPdispSideShowDevice, PSPdispSideShowDevice_Install
+UmdfServiceOrder = PSPdispSideShowDevice
+UmdfImpersonationLevel = Impersonation
+
+[Device_Install.Services]
+AddService  = WUDFRd, 0x000001fa, WUDFRD_ServiceInstall
+
+; =================== Driver Property section ===================
+
+[DriverPropertiesSection]
+DeviceIcon,,,,"%1%\PSPdispSideShow.dll,-100"
+
+; =================== Device Parameters section ===================
+
+[DeviceParametersSection]
+HKR, PSPdispSideShowDevice, DeviceFriendlyName,      0x00000000, "PSPdisp SideShow Device"
+
+; =================== UMDF Service Install section ===================
+
+[WUDF_CoInstallers_AddReg]
+HKR,,CoInstallers32,0x00010000,"WUDFCoInstaller.dll"
+
+[PSPdispSideShowDevice_Install]
+UmdfLibraryVersion = 1.0.0
+ServiceBinary = "%12%\umdf\PSPdispSideShow.dll"
+DriverCLSID = {b748f9f9-679a-451a-bf61-2b35489293a0}
+
+[UMDriverCopy]
+PSPdispSideShow.dll
+
+[DestinationDirs]
+UMDriverCopy=12,UMDF    ; copy to drivers\umdf
+
+[SourceDisksFiles]
+PSPdispSideShow.dll=1
+
+[SourceDisksNames]
+1 = %MediaDescription%
+
+; =================== WUDFRd ===================
+
+[WUDFRD_ServiceInstall]
+ServiceType     = %SERVICE_KERNEL_DRIVER%
+StartType       = %SERVICE_DEMAND_START%
+ErrorControl    = %SERVICE_ERROR_NORMAL%
+ServiceBinary   = %12%\WUDFRd.sys
+
+;
+; =================== Strings ===================
+;
+
+[Strings]
+JJS                             = "JJS"
+MediaDescription                = "PSPdisp SideShow driver installation disk"
+Device.DeviceDesc               = "PSPdisp SideShow Device"
+                                                            
+REG_DWORD                       = 0x00010001
+SERVICE_BOOT_START              = 0x0 
+SERVICE_SYSTEM_START            = 0x1 
+SERVICE_AUTO_START              = 0x2 
+SERVICE_DEMAND_START            = 0x3 
+SERVICE_DISABLED                = 0x4 
+SERVICE_KERNEL_DRIVER           = 0x1 
+SERVICE_ERROR_IGNORE            = 0x0 
+SERVICE_ERROR_NORMAL            = 0x1 
+SERVICE_ERROR_SEVERE            = 0x2 
+SERVICE_ERROR_CRITICAL          = 0x3 

@@ -1,0 +1,74 @@
+!IF $(386)
+TARGETNAME = PSPdispSideShow
+!ELSE
+TARGETNAME = PSPdispSideShow_x64
+!ENDIF
+
+TARGETTYPE = DYNLINK
+TARGET_DESTINATION = retail
+
+VISTA_SDK_INC_PATH=..\..\SDKInclude
+
+DLLENTRY = _DllMainCRTStartup
+DLLDEF = ..\SideShowBitmapDriver.def
+
+C_DEFINES = -DUNICODE -D_UNICODE -U_ASSIGNED_USER_MODEL
+
+USE_ATL = 1
+ATL_VER = 70
+USE_STL = 1
+STL_VER = 60
+USE_NATIVE_EH = ASYNC
+USE_LIBCMT = 1
+
+SOURCES = \
+    ..\WSSDevice.cpp \
+    ..\DriverEntry.cpp \
+    ..\Driver.cpp \
+    ..\Queue.cpp \
+    ..\DataManager.cpp \
+    ..\Device.cpp \
+    ..\Node.cpp \
+    ..\Renderer.cpp \
+    ..\Timer.cpp \
+    ..\BasicDDI.cpp \
+    ..\Content.cpp \
+    ..\ScfParser.cpp \
+    ..\ScfElement.cpp \
+    ..\RichTextHost.cpp \
+    ..\ContentView.cpp \
+    ..\ContentViewItem.cpp \
+    ..\Util.cpp \
+    ..\Icon.cpp \
+    ..\User.cpp \
+    Driver.rc \
+    Driver.idl \
+    DeviceSpecific.cpp \
+
+INCLUDES = \
+    ..; \
+    $(DDK_INC_PATH); \
+    $(UMDF_INC_PATH)\10; \
+    $(SDK_INC_PATH); \
+    $(SDK_INC_PATH)\gdiplus; \
+####### this is for textserv.h and tom.h 
+    $(VISTA_SDK_INC_PATH);
+
+TARGETLIBS = \
+    $(SDK_LIB_PATH)\KERNEL32.lib \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\ole32.lib \
+    $(SDK_LIB_PATH)\oleaut32.lib \
+    $(SDK_LIB_PATH)\ADVAPI32.lib \
+    $(SDK_LIB_PATH)\gdi32.lib \
+    $(SDK_LIB_PATH)\gdiplus.lib \
+    $(SDK_LIB_PATH)\PortableDeviceGuids.lib \
+    $(SDK_LIB_PATH)\WindowsSideShowGuids.lib \
+    $(SDK_LIB_PATH)\msxml2.lib \
+    $(SDK_LIB_PATH)\msimg32.lib \
+    $(SDK_LIB_PATH)\uuid.lib \
+    $(SDK_LIB_PATH)\propsys.lib \
+    $(SDK_LIB_PATH)\shell32.lib
+
+
+TARGETPATH = ..\..\..\bin

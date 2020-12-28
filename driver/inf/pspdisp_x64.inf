@@ -1,0 +1,112 @@
+; A different version for x64 system is needed because 
+; Windows 2000 doesn't understand decorated sections (like ".ntamd64")
+; and will not be able to parse a mixed x86/x64 inf file.
+; This behaviour is untested, but described in
+; http://www.microsoft.com/whdc/driver/install/64INF_reqs.mspx
+
+[Version]
+Signature="$Windows NT$"
+Provider=%JJS%
+ClassGUID={4D36E968-E325-11CE-BFC1-08002BE10318}
+Class=Display
+DriverVer=01/01/2009,0.3
+
+[DestinationDirs]
+DefaultDestDir   = 11
+pspdisp.Miniport  = 12  ; drivers
+pspdisp.Display   = 11  ; system32
+
+;
+; Driver information
+;
+
+[Manufacturer]
+%JJS% = DeviceModels,ntamd64
+
+[DeviceModels.ntamd64]
+%pspdisp% = pspdisp, PSPdisp_driver
+
+;
+; General installation section
+;
+
+[pspdisp]
+CopyFiles=pspdisp.Miniport, pspdisp.Display
+
+;
+; File sections
+;
+
+[pspdisp.Miniport]
+pspdisp_x64.sys
+
+[pspdisp.Display]
+pspdisp_x64.dll
+
+;
+; Service Installation
+;
+
+[pspdisp.Services]
+AddService = pspdisp, 0x00000002, pspdisp_Service_Inst
+
+[pspdisp_Service_Inst]
+
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 0                  ; SERVICE_ERROR_IGNORE
+LoadOrderGroup = Video
+ServiceBinary  = %12%\pspdisp_x64.sys
+
+
+;
+; Software Installation
+;
+
+[pspdisp.SoftwareSettings]
+AddReg = pspdisp_SoftwareDeviceSettings
+
+[pspdisp_SoftwareDeviceSettings]
+HKR,, pspdispDriver,               %REG_DWORD%,    1
+HKR,, InstalledDisplayDrivers,     %REG_MULTI_SZ%, pspdisp_x64
+HKR,, VgaCompatible,               %REG_DWORD%,    0
+HKR,, Attach.ToDesktop,            %REG_DWORD%,    1
+
+
+[pspdisp.GeneralConfigData]
+MaximumNumberOfDevices = 1
+KeepExistingDriverEnabled = 1
+
+;
+; Source file information
+;
+
+[SourceDisksNames]
+1 = %DiskId%,,,""
+
+[SourceDisksFiles]
+pspdisp_x64.sys  = 1
+pspdisp_x64.dll = 1
+
+[Strings]
+
+;
+; Non-Localizable Strings
+;
+
+REG_SZ         = 0x00000000
+REG_MULTI_SZ   = 0x00010000
+REG_EXPAND_SZ  = 0x00020000
+REG_BINARY     = 0x00000001
+REG_DWORD      = 0x00010001
+SERVICEROOT    = "System\CurrentControlSet\Services"
+
+;
+; Localizable Strings
+;
+
+DiskId       = "PSPdisp Installation DISK (VIDEO)"
+GraphAdap    = "Graphics Adapter"
+JJS          = "JJS"
+pspdisp      = "PSPdisp Display Driver"
+

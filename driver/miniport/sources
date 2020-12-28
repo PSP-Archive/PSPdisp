@@ -1,0 +1,17 @@
+!IF $(386)
+TARGETNAME=pspdisp
+!ELSE
+TARGETNAME=pspdisp_x64
+C_DEFINES = $(C_DEFINES) -DAMD64
+!ENDIF
+
+TARGETTYPE=DRIVER
+
+TARGETLIBS=$(DDK_LIB_PATH)\videoprt.lib
+
+INCLUDES=
+
+SOURCES=pspdisp.c \
+        pspdisp.rc
+
+TARGETPATH=..\bin

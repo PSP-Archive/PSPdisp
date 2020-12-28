@@ -1,0 +1,8 @@
+Sideshow driver compilation notes
+---------------------------------
+
+To compile this driver you need the Windows Vista WDK from http://www.microsoft.com/whdc/Devtools/wdk/default.mspx and the Windows SideShow Bitmap Driver source from http://www.codeplex.com/SideShowBitmap (version 1.0, revision 26610). 
+
+The contents of the "NoDevice" folder replace the respective files in the Bitmap Driver "BitmapDriverSample" directory.
+
+Run the "build" command from inside the "NoDevice" folder under a Windows Vista build environment.

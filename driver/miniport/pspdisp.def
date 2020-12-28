@@ -1,0 +1,6 @@
+LIBRARY pspdisp
+
+DESCRIPTION 'PSP Display Miniport Driver'
+
+EXPORTS
+  DriverEntry

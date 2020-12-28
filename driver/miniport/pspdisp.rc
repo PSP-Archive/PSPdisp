@@ -1,0 +1,21 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DRV
+#define VER_FILESUBTYPE             VFT2_DRV_DISPLAY
+#define VER_FILEDESCRIPTION_STR     "PSPdisp Display Miniport Driver"
+#define VER_INTERNALNAME_STR        "pspdisp.sys"
+#define VER_ORIGINALFILENAME_STR    "pspdisp.sys"
+
+#define VER_LANGNEUTRAL
+#define VER_LEGALCOPYRIGHT_YEARS    "2009"
+#define VER_LEGALCOPYRIGHT_STR	    "Copyright (c) JJS"
+#define VER_PRODUCTNAME_STR         "PSPdisp"
+#define VER_PRODUCTVERSION          0,3,00,000
+#define VER_FILEVERSION             VER_PRODUCTVERSION
+#define VER_PRODUCTVERSION_STR      "0.3"
+#define VER_FILEVERSION_STR         VER_PRODUCTVERSION_STR
+#define VER_COMPANYNAME_STR         "JJS"
+
+#define VER_LANGNEUTRAL
+#include "common.ver"

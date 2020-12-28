@@ -1,0 +1,29 @@
+Index: jmorecfg.h
+===================================================================
+--- jmorecfg.h	(revision 2494)
++++ jmorecfg.h	(working copy)
+@@ -314,7 +314,7 @@
+ #define RGB_RED		0	/* Offset of Red in an RGB scanline element */
+ #define RGB_GREEN	1	/* Offset of Green */
+ #define RGB_BLUE	2	/* Offset of Blue */
+-#define RGB_PIXELSIZE	3	/* JSAMPLEs per RGB scanline element */
++#define RGB_PIXELSIZE	4	/* JSAMPLEs per RGB scanline element */
+ 
+ 
+ /* Definitions for speed-related optimizations. */
+Index: Makefile
+===================================================================
+--- Makefile	(revision 2494)
++++ Makefile	(working copy)
+@@ -10,8 +10,10 @@
+ 	jcprepct.o jdcolor.o jdphuff.o jidctflt.o jutils.o jcinit.o \
+ 	jcsample.o jddctmgr.o jdpostct.o jidctfst.o
+ 
+-CFLAGS = -O2 -G0
++CFLAGS = -O3 -G0
+ 
++PSP_FW_VERSION = 371
++
+ include $(PSPSDK)/lib/build.mak
+ 
+ install: $(TARGET_LIB)
