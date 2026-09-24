@@ -2,7 +2,7 @@
 #define PSPDISP_DESKTOP_UI_PAGE_ABOUT
 
 #include <gtk/gtk.h>
-#include "../css.c"
+#include "../groupbox.c"
 
 // Title component - uses Pango markup to style the project name
 static GtkWidget *pspdisp_gtk_page_about_title_new() {
@@ -48,10 +48,6 @@ static GtkWidget *pspdisp_gtk_page_about_status_new() {
     GtkWidget *grid = gtk_grid_new();
     gtk_grid_set_row_spacing(GTK_GRID(grid), 4);
     gtk_grid_set_column_spacing(GTK_GRID(grid), 32);
-    gtk_widget_set_margin_top(grid, 10);
-    gtk_widget_set_margin_bottom(grid, 8);
-    gtk_widget_set_margin_start(grid, 12);
-    gtk_widget_set_margin_end(grid, 12);
 
     //////////////////////////////////////////////////////////////////
     // "Frames per second" row
@@ -105,21 +101,7 @@ static GtkWidget *pspdisp_gtk_page_about_status_new() {
     gtk_grid_attach(GTK_GRID(grid), total_sent_value, 1, total_sent_grid_row, 1, 1);
     //////////////////////////////////////////////////////////////////
 
-    GtkWidget *frame = gtk_frame_new(NULL);
-    gtk_widget_add_css_class(frame, pspdisp_css_groupbox_class());
-    gtk_frame_set_child(GTK_FRAME(frame), grid);
-    gtk_widget_set_margin_top(frame, 9);
-
-    GtkWidget *caption = gtk_label_new(" Status ");
-    gtk_widget_add_css_class(caption, pspdisp_css_groupbox_caption_class());
-    gtk_widget_set_halign(caption, GTK_ALIGN_START);
-    gtk_widget_set_valign(caption, GTK_ALIGN_START);
-    gtk_widget_set_margin_start(caption, 8);
-
-    GtkWidget *overlay = gtk_overlay_new();
-    gtk_overlay_set_child(GTK_OVERLAY(overlay), frame);
-    gtk_overlay_add_overlay(GTK_OVERLAY(overlay), caption);
-    return overlay;
+    return pspdisp_gtk_groupbox_new("Status", grid);
 }
 
 // "About" page component
