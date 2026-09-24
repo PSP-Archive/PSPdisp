@@ -1,5 +1,5 @@
-#ifndef PSPDISP_DESKTOP_PAGE_ABOUT
-#define PSPDISP_DESKTOP_PAGE_ABOUT
+#ifndef PSPDISP_DESKTOP_UI_PAGE_ABOUT
+#define PSPDISP_DESKTOP_UI_PAGE_ABOUT
 
 #include <gtk/gtk.h>
 
@@ -141,7 +141,7 @@ static GtkWidget *pspdisp_gtk_page_about_status_new() {
     return overlay;
 }
 
-// About page component
+// "About" page component
 static GtkWidget *pspdisp_gtk_page_about_new() {
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
 
