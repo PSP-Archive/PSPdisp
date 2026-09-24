@@ -2,6 +2,7 @@
 #define PSPDISP_DESKTOP_UI_PAGE_ABOUT
 
 #include <gtk/gtk.h>
+#include "../css.c"
 
 // Title component - uses Pango markup to style the project name
 static GtkWidget *pspdisp_gtk_page_about_title_new() {
@@ -104,33 +105,13 @@ static GtkWidget *pspdisp_gtk_page_about_status_new() {
     gtk_grid_attach(GTK_GRID(grid), total_sent_value, 1, total_sent_grid_row, 1, 1);
     //////////////////////////////////////////////////////////////////
 
-    static gboolean css_done = FALSE; // Just so we don't reload CSS between multiple calls1
-    if (!css_done) {
-        GtkCssProvider *p = gtk_css_provider_new();
-        gtk_css_provider_load_from_string(p,
-            ".pspdisp-page-about-status-groupbox {"
-            "  background-color: @theme_bg_color;"
-            "  border: 1px solid alpha(currentColor, 0.3);"
-            "  border-radius: 6px;"
-            "}"
-            ".pspdisp-page-about-status-groupbox-caption {"
-            "  background-color: @theme_bg_color;"
-            "  padding-left: 4px;"
-            "  padding-right: 4px;"
-            "}"
-        );
-        gtk_style_context_add_provider_for_display(gdk_display_get_default(), GTK_STYLE_PROVIDER(p), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-        g_object_unref(p);
-        css_done = TRUE;
-    }
-
     GtkWidget *frame = gtk_frame_new(NULL);
-    gtk_widget_add_css_class(frame, "pspdisp-page-about-status-groupbox");
+    gtk_widget_add_css_class(frame, pspdisp_css_groupbox_class());
     gtk_frame_set_child(GTK_FRAME(frame), grid);
     gtk_widget_set_margin_top(frame, 9);
 
     GtkWidget *caption = gtk_label_new(" Status ");
-    gtk_widget_add_css_class(caption, "pspdisp-page-about-status-groupbox-caption");
+    gtk_widget_add_css_class(caption, pspdisp_css_groupbox_caption_class());
     gtk_widget_set_halign(caption, GTK_ALIGN_START);
     gtk_widget_set_valign(caption, GTK_ALIGN_START);
     gtk_widget_set_margin_start(caption, 8);
