@@ -1,5 +1,4 @@
-#ifndef PSPDISP_DESKTOP_UI_PAGE_DISPLAY
-#define PSPDISP_DESKTOP_UI_PAGE_DISPLAY
+#pragma once
 
 #include <gtk/gtk.h>
 #include "../groupbox.c"
@@ -70,5 +69,3 @@ static GtkWidget *pspdisp_gtk_page_display_new() {
     gtk_box_append(GTK_BOX(box), pspdisp_gtk_page_display_position_new());
     return box;
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef PSPDISP_DESKTOP_UI_PAGE_ABOUT
-#define PSPDISP_DESKTOP_UI_PAGE_ABOUT
+#pragma once
 
 #include <gtk/gtk.h>
 #include "../groupbox.c"
@@ -108,6 +107,7 @@ static GtkWidget *pspdisp_gtk_page_about_status_new() {
 static GtkWidget *pspdisp_gtk_page_about_new() {
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
 
+    // TODO: setar isso como padrão para todas as pages?
     gtk_widget_set_margin_top(box, 24);
     gtk_widget_set_margin_bottom(box, 24);
     gtk_widget_set_margin_start(box, 24);
@@ -132,5 +132,3 @@ static GtkWidget *pspdisp_gtk_page_about_new() {
     gtk_box_append(GTK_BOX(box), status);
     return box;
 }
-
-#endif

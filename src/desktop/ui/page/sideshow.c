@@ -1,5 +1,4 @@
-#ifndef PSPDISP_DESKTOP_UI_PAGE_SIDESHOW
-#define PSPDISP_DESKTOP_UI_PAGE_SIDESHOW
+#pragma once
 
 #include <gtk/gtk.h>
 #include "../groupbox.c"
@@ -98,5 +97,3 @@ static GtkWidget *pspdisp_gtk_page_sideshow_new() {
     gtk_box_append(GTK_BOX(box), pspdisp_gtk_page_sideshow_quality_new());
     return box;
 }
-
-#endif

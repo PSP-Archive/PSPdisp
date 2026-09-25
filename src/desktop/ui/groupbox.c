@@ -1,5 +1,4 @@
-#ifndef PSPDISP_DESKTOP_UI_GROUPBOX
-#define PSPDISP_DESKTOP_UI_GROUPBOX
+#pragma once
 
 #include <gtk/gtk.h>
 
@@ -41,5 +40,3 @@ GtkWidget *pspdisp_gtk_groupbox_new(const char* title, GtkWidget *body) {
     gtk_overlay_add_overlay(GTK_OVERLAY(overlay), caption);
     return overlay;
 }
-
-#endif

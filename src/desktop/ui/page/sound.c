@@ -1,5 +1,4 @@
-#ifndef PSPDISP_DESKTOP_UI_PAGE_SOUND
-#define PSPDISP_DESKTOP_UI_PAGE_SOUND
+#pragma once
 
 #include <gtk/gtk.h>
 #include "../groupbox.c"
@@ -90,5 +89,3 @@ static GtkWidget *pspdisp_gtk_page_sound_new() {
     gtk_box_append(GTK_BOX(box), pspdisp_gtk_page_sound_instructions_new());
     return box;
 }
-
-#endif

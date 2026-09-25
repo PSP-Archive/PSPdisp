@@ -1,5 +1,4 @@
-#ifndef PSPDISP_DESKTOP_UI_PAGE_QUALITY
-#define PSPDISP_DESKTOP_UI_PAGE_QUALITY
+#pragma once
 
 #include <gtk/gtk.h>
 #include "../groupbox.c"
@@ -71,5 +70,3 @@ static GtkWidget *pspdisp_gtk_page_quality_new() {
     gtk_box_append(GTK_BOX(box), pspdisp_gtk_page_quality_jpeg_new());
     return box;
 }
-
-#endif
