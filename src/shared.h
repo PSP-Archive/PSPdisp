@@ -76,3 +76,27 @@ typedef enum {
     PSPDISP_MODEL_10G = 9,  // Never released
     PSPDISP_MODEL_11G = 10, // PSP-E1000 "Street"
 } PSPdispModel;
+
+/**
+ * @brief PSP sales region.
+ *
+ * Values match `ScePsCode.productCode` as filled by `sceChkregGetPsCode()` from uOFW's `chkreg.h` (listed as `SCE_PSP_PRODUCT_CODE_*` in `openpsid_kernel.h`).
+ *
+ * Constants are ordered by the last digits of the retail model given in the comments (e.g. PSP-2001 -> PSP_REGION_NORTH_AMERICA).
+ */
+typedef enum {
+    PSPDISP_REGION_JAPAN         = 0x03, // x000, Japan
+    PSPDISP_REGION_NORTH_AMERICA = 0x04, // x001, North America
+    PSPDISP_REGION_AUSTRALIA     = 0x09, // x002, Australia / New Zealand
+    PSPDISP_REGION_UK            = 0x07, // x003, United Kingdom
+    PSPDISP_REGION_EUROPE        = 0x05, // x004, Europe / Middle East
+    PSPDISP_REGION_KOREA         = 0x06, // x005, Korea
+    PSPDISP_REGION_HONG_KONG     = 0x0A, // x006, Hong Kong / Singapore
+    PSPDISP_REGION_TAIWAN        = 0x0B, // x007, Taiwan
+    PSPDISP_REGION_RUSSIA        = 0x0C, // x008, Russia
+    PSPDISP_REGION_CHINA         = 0x0D, // x009, China
+    PSPDISP_REGION_MEXICO        = 0x08, // x010, Mexico / Latin America
+    PSPDISP_REGION_TEST_UNIT     = 0x00, // No retail model, prototype / test unit
+    PSPDISP_REGION_DEVKIT        = 0x01, // No retail model, DEM-1000 / DTP-T1000
+    PSPDISP_REGION_TESTKIT       = 0x02, // No retail model, DTP-H1500
+} PSPdispRegion;
