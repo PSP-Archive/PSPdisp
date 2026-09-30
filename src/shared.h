@@ -55,3 +55,24 @@ typedef struct {
     uint16_t x2; // Right edge, exclusive
     uint16_t y2; // Bottom edge, exclusive
 } __attribute__((__packed__)) PSPdispDirtyRectangle;
+
+/**
+ * @brief PSP hardware generation.
+ * 
+ * Values match the return of `kuKernelGetModel()` from `kubridge.h`.
+ *
+ * The value is the "Xg" generation number minus one.
+ */
+typedef enum {
+    PSPDISP_MODEL_01G = 0,  // PSP-1000 "fat"
+    PSPDISP_MODEL_02G = 1,  // PSP-2000 "slim"
+    PSPDISP_MODEL_03G = 2,  // PSP-3000 "brite", early boards
+    PSPDISP_MODEL_04G = 3,  // PSP-3000, TA-093
+    PSPDISP_MODEL_05G = 4,  // PSP Go (N1000)
+    PSPDISP_MODEL_06G = 5,  // Never released
+    PSPDISP_MODEL_07G = 6,  // PSP-3000, TA-095
+    PSPDISP_MODEL_08G = 7,  // Never released
+    PSPDISP_MODEL_09G = 8,  // PSP-3000, last revision
+    PSPDISP_MODEL_10G = 9,  // Never released
+    PSPDISP_MODEL_11G = 10, // PSP-E1000 "Street"
+} PSPdispModel;
