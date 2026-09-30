@@ -23,7 +23,7 @@
  *
  * Little-endian, red in the lowest bits.
  */
-typedef enum {
+typedef enum: uint8_t {
 	PSPDISP_PIXEL_FORMAT_565  = 0, // 16 bpp: R5 G6 B5, no alpha
 	PSPDISP_PIXEL_FORMAT_5551 = 1, // 16 bpp: R5 G5 B5 A1
 	PSPDISP_PIXEL_FORMAT_4444 = 2, // 16 bpp: R4 G4 B4 A4
@@ -35,7 +35,7 @@ typedef enum {
  *
  * Values are ordered by increasing power saving, so they can be compared directly (e.g. `mode >= PSPDISP_DPMS_MODE_SUSPEND`).
  */
-typedef enum {
+typedef enum: uint8_t {
     PSPDISP_DPMS_MODE_ON,      // Display fully powered and showing output
     PSPDISP_DPMS_MODE_STANDBY, // Light power saving with near-instant recovery
     PSPDISP_DPMS_MODE_SUSPEND, // Deeper power saving with slower recovery
@@ -63,7 +63,7 @@ typedef struct {
  *
  * The value is the "Xg" generation number minus one.
  */
-typedef enum {
+typedef enum: uint8_t {
     PSPDISP_MODEL_01G = 0,  // PSP-1000 "fat"
     PSPDISP_MODEL_02G = 1,  // PSP-2000 "slim"
     PSPDISP_MODEL_03G = 2,  // PSP-3000 "brite", early boards
@@ -84,7 +84,7 @@ typedef enum {
  *
  * Constants are ordered by the last digits of the retail model given in the comments (e.g. PSP-2001 -> PSP_REGION_NORTH_AMERICA).
  */
-typedef enum {
+typedef enum: uint8_t {
     PSPDISP_REGION_JAPAN         = 0x03, // x000, Japan
     PSPDISP_REGION_NORTH_AMERICA = 0x04, // x001, North America
     PSPDISP_REGION_AUSTRALIA     = 0x09, // x002, Australia / New Zealand
