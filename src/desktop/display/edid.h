@@ -97,7 +97,7 @@ typedef enum: uint8_t {
 } PSPdispEDIDColorDepth;
 
 /**
- * @brief EDID interface standard of a digital input (`PSPdispEDIDVideoInput.digital.interface`).
+ * @brief EDID interface standard of a digital input (`PSPdispEDIDVideoInput.digital.interface_type`).
  *
  * Values 6-15 are reserved.
  */
@@ -137,9 +137,9 @@ typedef union {
         uint8_t         : 7; // bits 6-0: Read through the `digital` or the `analog` view
     }; // Bit 7 alone, as `video_input.is_digital`
     struct {
-        bool is_digital                   : 1; // bit 7: Always true
-        PSPdispEDIDColorDepth color_depth : 3; // bits 6-4: Bits per primary colour, see `PSPdispEDIDColorDepth`
-        PSPdispEDIDInterface interface    : 4; // bits 3-0: Interface standard, see `PSPdispEDIDInterface`
+        bool is_digital                     : 1; // bit 7: Always true
+        PSPdispEDIDColorDepth color_depth   : 3; // bits 6-4: Bits per primary colour, see `PSPdispEDIDColorDepth`
+        PSPdispEDIDInterface interface_type : 4; // bits 3-0: Interface standard, see `PSPdispEDIDInterface` (not `interface`, a macro of the Windows headers)
     } digital; // When `is_digital` is true
     struct {
         bool is_digital                     : 1; // bit 7: Always false

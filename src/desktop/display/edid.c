@@ -6,6 +6,16 @@
  * Copyright © 2026 Net-0                            *
  *****************************************************/
 
+/*
+ * EDID (Extended Display Identification Data) is an existing standard by VESA, not something made for this project.
+ *
+ * Every monitor gives one to the computer, to describe itself: its manufacturer, model, physical size, colours and supported modes.
+ *
+ * A real monitor stores it in a chip and sends it through the cable, while a virtual display hands it to its driver (e.g. EVDI) when connecting.
+ *
+ * This file builds the EDID of the PSP display, from the model, region and serial number of the PSP (see `edid.h` for its types).
+ */
+
 #pragma once
 
 #include <stdint.h>
@@ -307,7 +317,7 @@ PSPdispEDID pspdisp_display_edid_new(PSPdispModel model, PSPdispRegion region, u
         .serial_number = serial_number,
         .manufacture_date = pspdisp_display_edid_release_date(model, region),
         .version = { .major = 1, .minor = 4 }, // EDID v1.4
-        .video_input = { .digital = { .is_digital = true, .color_depth = PSPDISP_EDID_COLOR_DEPTH_8, .interface = PSPDISP_EDID_INTERFACE_UNDEFINED } }, // No real cable
+        .video_input = { .digital = { .is_digital = true, .color_depth = PSPDISP_EDID_COLOR_DEPTH_8, .interface_type = PSPDISP_EDID_INTERFACE_UNDEFINED } }, // No real cable
         .screen_size = { .horizontal = (width_mm + 5) / 10, .vertical = (height_mm + 5) / 10 },
         .gamma = 120, // 2.2, the sRGB gamma
         .features = { .dpms_active_off = true, .color_type = PSPDISP_EDID_COLOR_TYPE_RGB444, .srgb_default = true, .preferred_timing_native = true },
