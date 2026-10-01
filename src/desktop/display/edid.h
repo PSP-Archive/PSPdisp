@@ -8,6 +8,16 @@
  * Copyright © 2026 Net-0                            *
  *****************************************************/
 
+/*
+ * EDID (Extended Display Identification Data) is an existing standard by VESA, not something made for this project.
+ *
+ * Every monitor gives one to the computer, to describe itself: its manufacturer, model, physical size, colours and supported modes.
+ *
+ * The operating system reads it to know how to drive the monitor (e.g. which resolutions and refresh rates to offer).
+ *
+ * This file declares its 128-byte base block as types, following the VESA E-EDID 1.3 and 1.4 standards, so the PSP display can describe itself like a real monitor.
+ */
+
 #pragma once
 
 #include <stdint.h>
@@ -428,9 +438,7 @@ static_assert(sizeof(PSPdispEDIDDetailedTiming) == 18, "An EDID detailed timing 
  *
  * Each argument is used twice, so pass constants or expressions without side effects.
  */
-#define PSPDISP_EDID_DETAILED_TIMING(clock_khz, h_active, h_blanking, v_active, v_blanking,      \
-                                     h_front_porch, h_sync_width, v_front_porch, v_sync_width,   \
-                                     h_image_mm, v_image_mm, ...) ((PSPdispEDIDDetailedTiming) { \
+#define PSPDISP_EDID_DETAILED_TIMING(clock_khz, h_active, h_blanking, v_active, v_blanking, h_front_porch, h_sync_width, v_front_porch, v_sync_width, h_image_mm, v_image_mm, ...) ((PSPdispEDIDDetailedTiming) { \
     .pixel_clock_low             = ((clock_khz) / 10) & 0xFF,                                    \
     .pixel_clock_high            = ((clock_khz) / 10) >> 8,                                      \
     .horizontal_active_low       = (h_active) & 0xFF,                                            \
