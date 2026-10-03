@@ -11,6 +11,11 @@
 
 #pragma once
 
+#include <stdint.h>
+
+// TODO: rework the old protocol between Desktop and PSP
+#include "./shared.old.h"
+
 #define PSPDISP_DISPLAY_WIDTH               480 // The PSP display width in pixels
 #define PSPDISP_DISPLAY_HEIGHT              272 // The PSP display height in pixels
 #define PSPDISP_DISPLAY_FREQUENCY            60 // The PSP display refresh rate in hertz
