@@ -16,6 +16,11 @@
 #define PSPDISP_DISPLAY_FREQUENCY            60 // The PSP display refresh rate in hertz
 #define PSPDISP_DISPLAY_FRAME_BUFFER_STRIBE 512 // The PSP display frame-buffer pixels per row in memory
 
+// All the types of this file are packed and little-endian whatever the host, so the PSP and the desktop share the same layout.
+// Both pragmas are reset at the end of this file, so they don't leak into the files that include it.
+#pragma pack(push, 1)
+#pragma scalar_storage_order little-endian
+
 /**
  * @brief Pixel formats supported by the PSP frame buffer
  * 
@@ -54,7 +59,7 @@ typedef struct {
     uint16_t y1; // Top edge, inclusive
     uint16_t x2; // Right edge, exclusive
     uint16_t y2; // Bottom edge, exclusive
-} __attribute__((__packed__)) PSPdispDirtyRectangle;
+} PSPdispDirtyRectangle;
 
 /**
  * @brief PSP hardware generation.
@@ -100,3 +105,6 @@ typedef enum: uint8_t {
     PSPDISP_REGION_DEVKIT        = 0x01, // No retail model, DEM-1000 / DTP-T1000
     PSPDISP_REGION_TESTKIT       = 0x02, // No retail model, DTP-H1500
 } PSPdispRegion;
+
+#pragma scalar_storage_order default
+#pragma pack(pop)
