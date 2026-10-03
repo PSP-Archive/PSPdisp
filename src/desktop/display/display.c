@@ -1,7 +1,7 @@
 /*****************************************************
  * SPDX-License-Identifier: BSD-3-Clause             *
  *                                                   *
- * display.c - PSP display and provider functions    *
+ * display.c - PSP display and its connector         *
  *                                                   *
  * Copyright © 2026 Net-0                            *
  *****************************************************/
@@ -10,73 +10,32 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "./display.h"
+#include <stdint.h>
+#include <glib.h>
+#include <gio/gio.h>
+#include "../../shared.h"
 #include "./edid.c"
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief Unload the provider, closing its module and clearing its error, making it unfit to use until loaded again.
- *
- * Safe to call on a provider that is not loaded.
- * Disconnect every display using it before, because the provider code (like the source callbacks) goes away with the module.
- *
- * @param display_provider The provider to unload.
- */
-void pspdisp_display_provider_unload(PSPdispDisplayProvider *display_provider) {
-    if (display_provider->module != NULL) {
-        g_module_close(display_provider->module);
-        display_provider->module = NULL;
-    }
-    if (display_provider->module_error != NULL) {
-        g_error_free(display_provider->module_error);
-        display_provider->module_error = NULL;
-    }
-    display_provider->provide = NULL;
-}
+#include "./connector.c"
 
 /**
- * @brief Load the provider module and its `provide` function, making it ready to use if possible.
+ * @brief Display interface whose frames are going to be sent to PSP.
  *
- * On failure it prints why and `provide` stays `NULL`, when the module itself fails to open `module_error` tells why.
- *
- * @param display_provider The provider to load, it must not be loaded yet.
+ * The core implementation varies based on the connector, but there is always some kernel driver to manage this virtual display.
  */
-void pspdisp_display_provider_load(PSPdispDisplayProvider *display_provider) {
-    g_return_if_fail(display_provider != NULL); // There is no NULL provider
-    g_return_if_fail(display_provider->provide == NULL); // If there is a function pointer, it's already loaded
+typedef struct {
+    PSPdispFrameHandler frame_handler; // Handle each new frame to be drawn
+    PSPdispDPMSHandler dpms_handler; // Display Power Management Signaling Handler
+    PSPdispEDID edid; // Identification given to the computer when connecting, from the PSP model, region and serial number (see `pspdisp_display_edid_new()`)
 
-    pspdisp_display_provider_unload(display_provider); // Cleanup any stale resource before trying to load (maybe again?)
+    // TODO: brightness handler
+    // TODO: rotate handler
 
-    display_provider->module = g_module_open_full(display_provider->file_name, G_MODULE_BIND_LOCAL, &display_provider->module_error);
-    if (display_provider->module == NULL) {
-        g_printerr("pspdisp_display_provider_load(%s) -> failed to open module: %s\n", display_provider->name, display_provider->module_error->message);
-        return;
-    }
-
-    if (!g_module_symbol(display_provider->module, display_provider->symbol_name, (gpointer *) &display_provider->provide)) {
-        g_printerr("pspdisp_display_provider_load(%s) -> failed to retrieve symbol: %s\n", display_provider->name, g_module_error());
-        return;
-    }
-}
-
-/**
- * @brief Ask the provider to create the virtual display and return the source of its frames.
- *
- * @param display_provider The provider to use, it must be loaded.
- * @param display The display that receives the frames and the DPMS changes.
- * @return The source of frames (not attached to any context yet), or `NULL` if the provider is not loaded or failed.
- */
-GSource *pspdisp_display_provider_provide(PSPdispDisplayProvider *display_provider, PSPdispDisplay *display) {
-    g_return_val_if_fail(display_provider != NULL, NULL);
-    g_return_val_if_fail(display != NULL, NULL);
-    g_return_val_if_fail(display_provider->module != NULL, NULL);
-    g_return_val_if_fail(display_provider->module_error == NULL, NULL);
-    g_return_val_if_fail(display_provider->provide != NULL, NULL);
-    return display_provider->provide(display);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    GMainContext *context; // Context for the event loop, where the source of frames is dispatched
+    GMainLoop *loop; // Event loop of frames
+    GThread *thread; // Thread that runs the frames event loop
+    GCancellable *thread_cancellable; // Cancellable used to finish the thread that runs the frames event loop
+    GSource *frame_source; // Source of the display events, from the connector (see `pspdisp_display_connector_connect()`), attached to `context` (`NULL` while disconnected)
+} PSPdispDisplay;
 
 /**
  * @brief Quit the event loop of the display thread, called when `thread_cancellable` is cancelled.
@@ -117,11 +76,10 @@ gpointer pspdisp_display_thread_func(PSPdispDisplay *display) {
 /**
  * @brief Create a new display, not connected yet (see `pspdisp_display_connect()`).
  *
- * Starts the display thread, which runs the event loop where the provider calls the frame and DPMS handlers.
+ * Starts the display thread, which runs the event loop where the connector calls the frame and DPMS handlers.
  *
  * The model, the region and the serial number give the EDID of the display (see `pspdisp_display_edid_new()`).
  *
- * @param provider The provider used to create the virtual display when connecting.
  * @param model The PSP generation.
  * @param region The PSP sales region.
  * @param serial_number The serial number of the display, not 0 (see `pspdisp_display_edid_new()`).
@@ -129,12 +87,11 @@ gpointer pspdisp_display_thread_func(PSPdispDisplay *display) {
  * @param dpms_handler Handle each DPMS change, called on the display thread (can't be `NULL`).
  * @return The new display, free it with `pspdisp_display_destroy()`, or `NULL` when a handler is `NULL`.
  */
-PSPdispDisplay *pspdisp_display_new(PSPdispDisplayProvider *provider, PSPdispModel model, PSPdispRegion region, uint32_t serial_number, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler) {
+PSPdispDisplay *pspdisp_display_new(PSPdispModel model, PSPdispRegion region, uint32_t serial_number, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler) {
     g_return_val_if_fail(frame_handler != NULL, NULL);
     g_return_val_if_fail(dpms_handler != NULL, NULL);
 
     PSPdispDisplay *display = g_new(PSPdispDisplay, 1);
-    display->provider = provider;
     display->frame_handler = frame_handler;
     display->dpms_handler = dpms_handler;
     display->edid = pspdisp_display_edid_new(model, region, serial_number);
@@ -147,18 +104,18 @@ PSPdispDisplay *pspdisp_display_new(PSPdispDisplayProvider *provider, PSPdispMod
 }
 
 /**
- * @brief Connect the display, enabling it as a device: the provider creates the virtual display, so it appears on the computer.
+ * @brief Connect the display, enabling it as a device: the connector creates the virtual display, so it appears on the computer.
  *
- * The source of frames is attached to `context`, so the provider callbacks (and the handlers) run on the display thread.
+ * The source of the connector is attached to `context`, so the handlers run on the display thread.
  *
  * @param display The display to connect.
- * @return `true` if it was connected now, `false` if it was already connected or the provider failed.
+ * @return `true` if it was connected now, `false` if it was already connected or the connector failed.
  */
 bool pspdisp_display_connect(PSPdispDisplay *display) {
     if (display->frame_source != NULL) return false; // Already connected
 
-    GSource *frame_source = pspdisp_display_provider_provide(display->provider, display);
-    if (frame_source == NULL) return false; // The provider failed
+    GSource *frame_source = pspdisp_display_connector_connect(display->edid, display->frame_handler, display->dpms_handler);
+    if (frame_source == NULL) return false; // The connector failed
 
     g_source_attach(frame_source, display->context);
     display->frame_source = frame_source;
@@ -168,7 +125,8 @@ bool pspdisp_display_connect(PSPdispDisplay *display) {
 /**
  * @brief Disconnect the display, disabling it as a device: the virtual display is removed from the computer.
  *
- * Destroying the source of frames calls its destroy callback, where the provider frees its resources and removes the virtual display.
+ * Releasing the last reference to the source of the connector finalizes it, where the connector removes the virtual display.
+ * It happens here, or on the display thread right after a dispatch that was still running there.
  *
  * @param display The display to disconnect.
  * @return `true` if it was disconnected now, `false` if it was already disconnected.
@@ -176,8 +134,8 @@ bool pspdisp_display_connect(PSPdispDisplay *display) {
 bool pspdisp_display_disconnect(PSPdispDisplay *display) {
     if (display->frame_source == NULL) return false; // Already disconnected
 
-    g_source_destroy(display->frame_source); // Distach from the GMainContext and GMainLoop, call the destroy callback and also clean up it's own resources
-    g_source_unref(display->frame_source); // Release the reference returned by the provider
+    g_source_destroy(display->frame_source); // Never dispatched again (if the driver is gone, the connector already destroyed it)
+    g_source_unref(display->frame_source); // Release the reference from `pspdisp_display_connect()`, the last one finalizes it
     display->frame_source = NULL;
     return true;
 }
@@ -204,37 +162,3 @@ void pspdisp_display_destroy(PSPdispDisplay *display) {
 
     g_free(display);
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * @brief The known display providers of this platform.
- *
- * Remember to call `pspdisp_display_providers_load()` before using them.
- * The file names are relative to the working directory, so run the program from the folder that has the `display/` directory (e.g. `build/`).
- */
-PSPdispDisplayProvider pspdisp_display_providers[] = {
-    #if defined(__linux__)
-        { .name = "EVDI", .file_name = "./display/provider/evdi.so", .symbol_name = "pspdisp_display_provider_evdi_provide", .module = NULL, .module_error = NULL, .provide = NULL },
-    #else
-        #error "Unsupported platform"
-    #endif
-};
-
-/**
- * @brief Load all the known providers, making them ready to use if possible (see `pspdisp_display_provider_load()`).
- */
-void pspdisp_display_providers_load() {
-    for (uint8_t i = 0; i < sizeof(pspdisp_display_providers) / sizeof(pspdisp_display_providers[0]); i++)
-        pspdisp_display_provider_load(&pspdisp_display_providers[i]);
-}
-
-/**
- * @brief Unload all the known providers, freeing resources and making them unfit to use (see `pspdisp_display_provider_unload()`).
- */
-void pspdisp_display_providers_unload() {
-    for (uint8_t i = 0; i < sizeof(pspdisp_display_providers) / sizeof(pspdisp_display_providers[0]); i++)
-        pspdisp_display_provider_unload(&pspdisp_display_providers[i]);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
