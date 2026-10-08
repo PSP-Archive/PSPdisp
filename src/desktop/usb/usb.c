@@ -99,7 +99,7 @@ void pspdisp_usb_update(PSPdispUSB *usb) {
  * @return `true` if the PSP is ready for the frames.
  */
 bool pspdisp_usb_handshake(PSPdispUSBDevice *device, GCancellable *cancellable) {
-    uint8_t buffer[12] = {};
+    uint8_t buffer[12] = {0};
     uint32_t magic = GUINT32_TO_LE(PSPDISP_USB_HOSTFS_MAGIC);
     uint32_t transferred = 0;
 

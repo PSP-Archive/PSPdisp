@@ -176,7 +176,7 @@ char *pspdisp_wlan_address(GSocket *socket) {
  */
 PSPdispWLANConnection *pspdisp_wlan_check(PSPdispWLAN *wlan, GSocket *socket, GCancellable *cancellable) {
     char *address = pspdisp_wlan_address(socket);
-    uint8_t received[PSPDISP_WLAN_PASSWORD_SIZE] = {};
+    uint8_t received[PSPDISP_WLAN_PASSWORD_SIZE] = {0};
     GError *error = NULL;
 
     g_socket_set_blocking(socket, FALSE);

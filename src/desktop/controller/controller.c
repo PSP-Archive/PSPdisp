@@ -93,7 +93,7 @@ void pspdisp_controller_destroy(PSPdispController *controller) {
  * @return The state of the gamepad.
  */
 PSPdispGamepadState pspdisp_controller_map(uint32_t buttons, uint8_t analog_x, uint8_t analog_y) {
-    PSPdispGamepadState state = {};
+    PSPdispGamepadState state = {0};
 
     for (size_t i = 0; i < G_N_ELEMENTS(pspdisp_controller_buttons); i++)
         if (buttons & pspdisp_controller_buttons[i].psp)

@@ -59,7 +59,7 @@ bool pspdisp_usb_is_psp(uint32_t vendor_id, uint32_t product_id) {
  *
  * @return The new watch, free it with `pspdisp_usb_watch_destroy()`, or `NULL` if the system can't tell the plugs.
  */
-PSPdispUSBWatch *pspdisp_usb_watch_new(void);
+PSPdispUSBWatch *pspdisp_usb_watch_new();
 
 /**
  * @brief Stop watching and free the watch, implemented by the platform.
