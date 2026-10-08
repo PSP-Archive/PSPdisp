@@ -67,6 +67,36 @@ typedef struct {
 } PSPdispDirtyRectangle;
 
 /**
+ * @brief Buttons of the PSP, combined with bitwise OR.
+ *
+ * Values match `PspCtrlButtons` from `pspctrl.h` (the bits of `SceCtrlData.Buttons`).
+ *
+ * The PSP app reads them in user mode, so it only sends the first 12, the others are only readable in kernel mode.
+ */
+typedef enum: uint32_t {
+    PSPDISP_BUTTON_SELECT   = 0x000001, // Select
+    PSPDISP_BUTTON_START    = 0x000008, // Start
+    PSPDISP_BUTTON_UP       = 0x000010, // Up of the directional pad
+    PSPDISP_BUTTON_RIGHT    = 0x000020, // Right of the directional pad
+    PSPDISP_BUTTON_DOWN     = 0x000040, // Down of the directional pad
+    PSPDISP_BUTTON_LEFT     = 0x000080, // Left of the directional pad
+    PSPDISP_BUTTON_L        = 0x000100, // Left shoulder button ("L trigger")
+    PSPDISP_BUTTON_R        = 0x000200, // Right shoulder button ("R trigger")
+    PSPDISP_BUTTON_TRIANGLE = 0x001000, // Triangle, the top face button
+    PSPDISP_BUTTON_CIRCLE   = 0x002000, // Circle, the right face button
+    PSPDISP_BUTTON_CROSS    = 0x004000, // Cross, the bottom face button
+    PSPDISP_BUTTON_SQUARE   = 0x008000, // Square, the left face button
+    PSPDISP_BUTTON_HOME     = 0x010000, // Home (kernel mode only)
+    PSPDISP_BUTTON_HOLD     = 0x020000, // Hold switch (kernel mode only)
+    PSPDISP_BUTTON_WLAN_UP  = 0x040000, // WLAN switch turned on (kernel mode only)
+    PSPDISP_BUTTON_REMOTE   = 0x080000, // Remote control connected (kernel mode only)
+    PSPDISP_BUTTON_VOLUP    = 0x100000, // Volume up (kernel mode only)
+    PSPDISP_BUTTON_VOLDOWN  = 0x200000, // Volume down (kernel mode only)
+    PSPDISP_BUTTON_SCREEN   = 0x400000, // Screen, the brightness button (kernel mode only)
+    PSPDISP_BUTTON_NOTE     = 0x800000, // Note, the sound button (kernel mode only)
+} PSPdispButton;
+
+/**
  * @brief PSP hardware generation.
  * 
  * Values match the return of `kuKernelGetModel()` from `kubridge.h`.
