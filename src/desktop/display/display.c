@@ -3,7 +3,7 @@
  *                                                   *
  * display.c - PSP display and its connector         *
  *                                                   *
- * Copyright © 2026 Net-0                            *
+ * Copyright © 2026 Arthur Neto                      *
  *****************************************************/
 
 #pragma once

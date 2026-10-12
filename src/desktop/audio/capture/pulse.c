@@ -3,7 +3,7 @@
  *                                                   *
  * pulse.c - Audio capture using PulseAudio (Linux)  *
  *                                                   *
- * Copyright © 2026 Net-0                            *
+ * Copyright © 2026 Arthur Neto                      *
  *****************************************************/
 
 /*

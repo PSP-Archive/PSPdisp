@@ -3,7 +3,7 @@
  *                                                   *
  * wlan.c - WLAN link with the PSP                   *
  *                                                   *
- * Copyright © 2026 Net-0                            *
+ * Copyright © 2026 Arthur Neto                      *
  *****************************************************/
 
 /*

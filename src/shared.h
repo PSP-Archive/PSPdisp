@@ -6,7 +6,7 @@
  *  This file shall not define symbols.              *
  *                                                   *
  * Copyright © 2008-2015 Jochen Schleu               *
- * Copyright © 2026 Net-0                            *
+ * Copyright © 2026 Arthur Neto                      *
  *****************************************************/
 
 #pragma once

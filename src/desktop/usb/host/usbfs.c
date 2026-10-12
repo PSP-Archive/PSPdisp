@@ -3,7 +3,7 @@
  *                                                   *
  * usbfs.c - USB host using udev and usbfs (Linux)   *
  *                                                   *
- * Copyright © 2026 Net-0                            *
+ * Copyright © 2026 Arthur Neto                      *
  *****************************************************/
 
 /*

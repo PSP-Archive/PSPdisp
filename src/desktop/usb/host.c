@@ -3,7 +3,7 @@
  *                                                   *
  * host.c - USB host of the platform                 *
  *                                                   *
- * Copyright © 2026 Net-0                            *
+ * Copyright © 2026 Arthur Neto                      *
  *****************************************************/
 
 /*
