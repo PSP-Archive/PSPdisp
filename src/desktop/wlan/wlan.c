@@ -36,6 +36,7 @@
  */
 typedef struct {
     GSocketListener *listener; // Listens on the port, on every network interface
+    GMutex password_mutex; // Guards `password`, which may change while a PSP connects (see `pspdisp_wlan_set_password()`)
     char password[PSPDISP_WLAN_PASSWORD_SIZE]; // The password, padded with zeros
     char *refused; // Address of the last PSP refused for its password (`NULL` if none), so it's told once while it connects again
 } PSPdispWLAN;
@@ -72,8 +73,26 @@ PSPdispWLAN *pspdisp_wlan_new(uint16_t port, const char *password, GError **erro
 
     PSPdispWLAN *wlan = g_new0(PSPdispWLAN, 1);
     wlan->listener = listener;
+    g_mutex_init(&wlan->password_mutex);
     memcpy(wlan->password, password, strlen(password)); // The rest stays zero
     return wlan;
+}
+
+/**
+ * @brief Change the password, for the next PSPs that connect (the ones connected stay), from any thread.
+ *
+ * @param wlan The server.
+ * @param password The password set on the PSP, at most `PSPDISP_WLAN_PASSWORD_SIZE` characters (`""` for none).
+ * @return `true` if it was changed, `false` if it's too long.
+ */
+bool pspdisp_wlan_set_password(PSPdispWLAN *wlan, const char *password) {
+    if (strlen(password) > PSPDISP_WLAN_PASSWORD_SIZE) return false;
+
+    g_mutex_lock(&wlan->password_mutex);
+    memset(wlan->password, 0, sizeof(wlan->password));
+    memcpy(wlan->password, password, strlen(password));
+    g_mutex_unlock(&wlan->password_mutex);
+    return true;
 }
 
 /**
@@ -84,6 +103,7 @@ PSPdispWLAN *pspdisp_wlan_new(uint16_t port, const char *password, GError **erro
 void pspdisp_wlan_destroy(PSPdispWLAN *wlan) {
     g_socket_listener_close(wlan->listener);
     g_object_unref(wlan->listener);
+    g_mutex_clear(&wlan->password_mutex);
     g_free(wlan->refused);
     g_free(wlan);
 }
@@ -194,7 +214,9 @@ PSPdispWLANConnection *pspdisp_wlan_check(PSPdispWLAN *wlan, GSocket *socket, GC
     memset(&received[length], 0, sizeof(received) - length);
 
     uint8_t difference = 0;
+    g_mutex_lock(&wlan->password_mutex);
     for (size_t i = 0; i < sizeof(received); i++) difference |= received[i] ^ (uint8_t) wlan->password[i];
+    g_mutex_unlock(&wlan->password_mutex);
 
     if (difference != 0) {
         if (g_strcmp0(wlan->refused, address) != 0) g_warning("%s(): the PSP at %s sent a wrong password, set the same on the desktop and on the PSP", __FUNCTION__, address);
