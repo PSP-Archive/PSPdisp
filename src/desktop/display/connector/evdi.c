@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <unistd.h>
 #include <evdi_lib.h>
 #include <drm/drm_fourcc.h>
 #include <drm/drm_mode.h>
@@ -18,6 +19,11 @@
 #define PSPDISP_EVDI_BUFFER_ID  1 // ID of the only buffer registered on EVDI, where the frames are grabbed into
 #define PSPDISP_EVDI_MAX_RECTS 16 // Max dirty rectangles EVDI gives per frame (`MAX_DIRTS` on the EVDI kernel module and library, not exported)
 #define PSPDISP_EVDI_FRAME_INTERVAL (G_USEC_PER_SEC / PSPDISP_DISPLAY_FREQUENCY) // Time between 2 frame requests, in microseconds
+
+// PSPDISP_EVDI_ADD_HELPER: path of the helper that loads the EVDI module if needed and creates an EVDI device, as root through pkexec (given by the build)
+#ifndef PSPDISP_EVDI_ADD_HELPER
+    #error "PSPDISP_EVDI_ADD_HELPER must be defined by the build, e.g. -DPSPDISP_EVDI_ADD_HELPER='\"/usr/local/lib/pspdisp/pspdisp-evdi-add\"'"
+#endif
 
 /**
  * @brief Display connector using EVDI, the source returned by `pspdisp_display_connector_connect()`.
@@ -240,10 +246,40 @@ static GSourceFuncs pspdisp_display_connector_evdi_source_funcs = {
 };
 
 /**
+ * @brief Create an EVDI device, which may ask the user for the root permission (through polkit).
+ *
+ * @return `true` if a device was created.
+ */
+bool pspdisp_display_connector_evdi_add_device() {
+    if (!g_file_test(PSPDISP_EVDI_ADD_HELPER, G_FILE_TEST_IS_EXECUTABLE)) {
+        g_warning("%s(): no free EVDI device, and %s isn't installed to create one (see the README)", __FUNCTION__, PSPDISP_EVDI_ADD_HELPER);
+        return false;
+    }
+
+    g_message("No free EVDI device, creating one (polkit asks for the password)");
+
+    // The helper also loads the EVDI module when it isn't loaded
+    const char *argv[] = { "pkexec", PSPDISP_EVDI_ADD_HELPER, NULL };
+    GError *error = NULL;
+    int status;
+
+    if (g_spawn_sync(NULL, (char **) argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, &status, &error) && g_spawn_check_wait_status(status, &error)) return true;
+
+    // pkexec exits with 126 when the password prompt is dismissed, and 127 when it's not allowed (e.g. no polkit agent out of the desktop session)
+    if (g_error_matches(error, G_SPAWN_EXIT_ERROR, 126)) g_warning("%s(): the password prompt was dismissed, no EVDI device was created", __FUNCTION__);
+    else if (g_error_matches(error, G_SPAWN_EXIT_ERROR, 127)) g_warning("%s(): not allowed to create an EVDI device (is there a polkit agent in the desktop session?)", __FUNCTION__);
+    else g_warning("%s(): failed to create an EVDI device: %s", __FUNCTION__, error->message);
+
+    g_error_free(error);
+    return false;
+}
+
+/**
  * @brief Create the virtual display on EVDI, and the source of its events.
  *
  * Opens an EVDI device (not attached to a parent device, like a USB dock), registers a buffer of the PSP resolution to grab the frames, and connects the display with the EDID.
  * The display is limited to the PSP pixel area, so the compositor only sets modes that fit the PSP.
+ * When no EVDI device is free, it may ask the user for the root permission to create one.
  *
  * @param edid The identification given to the computer.
  * @param frame_handler Handle each new frame.
@@ -252,6 +288,14 @@ static GSourceFuncs pspdisp_display_connector_evdi_source_funcs = {
  */
 GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler) {
     evdi_handle handle = evdi_open_attached_to_fixed(NULL, 0);
+
+    // libevdi may fail to open because:
+    //  1. Reached the max devices
+    //  2. There is no free device and can't create a new one due to not having root permission
+
+    // If it fails, we try to create a new device asking the user for the root permission, and then we try to open again and if it fails again, then it has probably reached the max devices (or maybe some rare case of concurrency between applications using EVDI? dunno, maybe sometime I should check it)
+    if (handle == EVDI_INVALID_HANDLE && geteuid() != 0 && pspdisp_display_connector_evdi_add_device())
+        handle = evdi_open_attached_to_fixed(NULL, 0);
     if (handle == EVDI_INVALID_HANDLE) {
         g_warning("%s(): failed to open an EVDI device", __FUNCTION__);
         return NULL;
