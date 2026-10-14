@@ -167,7 +167,7 @@ bool pspdisp_usb_watch_next(PSPdispUSBWatch *watch, bool *plugged, char **path) 
 /**
  * @brief Open a PSP through usbfs, and claim its interface.
  *
- * Linux already set the only configuration of the PSP when it was plugged, so only its interface is claimed, then set to its alternate setting 0, as the old desktop app does.
+ * Linux already set the only configuration of the PSP when it was plugged, so only its interface is claimed.
  *
  * @param path The usbfs file of the PSP (e.g. `/dev/bus/usb/001/005`).
  * @param error Where to tell why it failed.
@@ -205,9 +205,7 @@ PSPdispUSBDevice *pspdisp_usb_device_open(const char *path, GError **error) {
         return NULL;
     }
 
-    struct usbdevfs_setinterface setting = { .interface = PSPDISP_USB_INTERFACE, .altsetting = 0 };
-    ioctl(fd, USBDEVFS_SETINTERFACE, &setting);
-
+    // No SET_INTERFACE: the PSP drops the read it posts for the handshake magic on attach, and only posts another on the next attach (a replug)
     PSPdispUSBDevice *device = g_new0(PSPdispUSBDevice, 1);
     device->fd = fd;
     return device;

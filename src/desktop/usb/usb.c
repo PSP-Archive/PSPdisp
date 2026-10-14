@@ -35,7 +35,7 @@
  */
 typedef struct {
     PSPdispUSBWatch *watch; // Plugs and unplugs of the PSPs, from the USB host of the platform
-    GHashTable *plugged; // Paths of the plugged PSPs (`char *`), each with if why it can't be opened was told (`GINT_TO_POINTER()`)
+    GHashTable *plugged; // Paths of the plugged PSPs (`char *`), each with if why it doesn't connect was told (`GINT_TO_POINTER()`)
 } PSPdispUSB;
 
 /**
@@ -76,7 +76,7 @@ void pspdisp_usb_update(PSPdispUSB *usb) {
     char *path;
 
     while (pspdisp_usb_watch_next(usb->watch, &plugged, &path)) {
-        g_debug("PSP %s (%s)", plugged ? "plugged" : "unplugged", path);
+        g_message("PSP %s (%s)", plugged ? "plugged" : "unplugged", path);
 
         if (plugged && !g_hash_table_contains(usb->plugged, path)) {
             g_hash_table_insert(usb->plugged, path, GINT_TO_POINTER(false)); // Takes the path
@@ -96,9 +96,10 @@ void pspdisp_usb_update(PSPdispUSB *usb) {
  *
  * @param device The opened PSP.
  * @param cancellable Abort the handshake when cancelled (`NULL` to never abort it).
+ * @param error Where to tell why it failed, with the step that failed.
  * @return `true` if the PSP is ready for the frames.
  */
-bool pspdisp_usb_handshake(PSPdispUSBDevice *device, GCancellable *cancellable) {
+bool pspdisp_usb_handshake(PSPdispUSBDevice *device, GCancellable *cancellable, GError **error) {
     uint8_t buffer[12] = {0};
     uint32_t magic = GUINT32_TO_LE(PSPDISP_USB_HOSTFS_MAGIC);
     uint32_t transferred = 0;
@@ -106,22 +107,35 @@ bool pspdisp_usb_handshake(PSPdispUSBDevice *device, GCancellable *cancellable) 
     memcpy(buffer, &magic, sizeof(magic));
 
     // The magic
-    if (!pspdisp_usb_device_transfer(device, PSPDISP_USB_ENDPOINT_OUT, buffer, sizeof(magic), PSPDISP_USB_HANDSHAKE_TIMEOUT, cancellable, &transferred, NULL)) return false;
+    if (!pspdisp_usb_device_transfer(device, PSPDISP_USB_ENDPOINT_OUT, buffer, sizeof(magic), PSPDISP_USB_HANDSHAKE_TIMEOUT, cancellable, &transferred, error)) {
+        g_prefix_error(error, "it didn't take the handshake magic: ");
+        return false;
+    }
 
     // The rest of a frame header: it only goes through when the PSP already did the handshake (it's not reading while it sends the hello)
     bool done = pspdisp_usb_device_transfer(device, PSPDISP_USB_ENDPOINT_OUT, buffer, sizeof(buffer), PSPDISP_USB_HANDSHAKE_TIMEOUT, cancellable, &transferred, NULL);
 
     // The hello command, sent back as its response
     if (!done) {
-        if (!pspdisp_usb_device_transfer(device, PSPDISP_USB_ENDPOINT_IN, buffer, sizeof(buffer), PSPDISP_USB_HANDSHAKE_TIMEOUT, cancellable, &transferred, NULL) || transferred != sizeof(buffer)) return false;
-        if (!pspdisp_usb_device_transfer(device, PSPDISP_USB_ENDPOINT_OUT, buffer, sizeof(buffer), PSPDISP_USB_HANDSHAKE_TIMEOUT, cancellable, &transferred, NULL)) return false;
+        if (!pspdisp_usb_device_transfer(device, PSPDISP_USB_ENDPOINT_IN, buffer, sizeof(buffer), PSPDISP_USB_HANDSHAKE_TIMEOUT, cancellable, &transferred, error)) {
+            g_prefix_error(error, "it didn't send its hello: ");
+            return false;
+        }
+        if (transferred != sizeof(buffer)) {
+            g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "its hello was %u bytes instead of %zu", transferred, sizeof(buffer));
+            return false;
+        }
+        if (!pspdisp_usb_device_transfer(device, PSPDISP_USB_ENDPOINT_OUT, buffer, sizeof(buffer), PSPDISP_USB_HANDSHAKE_TIMEOUT, cancellable, &transferred, error)) {
+            g_prefix_error(error, "it didn't take its hello back: ");
+            return false;
+        }
     }
 
     // Drop what the PSP may still send (e.g. its hello, when the rest of the frame header was taken as its response), so the first response of the session isn't mixed with it
     uint8_t scrap[512];
     pspdisp_usb_device_transfer(device, PSPDISP_USB_ENDPOINT_IN, scrap, sizeof(scrap), PSPDISP_USB_DRAIN_TIMEOUT, cancellable, &transferred, NULL);
 
-    return !g_cancellable_is_cancelled(cancellable);
+    return !g_cancellable_set_error_if_cancelled(cancellable, error);
 }
 
 /**
@@ -129,7 +143,7 @@ bool pspdisp_usb_handshake(PSPdispUSBDevice *device, GCancellable *cancellable) 
  *
  * It tries the plugged PSPs, then sleeps until the system tells a plug or an unplug.
  * While a plugged PSP didn't answer, it's tried again every `PSPDISP_USB_RETRY_INTERVAL`.
- * Why a PSP can't be opened (e.g. the driver to install) is told once per plug.
+ * Why a PSP doesn't connect (e.g. it can't be opened, or the PSPdisp app doesn't answer) is told once per plug.
  *
  * @param usb The USB of the computer.
  * @param cancellable Abort the wait when cancelled (`NULL` to never abort it).
@@ -156,8 +170,11 @@ PSPdispUSBDevice *pspdisp_usb_connect(PSPdispUSB *usb, GCancellable *cancellable
                 if (!GPOINTER_TO_INT(told)) g_warning("%s(): %s", __FUNCTION__, error->message);
                 g_hash_table_iter_replace(&iter, GINT_TO_POINTER(true));
                 g_error_free(error);
-            } else if (!pspdisp_usb_handshake(device, cancellable)) {
-                g_debug("The PSP (%s) didn't answer the handshake", (const char *) path);
+            } else if (!pspdisp_usb_handshake(device, cancellable, &error)) {
+                // Not a warning, it may only be starting (e.g. the app still starts its driver)
+                if (!GPOINTER_TO_INT(told) && !g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) g_message("The PSP (%s) doesn't answer, tried again every %d ms (is the PSPdisp app running in USB mode?): %s", (const char *) path, PSPDISP_USB_RETRY_INTERVAL, error->message);
+                g_hash_table_iter_replace(&iter, GINT_TO_POINTER(true));
+                g_error_free(error);
                 pspdisp_usb_device_close(device);
                 device = NULL;
             } else {
