@@ -7,8 +7,7 @@
  *****************************************************/
 
 /*
- * The plugs and unplugs come from a udev monitor, told once udev handled the device, so its usbfs file is ready then.
- * Opening that file to write needs root, which the daemon has anyway for the virtual display.
+ * The plugs and unplugs come from a udev monitor, told once udev applied its rules, so the PSP is already accessible then (with the udev rule `daemon/60-pspdisp.rules`).
  * The data goes through usbfs (`/dev/bus/usb/BBB/DDD`), as URBs submitted to the kernel and reaped once they complete, so a transfer waits with `g_poll()` and can be aborted.
  */
 
@@ -180,7 +179,7 @@ PSPdispUSBDevice *pspdisp_usb_device_open(const char *path, GError **error) {
     if (fd < 0) {
         int code = errno;
 
-        if (code == EACCES || code == EPERM) g_set_error(error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED, "the PSP is plugged (%s), but there's no access to it, the daemon must run as root", path);
+        if (code == EACCES || code == EPERM) g_set_error(error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED, "the PSP is plugged (%s), but there's no access to it, install the udev rule (sudo make install) then plug the PSP again", path);
         else g_set_error(error, G_IO_ERROR, g_io_error_from_errno(code), "failed to open the PSP (%s): %s", path, g_strerror(code));
         return NULL;
     }
