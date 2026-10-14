@@ -3,7 +3,7 @@
  *                                                   *
  * uinput.c - Virtual gamepad using uinput (Linux)   *
  *                                                   *
- * Copyright © 2026 Net-0                            *
+ * Copyright © 2026 Arthur Neto                      *
  *****************************************************/
 
 /*
@@ -99,7 +99,7 @@ PSPdispGamepad *pspdisp_gamepad_new(const char *name, GError **error) {
     if (fd < 0) {
         int code = errno;
 
-        if (code == EACCES || code == EPERM) g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "no access to /dev/uinput, run as root");
+        if (code == EACCES || code == EPERM) g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "no access to /dev/uinput, install the udev rule (sudo make install) or join the input group");
         else if (code == ENOENT || code == ENODEV) g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "/dev/uinput is missing, load the uinput kernel module (modprobe uinput)");
         else g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "failed to open /dev/uinput: %s", g_strerror(code));
         return NULL;

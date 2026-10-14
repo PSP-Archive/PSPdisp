@@ -684,11 +684,9 @@ PSPdispEDIDDescriptor pspdisp_display_edid_text_descriptor(PSPdispEDIDDescriptor
     PSPdispEDIDDisplayDescriptor descriptor = { .tag = tag };
     const uint8_t size = sizeof(descriptor.text);
 
-    uint8_t length = 0;
-    for (; length < size && text[length] != '\0'; length++); // Just count up to the max allowed size
-
     // Copy the text up to the max allowed size
-    memcpy(descriptor.text, text, length);
+    uint8_t length = 0;
+    for (; length < size && text[length] != '\0'; length++) descriptor.text[length] = text[length];
 
     // Put the termination '\n' and maybe the padding ' '
     if (length < size) {
@@ -697,178 +695,6 @@ PSPdispEDIDDescriptor pspdisp_display_edid_text_descriptor(PSPdispEDIDDescriptor
     }
 
     return (PSPdispEDIDDescriptor) { .display = descriptor };
-}
-
-/**
- * @brief Get the model number of a PSP, as printed on its label (e.g. "PSP-3004"), to name its display.
- *
- * The model number is the series of the generation (e.g. PSP-3000 for the 03g, 04g, 07g and 09g boards) with the region in its last digits.
- *
- * Names follow that pattern even for combinations that were never sold (e.g. "PSP-E1001", the PSP-E1000 was only sold in Europe).
- *
- * Development units get the model number of the first kit of their kind (e.g. "DTP-T1000" for a DevKit), whatever the generation.
- *
- * Never released generations get "?" as their series (e.g. "PSP-?001"), and unknown regions get the generation instead (e.g. "PSP-01g?").
- *
- * @param model The PSP generation.
- * @param region The PSP sales region.
- * @return The model number, a static string short enough for an EDID text descriptor (up to 13 characters).
- */
-const char *pspdisp_display_edid_name(PSPdispModel model, PSPdispRegion region) {
-    switch (region) {
-        case PSPDISP_REGION_JAPAN:
-            switch (model) {
-                case PSPDISP_MODEL_01G: return "PSP-1000";
-                case PSPDISP_MODEL_02G: return "PSP-2000";
-                case PSPDISP_MODEL_03G:
-                case PSPDISP_MODEL_04G:
-                case PSPDISP_MODEL_07G:
-                case PSPDISP_MODEL_09G: return "PSP-3000";
-                case PSPDISP_MODEL_05G: return "PSP-N1000";
-                case PSPDISP_MODEL_11G: return "PSP-E1000";
-                default: return "PSP-?000"; // Never released
-            }
-        case PSPDISP_REGION_NORTH_AMERICA:
-            switch (model) {
-                case PSPDISP_MODEL_01G: return "PSP-1001";
-                case PSPDISP_MODEL_02G: return "PSP-2001";
-                case PSPDISP_MODEL_03G:
-                case PSPDISP_MODEL_04G:
-                case PSPDISP_MODEL_07G:
-                case PSPDISP_MODEL_09G: return "PSP-3001";
-                case PSPDISP_MODEL_05G: return "PSP-N1001";
-                case PSPDISP_MODEL_11G: return "PSP-E1001";
-                default: return "PSP-?001"; // Never released
-            }
-        case PSPDISP_REGION_AUSTRALIA:
-            switch (model) {
-                case PSPDISP_MODEL_01G: return "PSP-1002";
-                case PSPDISP_MODEL_02G: return "PSP-2002";
-                case PSPDISP_MODEL_03G:
-                case PSPDISP_MODEL_04G:
-                case PSPDISP_MODEL_07G:
-                case PSPDISP_MODEL_09G: return "PSP-3002";
-                case PSPDISP_MODEL_05G: return "PSP-N1002";
-                case PSPDISP_MODEL_11G: return "PSP-E1002";
-                default: return "PSP-?002"; // Never released
-            }
-        case PSPDISP_REGION_UK:
-            switch (model) {
-                case PSPDISP_MODEL_01G: return "PSP-1003";
-                case PSPDISP_MODEL_02G: return "PSP-2003";
-                case PSPDISP_MODEL_03G:
-                case PSPDISP_MODEL_04G:
-                case PSPDISP_MODEL_07G:
-                case PSPDISP_MODEL_09G: return "PSP-3003";
-                case PSPDISP_MODEL_05G: return "PSP-N1003";
-                case PSPDISP_MODEL_11G: return "PSP-E1003";
-                default: return "PSP-?003"; // Never released
-            }
-        case PSPDISP_REGION_EUROPE:
-            switch (model) {
-                case PSPDISP_MODEL_01G: return "PSP-1004";
-                case PSPDISP_MODEL_02G: return "PSP-2004";
-                case PSPDISP_MODEL_03G:
-                case PSPDISP_MODEL_04G:
-                case PSPDISP_MODEL_07G:
-                case PSPDISP_MODEL_09G: return "PSP-3004";
-                case PSPDISP_MODEL_05G: return "PSP-N1004";
-                case PSPDISP_MODEL_11G: return "PSP-E1004";
-                default: return "PSP-?004"; // Never released
-            }
-        case PSPDISP_REGION_KOREA:
-            switch (model) {
-                case PSPDISP_MODEL_01G: return "PSP-1005";
-                case PSPDISP_MODEL_02G: return "PSP-2005";
-                case PSPDISP_MODEL_03G:
-                case PSPDISP_MODEL_04G:
-                case PSPDISP_MODEL_07G:
-                case PSPDISP_MODEL_09G: return "PSP-3005";
-                case PSPDISP_MODEL_05G: return "PSP-N1005";
-                case PSPDISP_MODEL_11G: return "PSP-E1005";
-                default: return "PSP-?005"; // Never released
-            }
-        case PSPDISP_REGION_HONG_KONG:
-            switch (model) {
-                case PSPDISP_MODEL_01G: return "PSP-1006";
-                case PSPDISP_MODEL_02G: return "PSP-2006";
-                case PSPDISP_MODEL_03G:
-                case PSPDISP_MODEL_04G:
-                case PSPDISP_MODEL_07G:
-                case PSPDISP_MODEL_09G: return "PSP-3006";
-                case PSPDISP_MODEL_05G: return "PSP-N1006";
-                case PSPDISP_MODEL_11G: return "PSP-E1006";
-                default: return "PSP-?006"; // Never released
-            }
-        case PSPDISP_REGION_TAIWAN:
-            switch (model) {
-                case PSPDISP_MODEL_01G: return "PSP-1007";
-                case PSPDISP_MODEL_02G: return "PSP-2007";
-                case PSPDISP_MODEL_03G:
-                case PSPDISP_MODEL_04G:
-                case PSPDISP_MODEL_07G:
-                case PSPDISP_MODEL_09G: return "PSP-3007";
-                case PSPDISP_MODEL_05G: return "PSP-N1007";
-                case PSPDISP_MODEL_11G: return "PSP-E1007";
-                default: return "PSP-?007"; // Never released
-            }
-        case PSPDISP_REGION_RUSSIA:
-            switch (model) {
-                case PSPDISP_MODEL_01G: return "PSP-1008";
-                case PSPDISP_MODEL_02G: return "PSP-2008";
-                case PSPDISP_MODEL_03G:
-                case PSPDISP_MODEL_04G:
-                case PSPDISP_MODEL_07G:
-                case PSPDISP_MODEL_09G: return "PSP-3008";
-                case PSPDISP_MODEL_05G: return "PSP-N1008";
-                case PSPDISP_MODEL_11G: return "PSP-E1008";
-                default: return "PSP-?008"; // Never released
-            }
-        case PSPDISP_REGION_CHINA:
-            switch (model) {
-                case PSPDISP_MODEL_01G: return "PSP-1009";
-                case PSPDISP_MODEL_02G: return "PSP-2009";
-                case PSPDISP_MODEL_03G:
-                case PSPDISP_MODEL_04G:
-                case PSPDISP_MODEL_07G:
-                case PSPDISP_MODEL_09G: return "PSP-3009";
-                case PSPDISP_MODEL_05G: return "PSP-N1009";
-                case PSPDISP_MODEL_11G: return "PSP-E1009";
-                default: return "PSP-?009"; // Never released
-            }
-        case PSPDISP_REGION_MEXICO:
-            switch (model) {
-                case PSPDISP_MODEL_01G: return "PSP-1010";
-                case PSPDISP_MODEL_02G: return "PSP-2010";
-                case PSPDISP_MODEL_03G:
-                case PSPDISP_MODEL_04G:
-                case PSPDISP_MODEL_07G:
-                case PSPDISP_MODEL_09G: return "PSP-3010";
-                case PSPDISP_MODEL_05G: return "PSP-N1010";
-                case PSPDISP_MODEL_11G: return "PSP-E1010";
-                default: return "PSP-?010"; // Never released
-            }
-        case PSPDISP_REGION_TEST_UNIT:  return "PSP-0000";
-        case PSPDISP_REGION_DEVKIT:     return "DTP-T1000";
-        case PSPDISP_REGION_TESTKIT:    return "DTP-H1500";
-        default: break;
-    }
-
-    // Unknown region
-    switch (model) {
-        case PSPDISP_MODEL_01G: return "PSP-01g?";
-        case PSPDISP_MODEL_02G: return "PSP-02g?";
-        case PSPDISP_MODEL_03G: return "PSP-03g?";
-        case PSPDISP_MODEL_04G: return "PSP-04g?";
-        case PSPDISP_MODEL_05G: return "PSP-05g?";
-        case PSPDISP_MODEL_06G: return "PSP-06g?";
-        case PSPDISP_MODEL_07G: return "PSP-07g?";
-        case PSPDISP_MODEL_08G: return "PSP-08g?";
-        case PSPDISP_MODEL_09G: return "PSP-09g?";
-        case PSPDISP_MODEL_10G: return "PSP-10g?";
-        case PSPDISP_MODEL_11G: return "PSP-11g?";
-    }
-    return "PSP-?"; // Unknown model
 }
 
 /**
@@ -942,7 +768,7 @@ PSPdispEDIDManufactureDate pspdisp_display_edid_release_date(PSPdispModel model,
  *
  * It's an EDID 1.4 base block (no extension blocks) of a digital display with only the PSP native mode: 480x272 at 59.94 Hz (9 MHz pixel clock), sRGB colours and DPMS support.
  *
- * The model gives the screen size (3.8" on the PSP Go, 4.3" on the others), and with the region the product name (e.g. "PSP-3004").
+ * The model gives the screen size (3.8" on the PSP Go, 4.3" on the others), and with the region the product name (see `pspdisp_psp_name()`).
  *
  * The model and the region also give the manufacture date, as the release date (see `pspdisp_display_edid_release_date()`).
  *
@@ -988,7 +814,7 @@ PSPdispEDID pspdisp_display_edid_new(PSPdispModel model, PSPdispRegion region, u
                     .timing_data = { '\n', ' ', ' ', ' ', ' ', ' ', ' ' },
                 },
             } },
-            pspdisp_display_edid_text_descriptor(PSPDISP_EDID_TAG_PRODUCT_NAME, pspdisp_display_edid_name(model, region)),
+            pspdisp_display_edid_text_descriptor(PSPDISP_EDID_TAG_PRODUCT_NAME, pspdisp_psp_name(model, region)),
             pspdisp_display_edid_text_descriptor(PSPDISP_EDID_TAG_ALPHANUMERIC_DATA, "PSPdisp"), // Just some extra descriptor info ;V
         },
         .extension_count = 0,

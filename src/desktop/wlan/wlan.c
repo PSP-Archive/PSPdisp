@@ -192,7 +192,7 @@ char *pspdisp_wlan_address(GSocket *socket) {
  * @param wlan The server.
  * @param socket The accepted connection, closed when the password doesn't match.
  * @param cancellable Abort the wait for the password when cancelled.
- * @return The connection, or `NULL` if the password didn't come or didn't match.
+ * @return The connection, or `NULL` if the password check failed.
  */
 PSPdispWLANConnection *pspdisp_wlan_check(PSPdispWLAN *wlan, GSocket *socket, GCancellable *cancellable) {
     char *address = pspdisp_wlan_address(socket);

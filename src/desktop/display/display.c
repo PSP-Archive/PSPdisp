@@ -85,7 +85,7 @@ gpointer pspdisp_display_thread_func(PSPdispDisplay *display) {
  * @param serial_number The serial number of the display, not 0 (see `pspdisp_display_edid_new()`).
  * @param frame_handler Handle each new frame, called on the display thread (can't be `NULL`).
  * @param dpms_handler Handle each DPMS change, called on the display thread (can't be `NULL`).
- * @return The new display, free it with `pspdisp_display_destroy()`, or `NULL` when a handler is `NULL`.
+ * @return The new display, free it with `pspdisp_display_destroy()`, or `NULL` if an argument is invalid.
  */
 PSPdispDisplay *pspdisp_display_new(PSPdispModel model, PSPdispRegion region, uint32_t serial_number, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler) {
     g_return_val_if_fail(frame_handler != NULL, NULL);

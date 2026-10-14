@@ -3,7 +3,7 @@
  *                                                   *
  * controller.c - PSP as a gamepad of the computer   *
  *                                                   *
- * Copyright © 2026 Net-0                            *
+ * Copyright © 2026 Arthur Neto                      *
  *****************************************************/
 
 /*
