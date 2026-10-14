@@ -1,66 +1,95 @@
 /*****************************************************
  * SPDX-License-Identifier: BSD-3-Clause             *
  *                                                   *
- * audio.c - Capture of the desktop sound            *
+ * audio.c - PSP audio and its connector             *
  *                                                   *
  * Copyright © 2026 Arthur Neto                      *
  *****************************************************/
-
-/*
- * The audio capture records the sound the desktop plays (not a microphone), in chunks to be sent to the PSP.
- *
- * Its implementation varies with the platform, chosen at compile time: PulseAudio on Linux (`capture/pulse.c`), which also works on PipeWire through pipewire-pulse, and WASAPI on Windows (`capture/wasapi.c`).
- * The samples are always 16-bit signed little-endian, stereo and interleaved (left, right), at the asked sample rate.
- */
 
 #pragma once
 
 #include <stdint.h>
 #include <glib.h>
+#include "./connector.c"
 
 /**
- * @brief Type of a function pointer to handle a chunk of audio.
+ * @brief Audio interface whose sound is going to be sent to PSP.
  *
- * Called by the audio capture on its own thread, with each full chunk.
- * The chunk is owned by the capture and only valid until the handler returns, so copy what must outlive the call.
- *
- * @param samples The samples, 16-bit signed, stereo and interleaved (left, right).
- * @param size The size of the chunk in bytes, the one asked on `pspdisp_audio_new()`.
+ * While it's connected, the sound for the PSP comes to its handler in chunks.
+ * Where that sound comes from depends on the implementation of the connector of each platform.
  */
-typedef void (*PSPdispAudioHandler) (const int16_t *samples, uint32_t size);
+typedef struct {
+    PSPdispModel model; // PSP generation, with the region its name shown to the user (see `pspdisp_psp_name()`)
+    PSPdispRegion region; // PSP sales region
+    PSPdispAudioHandler audio_handler; // Handle each full chunk
+    uint32_t sample_rate; // Sample rate of the chunks in Hz
+    uint32_t chunk_size; // Size of each chunk in bytes
+    PSPdispAudioConnector *connector; // The connector (`NULL` while disconnected)
+} PSPdispAudio;
 
 /**
- * @brief Capture of the sound the desktop plays.
+ * @brief Create a new audio, not connected yet (see `pspdisp_audio_connect()`).
  *
- * Its platform implementation (included below, e.g. `capture/pulse.c`) declares this struct with the data it needs, and defines `PSPDISP_AUDIO_CAPTURE_NAME`.
- */
-typedef struct PSPdispAudio PSPdispAudio;
-
-/**
- * @brief Start capturing the sound the desktop plays, implemented by the platform.
- *
- * The platform resamples the sound to the asked sample rate, and mixes it to stereo.
- *
+ * @param model The PSP generation.
+ * @param region The PSP sales region.
  * @param sample_rate The sample rate in Hz (e.g. 22050).
  * @param chunk_size The size of each chunk in bytes, a multiple of 4 (a stereo frame of 16-bit samples).
- * @param handler Handle each full chunk, called on the capture thread.
- * @return The new capture, free it with `pspdisp_audio_destroy()`, or `NULL` if it failed (e.g. there's no sound server).
+ * @param audio_handler Handle each full chunk, called on the connector thread (can't be `NULL`).
+ * @return The new audio, free it with `pspdisp_audio_destroy()`, or `NULL` if an argument is invalid.
  */
-PSPdispAudio *pspdisp_audio_new(uint32_t sample_rate, uint32_t chunk_size, PSPdispAudioHandler handler);
+PSPdispAudio *pspdisp_audio_new(PSPdispModel model, PSPdispRegion region, uint32_t sample_rate, uint32_t chunk_size, PSPdispAudioHandler audio_handler) {
+    g_return_val_if_fail(chunk_size > 0 && chunk_size % 4 == 0, NULL);
+    g_return_val_if_fail(audio_handler != NULL, NULL);
+
+    PSPdispAudio *audio = g_new(PSPdispAudio, 1);
+    audio->model = model;
+    audio->region = region;
+    audio->audio_handler = audio_handler;
+    audio->sample_rate = sample_rate;
+    audio->chunk_size = chunk_size;
+    audio->connector = NULL;
+    return audio;
+}
 
 /**
- * @brief Stop capturing and free the capture, implemented by the platform.
+ * @brief Connect the audio, enabling it as a device: the connector starts handing the chunks of the sound for the PSP.
  *
- * After it returns, the handler is never called again.
- * It must not be called from the handler, it waits for the capture thread.
- *
- * @param audio The capture to destroy.
+ * @param audio The audio to connect.
+ * @return `true` if it was connected now, `false` if it was already connected or the connector failed.
  */
-void pspdisp_audio_destroy(PSPdispAudio *audio);
+bool pspdisp_audio_connect(PSPdispAudio *audio) {
+    if (audio->connector != NULL) return false; // Already connected
 
-// The audio capture of this platform, it declares `PSPdispAudio`, implements its functions and defines `PSPDISP_AUDIO_CAPTURE_NAME`
-#if defined(__linux__)
-    #include "./capture/pulse.c"
-#else
-    #error "Unsupported platform"
-#endif
+    audio->connector = pspdisp_audio_connector_connect(audio->model, audio->region, audio->sample_rate, audio->chunk_size, audio->audio_handler);
+    return audio->connector != NULL;
+}
+
+/**
+ * @brief Disconnect the audio, disabling it as a device: no chunk comes after it.
+ *
+ * The connector undoes what it set up on the computer, which depends on the implementation of each platform.
+ * It must not be called from the handler, it waits for the connector thread.
+ *
+ * @param audio The audio to disconnect.
+ * @return `true` if it was disconnected now, `false` if it was already disconnected.
+ */
+bool pspdisp_audio_disconnect(PSPdispAudio *audio) {
+    if (audio->connector == NULL) return false; // Already disconnected
+
+    pspdisp_audio_connector_disconnect(audio->connector);
+    audio->connector = NULL;
+    return true;
+}
+
+/**
+ * @brief Destroy the audio, freeing all resources and making it forever unusable.
+ *
+ * Disconnects it (if connected), so it must not be called from the handler either.
+ *
+ * @param audio The audio to destroy.
+ */
+void pspdisp_audio_destroy(PSPdispAudio *audio) {
+    pspdisp_audio_disconnect(audio);
+
+    g_free(audio);
+}
