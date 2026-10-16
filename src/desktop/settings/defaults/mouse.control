@@ -1,0 +1,145 @@
+; A sample control file that emulates a mouse
+; through the PSP.
+;
+; square = left mouse button
+; cross = right mouse button
+; triangle = double click
+; circle = middle mouse button
+; left trigger = wheel up
+; right trigger = wheel down
+; dpad = move cursor by 2 pixels
+; analog stick = move cursor in analog fashion,
+;                can be changed by altering the
+;                values in [AnalogStickMapping]
+;
+; START = open PSPdisp menu
+; SELECT = open onscreen keyboard
+
+[Info]
+Version=0.5.0.0
+
+[General]
+Name=Mouse emulation
+MapAnalogToDPad=0
+AnalogDeadZone=60
+EnableOSK=1
+
+[AnalogStickMapping]
+Section1=1
+Section2=2
+Section3=3
+Section4=5
+Section5=8
+Maximum=16
+
+
+[TRIANGLE]
+Event=Mouse
+Scancode=
+Typematic=
+Button=DoubleClick
+
+[CIRCLE]
+Event=Mouse
+Scancode=
+Typematic=
+Button=Middle
+
+[CROSS]
+Event=Mouse
+Scancode=
+Typematic=
+Button=Right
+
+[SQUARE]
+Event=Mouse
+Scancode=
+Typematic=
+Button=Left
+
+[SELECT]
+Event=
+Scancode=
+Typematic=
+Button=
+
+[START]
+Event=PSPdisp
+Action=OpenMenu
+Scancode=
+Typematic=
+Button=
+
+[HOME]
+Event=
+Scancode=
+Typematic=
+Button=
+
+[ANALOG_UP]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveAnalog
+MoveByPixels=16
+
+[ANALOG_RIGHT]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveAnalog
+MoveByPixels=16
+
+[ANALOG_DOWN]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveAnalog
+MoveByPixels=16
+
+[ANALOG_LEFT]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveAnalog
+MoveByPixels=16
+
+[DPAD_UP]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveUp
+MoveByPixels=2
+
+[DPAD_RIGHT]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveRight
+MoveByPixels=2
+
+[DPAD_DOWN]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveDown
+MoveByPixels=2
+
+[DPAD_LEFT]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveLeft
+MoveByPixels=2
+
+[LEFT_TRIGGER]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=WheelUp
+
+[RIGHT_TRIGGER]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=WheelDown

@@ -1,0 +1,149 @@
+; A sample control file that can be used to control a
+; typical first person shooter game.
+;
+; Movement controls:
+; square = A
+; cross = S
+; triangle = W
+; circle = D
+;
+; left trigger = right mouse click
+; right trigger = left mouse click
+; analog stick = mouse control
+;
+; DPAD up = spacebar (jump)
+; DPAD down = left ctrl (crouch)
+; DAPD left = mouse wheel down (previous weapon)
+; DPAD right = mouse wheel up (next weapon)
+;
+; START = unassigned
+; SELECT = unassigned
+
+[Info]
+Version=0.6.0.0
+
+[General]
+Name=Generic FPS
+MapAnalogToDPad=0
+AnalogDeadZone=60
+EnableOSK=0
+
+[AnalogStickMapping]
+Section1=1
+Section2=2
+Section3=3
+Section4=5
+Section5=6
+Maximum=7
+
+
+[TRIANGLE]
+Event=Keyboard
+Scancode=11
+Typematic=0
+Button=
+
+[CIRCLE]
+Event=Keyboard
+Scancode=20
+Typematic=0
+Button=
+
+[CROSS]
+Event=Keyboard
+Scancode=1F
+Typematic=0
+Button=
+
+[SQUARE]
+Event=Keyboard
+Scancode=1E
+Typematic=0
+Button=
+
+[SELECT]
+Event=
+Scancode=
+Typematic=
+Button=
+
+[START]
+Event=
+Action=
+Scancode=
+Typematic=
+Button=
+
+[HOME]
+Event=
+Scancode=
+Typematic=
+Button=
+
+[ANALOG_UP]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveAnalog
+MoveByPixels=
+
+[ANALOG_RIGHT]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveAnalog
+MoveByPixels=
+
+[ANALOG_DOWN]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveAnalog
+MoveByPixels=
+
+[ANALOG_LEFT]
+Event=Mouse
+Scancode=
+Typematic=1
+Button=MouseMoveAnalog
+MoveByPixels=
+
+[DPAD_UP]
+Event=Keyboard
+Scancode=39
+Typematic=0
+Button=
+MoveByPixels=
+
+[DPAD_RIGHT]
+Event=Mouse
+Scancode=
+Typematic=0
+Button=WheelDown
+MoveByPixels=
+
+[DPAD_DOWN]
+Event=Keyboard
+Scancode=1D
+Typematic=0
+Button=
+MoveByPixels=
+
+[DPAD_LEFT]
+Event=Mouse
+Scancode=
+Typematic=0
+Button=WheelUp
+MoveByPixels=
+
+[LEFT_TRIGGER]
+Event=Mouse
+Scancode=
+Typematic=0
+Button=Right
+
+[RIGHT_TRIGGER]
+Event=Mouse
+Scancode=
+Typematic=0
+Button=Left
