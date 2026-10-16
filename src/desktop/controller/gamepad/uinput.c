@@ -99,16 +99,21 @@ PSPdispGamepad *pspdisp_gamepad_new(const char *name, GError **error) {
     if (fd < 0) {
         int code = errno;
 
-        if (code == EACCES || code == EPERM) g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "no access to /dev/uinput, install the udev rule (sudo make install) or join the input group");
-        else if (code == ENOENT || code == ENODEV) g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "/dev/uinput is missing, load the uinput kernel module (modprobe uinput)");
-        else g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "failed to open /dev/uinput: %s", g_strerror(code));
+        if (code == EACCES || code == EPERM)
+            g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "no access to /dev/uinput, install the udev rule (sudo make install) or join the input group");
+        else if (code == ENOENT || code == ENODEV)
+            g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "/dev/uinput is missing, load the uinput kernel module (modprobe uinput)");
+        else
+            g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(code), "failed to open /dev/uinput: %s", g_strerror(code));
         return NULL;
     }
 
     bool done = ioctl(fd, UI_SET_EVBIT, EV_KEY) == 0 && ioctl(fd, UI_SET_EVBIT, EV_ABS) == 0;
 
-    for (size_t i = 0; done && i < G_N_ELEMENTS(pspdisp_gamepad_uinput_buttons); i++) done = ioctl(fd, UI_SET_KEYBIT, pspdisp_gamepad_uinput_buttons[i].code) == 0;
-    for (size_t i = 0; done && i < G_N_ELEMENTS(pspdisp_gamepad_uinput_axes); i++) done = ioctl(fd, UI_ABS_SETUP, &pspdisp_gamepad_uinput_axes[i]) == 0;
+    for (size_t i = 0; done && i < G_N_ELEMENTS(pspdisp_gamepad_uinput_buttons); i++)
+        done = ioctl(fd, UI_SET_KEYBIT, pspdisp_gamepad_uinput_buttons[i].code) == 0;
+    for (size_t i = 0; done && i < G_N_ELEMENTS(pspdisp_gamepad_uinput_axes); i++)
+        done = ioctl(fd, UI_ABS_SETUP, &pspdisp_gamepad_uinput_axes[i]) == 0;
 
     struct uinput_setup setup = {
         .id = { .bustype = BUS_USB, .vendor = PSPDISP_GAMEPAD_UINPUT_VENDOR_ID, .product = PSPDISP_GAMEPAD_UINPUT_PRODUCT_ID, .version = PSPDISP_GAMEPAD_UINPUT_VERSION },
@@ -145,16 +150,21 @@ bool pspdisp_gamepad_update(PSPdispGamepad *gamepad, const PSPdispGamepadState *
         PSPdispGamepadButton button = pspdisp_gamepad_uinput_buttons[i].button;
         bool pressed = (state->buttons & button) != 0;
 
-        if (button != 0 && pressed != ((old->buttons & button) != 0)) events[count++] = (struct input_event) { .type = EV_KEY, .code = pspdisp_gamepad_uinput_buttons[i].code, .value = pressed };
+        if (button != 0 && pressed != ((old->buttons & button) != 0))
+            events[count++] = (struct input_event) { .type = EV_KEY, .code = pspdisp_gamepad_uinput_buttons[i].code, .value = pressed };
     }
 
     int32_t hat_x = pspdisp_gamepad_uinput_hat(state->buttons, PSPDISP_GAMEPAD_BUTTON_DPAD_LEFT, PSPDISP_GAMEPAD_BUTTON_DPAD_RIGHT);
     int32_t hat_y = pspdisp_gamepad_uinput_hat(state->buttons, PSPDISP_GAMEPAD_BUTTON_DPAD_UP, PSPDISP_GAMEPAD_BUTTON_DPAD_DOWN);
 
-    if (hat_x != pspdisp_gamepad_uinput_hat(old->buttons, PSPDISP_GAMEPAD_BUTTON_DPAD_LEFT, PSPDISP_GAMEPAD_BUTTON_DPAD_RIGHT)) events[count++] = (struct input_event) { .type = EV_ABS, .code = ABS_HAT0X, .value = hat_x };
-    if (hat_y != pspdisp_gamepad_uinput_hat(old->buttons, PSPDISP_GAMEPAD_BUTTON_DPAD_UP, PSPDISP_GAMEPAD_BUTTON_DPAD_DOWN)) events[count++] = (struct input_event) { .type = EV_ABS, .code = ABS_HAT0Y, .value = hat_y };
-    if (state->left_x != old->left_x) events[count++] = (struct input_event) { .type = EV_ABS, .code = ABS_X, .value = state->left_x };
-    if (state->left_y != old->left_y) events[count++] = (struct input_event) { .type = EV_ABS, .code = ABS_Y, .value = state->left_y };
+    if (hat_x != pspdisp_gamepad_uinput_hat(old->buttons, PSPDISP_GAMEPAD_BUTTON_DPAD_LEFT, PSPDISP_GAMEPAD_BUTTON_DPAD_RIGHT))
+        events[count++] = (struct input_event) { .type = EV_ABS, .code = ABS_HAT0X, .value = hat_x };
+    if (hat_y != pspdisp_gamepad_uinput_hat(old->buttons, PSPDISP_GAMEPAD_BUTTON_DPAD_UP, PSPDISP_GAMEPAD_BUTTON_DPAD_DOWN))
+        events[count++] = (struct input_event) { .type = EV_ABS, .code = ABS_HAT0Y, .value = hat_y };
+    if (state->left_x != old->left_x)
+        events[count++] = (struct input_event) { .type = EV_ABS, .code = ABS_X, .value = state->left_x };
+    if (state->left_y != old->left_y)
+        events[count++] = (struct input_event) { .type = EV_ABS, .code = ABS_Y, .value = state->left_y };
 
     if (count == 0) return true;
 

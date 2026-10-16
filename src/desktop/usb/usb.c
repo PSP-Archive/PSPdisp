@@ -83,7 +83,8 @@ void pspdisp_usb_update(PSPdispUSB *usb) {
             continue;
         }
 
-        if (!plugged) g_hash_table_remove(usb->plugged, path);
+        if (!plugged)
+            g_hash_table_remove(usb->plugged, path);
         g_free(path);
     }
 }
@@ -167,12 +168,14 @@ PSPdispUSBDevice *pspdisp_usb_connect(PSPdispUSB *usb, GCancellable *cancellable
             device = pspdisp_usb_device_open(path, &error);
 
             if (device == NULL) {
-                if (!GPOINTER_TO_INT(told)) g_warning("%s(): %s", __FUNCTION__, error->message);
+                if (!GPOINTER_TO_INT(told))
+                    g_warning("%s(): %s", __FUNCTION__, error->message);
                 g_hash_table_iter_replace(&iter, GINT_TO_POINTER(true));
                 g_error_free(error);
             } else if (!pspdisp_usb_handshake(device, cancellable, &error)) {
                 // Not a warning, it may only be starting (e.g. the app still starts its driver)
-                if (!GPOINTER_TO_INT(told) && !g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) g_message("The PSP (%s) doesn't answer, tried again every %d ms (is the PSPdisp app running in USB mode?): %s", (const char *) path, PSPDISP_USB_RETRY_INTERVAL, error->message);
+                if (!GPOINTER_TO_INT(told) && !g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+                    g_message("The PSP (%s) doesn't answer, tried again every %d ms (is the PSPdisp app running in USB mode?): %s", (const char *) path, PSPDISP_USB_RETRY_INTERVAL, error->message);
                 g_hash_table_iter_replace(&iter, GINT_TO_POINTER(true));
                 g_error_free(error);
                 pspdisp_usb_device_close(device);
@@ -183,10 +186,12 @@ PSPdispUSBDevice *pspdisp_usb_connect(PSPdispUSB *usb, GCancellable *cancellable
         }
 
         // Sleep until a plug or an unplug, or until the next try of the plugged PSPs
-        if (device == NULL) g_poll(fds, fds_count, g_hash_table_size(usb->plugged) > 0 ? PSPDISP_USB_RETRY_INTERVAL : -1);
+        if (device == NULL)
+            g_poll(fds, fds_count, g_hash_table_size(usb->plugged) > 0 ? PSPDISP_USB_RETRY_INTERVAL : -1);
     }
 
-    if (fds_count > 1) g_cancellable_release_fd(cancellable);
+    if (fds_count > 1)
+        g_cancellable_release_fd(cancellable);
     return device;
 }
 
@@ -209,8 +214,10 @@ void pspdisp_usb_disconnect(PSPdispUSBDevice *device) {
  * @param error Why it failed, it's freed.
  */
 void pspdisp_usb_tell_failure(const char *function, const char *what, GError *error) {
-    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_CONNECTED)) g_debug("%s(): %s: %s", function, what, error->message);
-    else if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) g_warning("%s(): %s: %s", function, what, error->message);
+    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_CONNECTED))
+        g_debug("%s(): %s: %s", function, what, error->message);
+    else if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        g_warning("%s(): %s: %s", function, what, error->message);
     g_error_free(error);
 }
 

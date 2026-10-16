@@ -56,8 +56,10 @@ void pspdisp_audio_connector_pipewire_push(PSPdispAudioConnector *audio_connecto
     while (position < size) {
         uint32_t count = MIN(size - position, audio_connector->chunk_size - audio_connector->chunk_length);
 
-        if (data != NULL) memcpy(audio_connector->chunk + audio_connector->chunk_length, data + position, count);
-        else memset(audio_connector->chunk + audio_connector->chunk_length, 0, count);
+        if (data != NULL)
+            memcpy(audio_connector->chunk + audio_connector->chunk_length, data + position, count);
+        else
+            memset(audio_connector->chunk + audio_connector->chunk_length, 0, count);
         audio_connector->chunk_length += count;
         position += count;
 
@@ -80,9 +82,11 @@ void pspdisp_audio_connector_pipewire_on_state_changed(void *data, enum pw_strea
     PSPdispAudioConnector *audio_connector = data;
 
     // The chunk being filled would otherwise start the next sound, so it's completed with silence
-    if (old == PW_STREAM_STATE_STREAMING && audio_connector->chunk_length > 0) pspdisp_audio_connector_pipewire_push(audio_connector, NULL, audio_connector->chunk_size - audio_connector->chunk_length);
+    if (old == PW_STREAM_STATE_STREAMING && audio_connector->chunk_length > 0)
+        pspdisp_audio_connector_pipewire_push(audio_connector, NULL, audio_connector->chunk_size - audio_connector->chunk_length);
 
-    if (state == PW_STREAM_STATE_ERROR && old != PW_STREAM_STATE_CONNECTING) g_warning("%s(): the sound for the PSP stopped: %s", __FUNCTION__, error);
+    if (state == PW_STREAM_STATE_ERROR && old != PW_STREAM_STATE_CONNECTING)
+        g_warning("%s(): the sound for the PSP stopped: %s", __FUNCTION__, error);
     pw_thread_loop_signal(audio_connector->loop, false);
 }
 
@@ -161,8 +165,10 @@ PSPdispAudioConnector *pspdisp_audio_connector_connect(PSPdispModel model, PSPdi
         ready = state == PW_STREAM_STATE_PAUSED || state == PW_STREAM_STATE_STREAMING;
     }
 
-    if (!ready) g_warning("%s(): failed to add the \"%s\" sound output: %s", __FUNCTION__, name, error != NULL ? error : "PipeWire doesn't run");
-    else g_message("Added the \"%s\" sound output, choose it in the sound settings to play on the PSP", name);
+    if (!ready)
+        g_warning("%s(): failed to add the \"%s\" sound output: %s", __FUNCTION__, name, error != NULL ? error : "PipeWire doesn't run");
+    else
+        g_message("Added the \"%s\" sound output, choose it in the sound settings to play on the PSP", name);
     pw_thread_loop_unlock(audio_connector->loop);
 
     if (!ready) {
@@ -184,7 +190,8 @@ void pspdisp_audio_connector_disconnect(PSPdispAudioConnector *audio_connector) 
     pw_thread_loop_stop(audio_connector->loop);
 
     // The sound played on the output moves to another output
-    if (audio_connector->stream != NULL) pw_stream_destroy(audio_connector->stream);
+    if (audio_connector->stream != NULL)
+        pw_stream_destroy(audio_connector->stream);
     pw_thread_loop_destroy(audio_connector->loop);
     pw_deinit();
 

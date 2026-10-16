@@ -96,7 +96,8 @@ PSPdispUSBWatch *pspdisp_usb_watch_new() {
         if (device == NULL) continue;
 
         const char *devnode = udev_device_get_devnode(device);
-        if (devnode != NULL && pspdisp_usb_usbfs_is_psp(device)) g_queue_push_tail(watch->present, g_strdup(devnode));
+        if (devnode != NULL && pspdisp_usb_usbfs_is_psp(device))
+            g_queue_push_tail(watch->present, g_strdup(devnode));
         udev_device_unref(device);
     }
 
@@ -179,8 +180,10 @@ PSPdispUSBDevice *pspdisp_usb_device_open(const char *path, GError **error) {
     if (fd < 0) {
         int code = errno;
 
-        if (code == EACCES || code == EPERM) g_set_error(error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED, "the PSP is plugged (%s), but there's no access to it, install the udev rule (sudo make install) then plug the PSP again", path);
-        else g_set_error(error, G_IO_ERROR, g_io_error_from_errno(code), "failed to open the PSP (%s): %s", path, g_strerror(code));
+        if (code == EACCES || code == EPERM)
+            g_set_error(error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED, "the PSP is plugged (%s), but there's no access to it, install the udev rule (sudo make install) then plug the PSP again", path);
+        else
+            g_set_error(error, G_IO_ERROR, g_io_error_from_errno(code), "failed to open the PSP (%s): %s", path, g_strerror(code));
         return NULL;
     }
 
@@ -199,8 +202,10 @@ PSPdispUSBDevice *pspdisp_usb_device_open(const char *path, GError **error) {
     if (ioctl(fd, USBDEVFS_DISCONNECT_CLAIM, &claim) < 0) {
         int code = errno;
 
-        if (code == EBUSY) g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "the PSP (%s) is used by another program", path);
-        else g_set_error(error, G_IO_ERROR, g_io_error_from_errno(code), "failed to claim the interface of the PSP (%s): %s", path, g_strerror(code));
+        if (code == EBUSY)
+            g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "the PSP (%s) is used by another program", path);
+        else
+            g_set_error(error, G_IO_ERROR, g_io_error_from_errno(code), "failed to claim the interface of the PSP (%s): %s", path, g_strerror(code));
         close(fd);
         return NULL;
     }
@@ -231,7 +236,8 @@ void pspdisp_usb_device_close(PSPdispUSBDevice *device) {
  * @return The error, in the `G_IO_ERROR` domain.
  */
 GError *pspdisp_usb_usbfs_error(int code) {
-    if (code == ENODEV || code == ESHUTDOWN) return g_error_new_literal(G_IO_ERROR, G_IO_ERROR_NOT_CONNECTED, "the PSP was unplugged");
+    if (code == ENODEV || code == ESHUTDOWN)
+        return g_error_new_literal(G_IO_ERROR, G_IO_ERROR_NOT_CONNECTED, "the PSP was unplugged");
     return g_error_new_literal(G_IO_ERROR, g_io_error_from_errno(code), g_strerror(code));
 }
 
@@ -280,7 +286,8 @@ bool pspdisp_usb_usbfs_run(PSPdispUSBDevice *device, uint8_t endpoint, uint8_t *
         // On a failure, the URBs still running are discarded, then they complete right away
         if (failure != NULL && !discarded) {
             for (uint32_t i = 0; i < count; i++) {
-                if (running[i]) ioctl(device->fd, USBDEVFS_DISCARDURB, &urbs[i]);
+                if (running[i])
+                    ioctl(device->fd, USBDEVFS_DISCARDURB, &urbs[i]);
             }
             discarded = true;
         }
@@ -293,14 +300,16 @@ bool pspdisp_usb_usbfs_run(PSPdispUSBDevice *device, uint8_t endpoint, uint8_t *
             if (urb >= urbs && urb < urbs + count && running[urb - urbs]) {
                 running[urb - urbs] = false;
                 running_count--;
-                if (urb->status != 0 && failure == NULL) failure = pspdisp_usb_usbfs_error(-urb->status);
+                if (urb->status != 0 && failure == NULL)
+                    failure = pspdisp_usb_usbfs_error(-urb->status);
             }
             continue;
         }
 
         if (code == EINTR) continue;
         if (code != EAGAIN) { // `ENODEV`: the PSP was unplugged, its URBs are gone
-            if (failure == NULL) failure = pspdisp_usb_usbfs_error(code);
+            if (failure == NULL)
+                failure = pspdisp_usb_usbfs_error(code);
             break;
         }
 
@@ -313,7 +322,8 @@ bool pspdisp_usb_usbfs_run(PSPdispUSBDevice *device, uint8_t endpoint, uint8_t *
         }
     }
 
-    if (fds_count > 1) g_cancellable_release_fd(cancellable);
+    if (fds_count > 1)
+        g_cancellable_release_fd(cancellable);
 
     *transferred = 0;
     for (uint32_t i = 0; i < count; i++) {
@@ -354,7 +364,8 @@ bool pspdisp_usb_device_transfer(PSPdispUSBDevice *device, uint8_t endpoint, voi
     *transferred = 0;
     if (g_cancellable_set_error_if_cancelled(cancellable, error)) return false;
 
-    if (!(endpoint & USB_DIR_IN)) return pspdisp_usb_usbfs_run(device, endpoint, buffer, size, deadline, cancellable, transferred, error);
+    if (!(endpoint & USB_DIR_IN))
+        return pspdisp_usb_usbfs_run(device, endpoint, buffer, size, deadline, cancellable, transferred, error);
 
     while (*transferred < size) {
         uint32_t length = MIN(size - *transferred, PSPDISP_USB_USBFS_URB_SIZE);

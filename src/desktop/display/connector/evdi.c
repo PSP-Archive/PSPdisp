@@ -205,7 +205,8 @@ gboolean pspdisp_display_connector_evdi_dispatch(GSource *source, GSourceFunc ca
         return G_SOURCE_REMOVE;
     }
 
-    if (condition & G_IO_IN) evdi_handle_events(display_connector->handle, &display_connector->event_context); // Only when readable, it reads the file descriptor and would block otherwise
+    if (condition & G_IO_IN)
+        evdi_handle_events(display_connector->handle, &display_connector->event_context); // Only when readable, it reads the file descriptor and would block otherwise
 
     gint64 time = g_source_get_time(source);
     gint64 ready_time = g_source_get_ready_time(source);
@@ -266,9 +267,12 @@ bool pspdisp_display_connector_evdi_add_device() {
     if (g_spawn_sync(NULL, (char **) argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, &status, &error) && g_spawn_check_wait_status(status, &error)) return true;
 
     // pkexec exits with 126 when the password prompt is dismissed, and 127 when it's not allowed (e.g. no polkit agent out of the desktop session)
-    if (g_error_matches(error, G_SPAWN_EXIT_ERROR, 126)) g_warning("%s(): the password prompt was dismissed, no EVDI device was created", __FUNCTION__);
-    else if (g_error_matches(error, G_SPAWN_EXIT_ERROR, 127)) g_warning("%s(): not allowed to create an EVDI device (is there a polkit agent in the desktop session?)", __FUNCTION__);
-    else g_warning("%s(): failed to create an EVDI device: %s", __FUNCTION__, error->message);
+    if (g_error_matches(error, G_SPAWN_EXIT_ERROR, 126))
+        g_warning("%s(): the password prompt was dismissed, no EVDI device was created", __FUNCTION__);
+    else if (g_error_matches(error, G_SPAWN_EXIT_ERROR, 127))
+        g_warning("%s(): not allowed to create an EVDI device (is there a polkit agent in the desktop session?)", __FUNCTION__);
+    else
+        g_warning("%s(): failed to create an EVDI device: %s", __FUNCTION__, error->message);
 
     g_error_free(error);
     return false;

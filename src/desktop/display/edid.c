@@ -686,7 +686,8 @@ PSPdispEDIDDescriptor pspdisp_display_edid_text_descriptor(PSPdispEDIDDescriptor
 
     // Copy the text up to the max allowed size
     uint8_t length = 0;
-    for (; length < size && text[length] != '\0'; length++) descriptor.text[length] = text[length];
+    for (; length < size && text[length] != '\0'; length++)
+        descriptor.text[length] = text[length];
 
     // Put the termination '\n' and maybe the padding ' '
     if (length < size) {
