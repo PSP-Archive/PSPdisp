@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# 60-pspdisp.rules - udev rule of the PSPdisp daemon (Linux)
+#
+# Copyright © 2026 Arthur Neto
+#
+# Gives the user at the computer (the active local session, with the uaccess tag) what the daemon needs, so it runs as the user.
+# Installed by `make install`, then plug the PSP again.
+
+# A PSP running the PSPdisp app in USB mode: the USBHostFS driver of PSPLink shows up as a Sony device, as type B (01c9, the default) or type C (01ca)
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="054c", ATTR{idProduct}=="01c9", TAG+="uaccess"
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="054c", ATTR{idProduct}=="01ca", TAG+="uaccess"
+
+# The virtual gamepad, keyboard and mouse (some packages already give it, e.g. Steam)
+KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"
