@@ -25,6 +25,7 @@
 typedef struct {
     PSPdispFrameHandler frame_handler; // Handle each new frame to be drawn
     PSPdispDPMSHandler dpms_handler; // Display Power Management Signaling Handler
+    gpointer handler_data; // Given to the handlers
     PSPdispEDID edid; // Identification given to the computer when connecting, from the PSP model, region and serial number (see `pspdisp_display_edid_new()`)
 
     // TODO: brightness handler
@@ -85,15 +86,17 @@ gpointer pspdisp_display_thread_func(PSPdispDisplay *display) {
  * @param serial_number The serial number of the display, not 0 (see `pspdisp_display_edid_new()`).
  * @param frame_handler Handle each new frame, called on the display thread (can't be `NULL`).
  * @param dpms_handler Handle each DPMS change, called on the display thread (can't be `NULL`).
+ * @param data Given to the handlers.
  * @return The new display, free it with `pspdisp_display_destroy()`, or `NULL` if an argument is invalid.
  */
-PSPdispDisplay *pspdisp_display_new(PSPdispModel model, PSPdispRegion region, uint32_t serial_number, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler) {
+PSPdispDisplay *pspdisp_display_new(PSPdispModel model, PSPdispRegion region, uint32_t serial_number, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler, gpointer data) {
     g_return_val_if_fail(frame_handler != NULL, NULL);
     g_return_val_if_fail(dpms_handler != NULL, NULL);
 
     PSPdispDisplay *display = g_new(PSPdispDisplay, 1);
     display->frame_handler = frame_handler;
     display->dpms_handler = dpms_handler;
+    display->handler_data = data;
     display->edid = pspdisp_display_edid_new(model, region, serial_number);
     display->context = g_main_context_new();
     display->loop = g_main_loop_new(display->context, FALSE);
@@ -109,12 +112,12 @@ PSPdispDisplay *pspdisp_display_new(PSPdispModel model, PSPdispRegion region, ui
  * The source of the connector is attached to `context`, so the handlers run on the display thread.
  *
  * @param display The display to connect.
- * @return `true` if it was connected now, `false` if it was already connected or the connector failed.
+ * @return `true` if it was connected now, `false` if it was already connected or it failed.
  */
 bool pspdisp_display_connect(PSPdispDisplay *display) {
     if (display->frame_source != NULL) return false; // Already connected
 
-    GSource *frame_source = pspdisp_display_connector_connect(display->edid, display->frame_handler, display->dpms_handler);
+    GSource *frame_source = pspdisp_display_connector_connect(display->edid, display->frame_handler, display->dpms_handler, display->handler_data);
     if (frame_source == NULL) return false; // The connector failed
 
     g_source_attach(frame_source, display->context);

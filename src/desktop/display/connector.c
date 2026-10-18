@@ -26,8 +26,9 @@
  * @param format The pixel format of the frame buffer.
  * @param rectangles The dirty rectangles, the area that changed compared with the previous frame.
  * @param rectangles_length The number of dirty rectangles.
+ * @param data The data given with the function.
  */
-typedef void (*PSPdispFrameHandler) (void *pixels, uint16_t stride, PSPdispPixelFormat format, PSPdispDirtyRectangle *rectangles, uint8_t rectangles_length);
+typedef void (*PSPdispFrameHandler) (void *pixels, uint16_t stride, PSPdispPixelFormat format, PSPdispDirtyRectangle *rectangles, uint8_t rectangles_length, gpointer data);
 
 /**
  * @brief Type of a function pointer to handle Display Power Management Signaling (DPMS).
@@ -35,8 +36,9 @@ typedef void (*PSPdispFrameHandler) (void *pixels, uint16_t stride, PSPdispPixel
  * Called by the connector on the thread that runs the context of its source (for a display, the display thread), when the computer turns the display on or off.
  *
  * @param mode The signaled DPMS mode.
+ * @param data The data given with the function.
  */
-typedef void (*PSPdispDPMSHandler) (PSPdispDPMSMode mode);
+typedef void (*PSPdispDPMSHandler) (PSPdispDPMSMode mode, gpointer data);
 
 /**
  * @brief Connect a virtual display through the connector of this platform, so it appears on the computer.
@@ -52,9 +54,10 @@ typedef void (*PSPdispDPMSHandler) (PSPdispDPMSMode mode);
  * @param edid The identification given to the computer.
  * @param frame_handler Handle each new frame.
  * @param dpms_handler Handle each DPMS change.
- * @return The source of the display events, or `NULL` if the connector failed (e.g. its driver is not installed).
+ * @param data Given to the handlers.
+ * @return The source of the display events, or `NULL` if it failed.
  */
-GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler);
+GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler, gpointer data);
 
 // The display connector of this platform, it implements `pspdisp_display_connector_connect()` and defines `PSPDISP_DISPLAY_CONNECTOR_NAME`
 #if defined(__linux__)

@@ -35,6 +35,7 @@ typedef struct {
     GSource source; // The base source, first so this struct is also a `GSource`
     PSPdispFrameHandler frame_handler; // Handle each new frame
     PSPdispDPMSHandler dpms_handler; // Handle each DPMS change
+    gpointer handler_data; // Given to the handlers
     struct evdi_event_context event_context; // Handlers called by `evdi_handle_events()`, with this connector as the user data
     evdi_handle handle; // The opened EVDI device
     gpointer fd_tag; // Tag of the EVDI file descriptor on this source, to query its conditions
@@ -130,7 +131,7 @@ void pspdisp_display_connector_evdi_on_update_ready(int buffer_to_be_updated, PS
             return;
     }
 
-    display_connector->frame_handler(pixels, PSPDISP_DISPLAY_WIDTH, PSPDISP_PIXEL_FORMAT_8888, rectangles, rectangles_length);
+    display_connector->frame_handler(pixels, PSPDISP_DISPLAY_WIDTH, PSPDISP_PIXEL_FORMAT_8888, rectangles, rectangles_length, display_connector->handler_data);
 }
 
 /**
@@ -165,7 +166,7 @@ void pspdisp_display_connector_evdi_on_dpms(int dpms_mode, PSPdispDisplayConnect
             return;
     }
 
-    display_connector->dpms_handler(mode);
+    display_connector->dpms_handler(mode, display_connector->handler_data);
 }
 
 /**
@@ -288,9 +289,10 @@ bool pspdisp_display_connector_evdi_add_device() {
  * @param edid The identification given to the computer.
  * @param frame_handler Handle each new frame.
  * @param dpms_handler Handle each DPMS change.
- * @return The source of the display events (not attached yet), or `NULL` if no EVDI device could be opened.
+ * @param data Given to the handlers.
+ * @return The source of the display events (not attached yet), or `NULL` if it failed.
  */
-GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler) {
+GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler, gpointer data) {
     evdi_handle handle = evdi_open_attached_to_fixed(NULL, 0);
 
     // libevdi may fail to open because:
@@ -309,28 +311,30 @@ GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler
     PSPdispDisplayConnector *display_connector = (PSPdispDisplayConnector *) source;
     display_connector->frame_handler = frame_handler;
     display_connector->dpms_handler = dpms_handler;
+    display_connector->handler_data = data;
     display_connector->event_context = (struct evdi_event_context) {
         .mode_changed_handler = (void (*)(struct evdi_mode, void*)) pspdisp_display_connector_evdi_on_mode_changed,
         .update_ready_handler = (void (*)(int, void*)) pspdisp_display_connector_evdi_on_update_ready,
         .dpms_handler         = (void (*)(int, void*)) pspdisp_display_connector_evdi_on_dpms,
         .user_data            = display_connector,
     };
+    const uint32_t pixel_count = PSPDISP_DISPLAY_WIDTH * PSPDISP_DISPLAY_HEIGHT; // Pixels of the PSP screen
     display_connector->handle = handle;
     display_connector->buffer = (struct evdi_buffer) {
         .id = PSPDISP_EVDI_BUFFER_ID,
-        .buffer = g_new0(uint32_t, PSPDISP_DISPLAY_WIDTH * PSPDISP_DISPLAY_HEIGHT),
+        .buffer = g_new0(uint32_t, pixel_count),
         .width = PSPDISP_DISPLAY_WIDTH,
         .height = PSPDISP_DISPLAY_HEIGHT,
         .stride = PSPDISP_DISPLAY_WIDTH * 4,
         .rects = NULL,
         .rect_count = 0,
     };
-    display_connector->pixels = g_new0(uint32_t, PSPDISP_DISPLAY_WIDTH * PSPDISP_DISPLAY_HEIGHT);
+    display_connector->pixels = g_new0(uint32_t, pixel_count);
     display_connector->mode = (struct evdi_mode) {}; // No mode until the compositor sets one
     display_connector->update_requested = false;
 
     evdi_register_buffer(display_connector->handle, display_connector->buffer);
-    evdi_connect(display_connector->handle, (const unsigned char *) &edid, sizeof(PSPdispEDID), PSPDISP_DISPLAY_WIDTH * PSPDISP_DISPLAY_HEIGHT);
+    evdi_connect(display_connector->handle, (const unsigned char *) &edid, sizeof(PSPdispEDID), pixel_count);
 
     display_connector->fd_tag = g_source_add_unix_fd(source, evdi_get_event_ready(display_connector->handle), G_IO_IN);
     g_source_set_ready_time(source, g_get_monotonic_time() + PSPDISP_EVDI_FRAME_INTERVAL); // The first frame request
