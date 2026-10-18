@@ -192,7 +192,7 @@ bool pspdisp_input_uinput_setup_mouse(int fd) {
  *
  * @param name The name the computer shows for them, before " keyboard" and " mouse".
  * @param error Where to tell why it failed.
- * @return The devices, or `NULL` if it failed (e.g. no access to `/dev/uinput`).
+ * @return The devices, or `NULL` if it failed.
  */
 PSPdispInput *pspdisp_input_new(const char *name, GError **error) {
     char *keyboard_name = g_strdup_printf("%s keyboard", name);
@@ -250,13 +250,16 @@ bool pspdisp_input_key(PSPdispInput *input, uint16_t scancode, bool pressed) {
     uint16_t code = pspdisp_input_uinput_code(scancode);
     if (code == KEY_RESERVED) return false;
 
-    bool was_pressed = input->pressed_keys[code / 8] & (1 << (code % 8));
+    uint8_t *byte = &input->pressed_keys[code / 8]; // The byte of the key, in the bits of the pressed keys
+    const uint8_t bit = 1 << (code % 8);
+
+    bool was_pressed = *byte & bit;
     if (pressed == was_pressed) return true;
 
     if (pressed)
-        input->pressed_keys[code / 8] |= 1 << (code % 8);
+        *byte |= bit;
     else
-        input->pressed_keys[code / 8] &= ~(1 << (code % 8));
+        *byte &= ~bit;
 
     struct input_event events[2] = { { .type = EV_KEY, .code = code, .value = pressed } };
     return pspdisp_input_uinput_write(input->keyboard, events, 1);

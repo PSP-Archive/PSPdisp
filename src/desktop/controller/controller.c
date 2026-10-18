@@ -62,7 +62,7 @@ typedef struct {
  * @brief Plug the virtual gamepad into the computer, at rest.
  *
  * @param error Where to tell why it failed, ready to be shown to the user (e.g. the permission it needs).
- * @return The controller, free it with `pspdisp_controller_destroy()`, or `NULL` if the gamepad can't be created.
+ * @return The controller, free it with `pspdisp_controller_destroy()`, or `NULL` if it failed.
  */
 PSPdispController *pspdisp_controller_new(GError **error) {
     PSPdispGamepad *gamepad = pspdisp_gamepad_new(PSPDISP_CONTROLLER_NAME, error);

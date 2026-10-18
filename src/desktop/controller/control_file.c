@@ -302,36 +302,38 @@ int32_t pspdisp_control_file_analog_pixels(PSPdispControlFile *control, int32_t 
  */
 void pspdisp_control_file_map_analog(PSPdispControlFile *control, uint32_t *buttons, uint8_t analog_x, uint8_t analog_y) {
     int32_t zone = control->dead_zone;
+    const int32_t high = 128 + zone; // Above it, the stick is pushed right or down
+    const int32_t low = 128 - zone; // Below it, the stick is pushed left or up
 
     control->analog_x = 0;
     control->analog_y = 0;
 
     if (control->map_analog_to_dpad) {
-        if (analog_x > 128 + zone)
+        if (analog_x > high)
             *buttons |= PSPDISP_BUTTON_RIGHT;
-        else if (analog_x < 128 - zone)
+        else if (analog_x < low)
             *buttons |= PSPDISP_BUTTON_LEFT;
-        if (analog_y > 128 + zone)
+        if (analog_y > high)
             *buttons |= PSPDISP_BUTTON_DOWN;
-        else if (analog_y < 128 - zone)
+        else if (analog_y < low)
             *buttons |= PSPDISP_BUTTON_UP;
         return;
     }
 
-    if (analog_x > 128 + zone) {
+    if (analog_x > high) {
         *buttons |= PSPDISP_CONTROL_FILE_ANALOG_RIGHT;
-        control->analog_x = pspdisp_control_file_analog_pixels(control, analog_x - 127 - zone);
-    } else if (analog_x < 128 - zone) {
+        control->analog_x = pspdisp_control_file_analog_pixels(control, analog_x - high + 1);
+    } else if (analog_x < low) {
         *buttons |= PSPDISP_CONTROL_FILE_ANALOG_LEFT;
-        control->analog_x = pspdisp_control_file_analog_pixels(control, analog_x - 128 + zone);
+        control->analog_x = pspdisp_control_file_analog_pixels(control, analog_x - low);
     }
 
-    if (analog_y > 128 + zone) {
+    if (analog_y > high) {
         *buttons |= PSPDISP_CONTROL_FILE_ANALOG_DOWN;
-        control->analog_y = pspdisp_control_file_analog_pixels(control, analog_y - 127 - zone);
-    } else if (analog_y < 128 - zone) {
+        control->analog_y = pspdisp_control_file_analog_pixels(control, analog_y - high + 1);
+    } else if (analog_y < low) {
         *buttons |= PSPDISP_CONTROL_FILE_ANALOG_UP;
-        control->analog_y = pspdisp_control_file_analog_pixels(control, analog_y - 128 + zone);
+        control->analog_y = pspdisp_control_file_analog_pixels(control, analog_y - low);
     }
 }
 

@@ -91,7 +91,7 @@ int32_t pspdisp_gamepad_uinput_hat(uint16_t buttons, PSPdispGamepadButton negati
  *
  * @param name The name the computer shows for it.
  * @param error Where to tell why it failed.
- * @return The gamepad, or `NULL` if it failed (e.g. no access to `/dev/uinput`).
+ * @return The gamepad, or `NULL` if it failed.
  */
 PSPdispGamepad *pspdisp_gamepad_new(const char *name, GError **error) {
     int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK | O_CLOEXEC);
