@@ -83,7 +83,7 @@ PSPdispWLAN *pspdisp_wlan_new(uint16_t port, const char *password, GError **erro
  *
  * @param wlan The server.
  * @param password The password set on the PSP, at most `PSPDISP_WLAN_PASSWORD_SIZE` characters (`""` for none).
- * @return `true` if it was changed, `false` if it's too long.
+ * @return `true` if it was changed, `false` if an argument is invalid.
  */
 bool pspdisp_wlan_set_password(PSPdispWLAN *wlan, const char *password) {
     if (strlen(password) > PSPDISP_WLAN_PASSWORD_SIZE) return false;
@@ -134,8 +134,9 @@ bool pspdisp_wlan_transfer(GSocket *socket, bool sending, uint8_t *buffer, uint3
         if (!g_socket_condition_timed_wait(socket, sending ? G_IO_OUT : G_IO_IN, remaining, cancellable, error)) return false;
 
         GError *failure = NULL;
-        gssize count = sending ? g_socket_send(socket, (const gchar *) buffer + position, size - position, cancellable, &failure)
-                               : g_socket_receive(socket, (gchar *) buffer + position, size - position, cancellable, &failure);
+        gchar *rest = (gchar *) buffer + position; // What's left to transfer
+        const gsize rest_size = size - position;
+        gssize count = sending ? g_socket_send(socket, rest, rest_size, cancellable, &failure) : g_socket_receive(socket, rest, rest_size, cancellable, &failure);
 
         if (count < 0) {
             if (g_error_matches(failure, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) { // Woken up for nothing
@@ -192,7 +193,7 @@ char *pspdisp_wlan_address(GSocket *socket) {
  * @param wlan The server.
  * @param socket The accepted connection, closed when the password doesn't match.
  * @param cancellable Abort the wait for the password when cancelled.
- * @return The connection, or `NULL` if the password check failed.
+ * @return The connection, or `NULL` if it failed.
  */
 PSPdispWLANConnection *pspdisp_wlan_check(PSPdispWLAN *wlan, GSocket *socket, GCancellable *cancellable) {
     char *address = pspdisp_wlan_address(socket);
