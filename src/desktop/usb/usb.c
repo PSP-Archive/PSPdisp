@@ -41,7 +41,7 @@ typedef struct {
 /**
  * @brief Start watching the USB of the computer for PSPs.
  *
- * @return The USB, free it with `pspdisp_usb_destroy()`, or `NULL` if the system can't tell the plugs.
+ * @return The USB, free it with `pspdisp_usb_destroy()`, or `NULL` if it failed.
  */
 PSPdispUSB *pspdisp_usb_new() {
     PSPdispUSBWatch *watch = pspdisp_usb_watch_new();

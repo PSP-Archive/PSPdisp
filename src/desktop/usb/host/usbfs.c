@@ -63,7 +63,7 @@ bool pspdisp_usb_usbfs_is_psp(struct udev_device *device) {
  *
  * The monitor starts first, so a PSP plugged meanwhile isn't missed.
  *
- * @return The new watch, or `NULL` if udev can't be used.
+ * @return The new watch, or `NULL` if it failed.
  */
 PSPdispUSBWatch *pspdisp_usb_watch_new() {
     struct udev *udev = udev_new();
@@ -297,11 +297,15 @@ bool pspdisp_usb_usbfs_run(PSPdispUSBDevice *device, uint8_t endpoint, uint8_t *
         int code = errno;
 
         if (result == 0) {
-            if (urb >= urbs && urb < urbs + count && running[urb - urbs]) {
-                running[urb - urbs] = false;
-                running_count--;
-                if (urb->status != 0 && failure == NULL)
-                    failure = pspdisp_usb_usbfs_error(-urb->status);
+            if (urb >= urbs && urb < urbs + count) {
+                const size_t index = urb - urbs; // Only once it's known to be one of `urbs`
+
+                if (running[index]) {
+                    running[index] = false;
+                    running_count--;
+                    if (urb->status != 0 && failure == NULL)
+                        failure = pspdisp_usb_usbfs_error(-urb->status);
+                }
             }
             continue;
         }
