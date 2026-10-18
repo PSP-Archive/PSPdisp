@@ -20,8 +20,9 @@
  *
  * @param samples The samples, 16-bit signed, stereo and interleaved (left, right).
  * @param size The size of the chunk in bytes, the one asked on `pspdisp_audio_connector_connect()`.
+ * @param data The data given with the function.
  */
-typedef void (*PSPdispAudioHandler) (const int16_t *samples, uint32_t size);
+typedef void (*PSPdispAudioHandler) (const int16_t *samples, uint32_t size, gpointer data);
 
 /**
  * @brief Audio connector, declared by the connector of this platform with the data it needs.
@@ -40,9 +41,10 @@ typedef struct PSPdispAudioConnector PSPdispAudioConnector;
  * @param sample_rate The sample rate in Hz (e.g. 22050).
  * @param chunk_size The size of each chunk in bytes, a multiple of 4 (a stereo frame of 16-bit samples).
  * @param audio_handler Handle each full chunk.
+ * @param data Given to the handler.
  * @return The connector, or `NULL` if it failed.
  */
-PSPdispAudioConnector *pspdisp_audio_connector_connect(PSPdispModel model, PSPdispRegion region, uint32_t sample_rate, uint32_t chunk_size, PSPdispAudioHandler audio_handler);
+PSPdispAudioConnector *pspdisp_audio_connector_connect(PSPdispModel model, PSPdispRegion region, uint32_t sample_rate, uint32_t chunk_size, PSPdispAudioHandler audio_handler, gpointer data);
 
 /**
  * @brief Disconnect the PSP audio and free the connector, undoing what it set up on the computer.

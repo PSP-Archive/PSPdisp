@@ -38,6 +38,7 @@ struct PSPdispAudioConnector {
     struct pw_thread_loop *loop; // Loop of the stream events, on its own thread
     struct pw_stream *stream; // The output, the stream shown as a sink
     PSPdispAudioHandler audio_handler; // Handle each full chunk
+    gpointer handler_data; // Given to `audio_handler`
     uint8_t *chunk; // The chunk being filled
     uint32_t chunk_size; // The size of a chunk in bytes
     uint32_t chunk_length; // How many bytes of `chunk` are filled
@@ -55,16 +56,17 @@ void pspdisp_audio_connector_pipewire_push(PSPdispAudioConnector *audio_connecto
 
     while (position < size) {
         uint32_t count = MIN(size - position, audio_connector->chunk_size - audio_connector->chunk_length);
+        uint8_t *end = audio_connector->chunk + audio_connector->chunk_length; // Where the chunk goes on
 
         if (data != NULL)
-            memcpy(audio_connector->chunk + audio_connector->chunk_length, data + position, count);
+            memcpy(end, data + position, count);
         else
-            memset(audio_connector->chunk + audio_connector->chunk_length, 0, count);
+            memset(end, 0, count);
         audio_connector->chunk_length += count;
         position += count;
 
         if (audio_connector->chunk_length == audio_connector->chunk_size) {
-            audio_connector->audio_handler((const int16_t *) audio_connector->chunk, audio_connector->chunk_size);
+            audio_connector->audio_handler((const int16_t *) audio_connector->chunk, audio_connector->chunk_size, audio_connector->handler_data);
             audio_connector->chunk_length = 0;
         }
     }
@@ -128,14 +130,16 @@ static const struct pw_stream_events pspdisp_audio_connector_pipewire_events = {
  * @param sample_rate The sample rate in Hz (e.g. 22050).
  * @param chunk_size The size of each chunk in bytes, a multiple of 4 (a stereo frame of 16-bit samples).
  * @param audio_handler Handle each full chunk, called on the thread of the PipeWire thread loop.
+ * @param data Given to the handler.
  * @return The connector, or `NULL` if it failed.
  */
-PSPdispAudioConnector *pspdisp_audio_connector_connect(PSPdispModel model, PSPdispRegion region, uint32_t sample_rate, uint32_t chunk_size, PSPdispAudioHandler audio_handler) {
+PSPdispAudioConnector *pspdisp_audio_connector_connect(PSPdispModel model, PSPdispRegion region, uint32_t sample_rate, uint32_t chunk_size, PSPdispAudioHandler audio_handler, gpointer data) {
     const char *name = pspdisp_psp_name(model, region);
     pw_init(NULL, NULL);
 
     PSPdispAudioConnector *audio_connector = g_new0(PSPdispAudioConnector, 1);
     audio_connector->audio_handler = audio_handler;
+    audio_connector->handler_data = data;
     audio_connector->chunk = g_malloc0(chunk_size);
     audio_connector->chunk_size = chunk_size;
     audio_connector->chunk_length = 0;
