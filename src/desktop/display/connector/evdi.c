@@ -30,6 +30,7 @@
  *
  * GLib polls the EVDI file descriptor, readable when EVDI has events: mode and power changes come on their own, frames only after `evdi_request_update()`.
  * Its ready time is the next frame request, so it also dispatches at the PSP refresh rate to ask EVDI for a frame, because EVDI doesn't pace the frames by the refresh rate of the EDID.
+ * While the display isn't on (DPMS), it has no ready time, so no frame is asked for.
  */
 typedef struct {
 	GSource source; // The base source, first so this struct is also a `GSource`
@@ -155,6 +156,7 @@ void pspdisp_display_connector_evdi_on_update_ready(int buffer_to_be_updated, PS
  * It comes on its own, without asking for it.
  *
  * EVDI uses the DRM DPMS modes, which have the same order as `PSPdispDPMSMode`, but in practice only sends `DRM_MODE_DPMS_ON` and `DRM_MODE_DPMS_OFF`.
+ * Frames are only asked for while the display is on: the frame requests stop when it isn't, and start again at once when it's turned on.
  *
  * @param dpms_mode The DRM DPMS mode: `DRM_MODE_DPMS_ON`, `DRM_MODE_DPMS_STANDBY`, `DRM_MODE_DPMS_SUSPEND` or `DRM_MODE_DPMS_OFF`.
  * @param display_connector The connector, from the `user_data` of the EVDI event context.
@@ -180,6 +182,10 @@ void pspdisp_display_connector_evdi_on_dpms(int dpms_mode, PSPdispDisplayConnect
 			return;
 	}
 
+	// -1 removes the ready time, so the source only dispatches for the events of EVDI
+	GSource *source = &display_connector->source;
+	g_source_set_ready_time(source, mode == PSPDISP_DPMS_MODE_ON ? g_source_get_time(source) : -1);
+
 	display_connector->dpms_handler(mode, display_connector->handler_data);
 }
 
@@ -204,7 +210,7 @@ void pspdisp_display_connector_evdi_request_frame(PSPdispDisplayConnector *displ
 }
 
 /**
- * @brief Handle the pending EVDI events, then ask EVDI for a frame when it's time, called by GLib when the EVDI file descriptor is ready or the ready time is reached.
+ * @brief Handle the pending EVDI events, then ask EVDI for a frame when it's time, called by GLib when the EVDI file descriptor is ready or the ready time is reached (none while the display is off).
  *
  * @param source The connector.
  * @param callback Unused, the connector calls its handlers itself.
@@ -229,7 +235,7 @@ gboolean pspdisp_display_connector_evdi_dispatch(GSource *source, GSourceFunc ca
 	gint64 time = g_source_get_time(source);
 	gint64 ready_time = g_source_get_ready_time(source);
 
-	if (time >= ready_time) {
+	if (ready_time >= 0 && time >= ready_time) {
 		gint64 next_ready_time = ready_time + PSPDISP_EVDI_FRAME_INTERVAL;
 		g_source_set_ready_time(source, next_ready_time > time ? next_ready_time : time + PSPDISP_EVDI_FRAME_INTERVAL); // When late (e.g. a slow frame handler), the missed frames are skipped
 		pspdisp_display_connector_evdi_request_frame(display_connector);
