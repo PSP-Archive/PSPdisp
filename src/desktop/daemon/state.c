@@ -184,6 +184,9 @@ void pspdisp_daemon_state_set_control(PSPdispDaemonState *state, const char *con
 
 /**
  * @brief Tell the state if the virtual display was created.
+ *
+ * @param state The state.
+ * @param display If it was created.
  */
 void pspdisp_daemon_state_set_display(PSPdispDaemonState *state, bool display) {
 	g_mutex_lock(&state->mutex);
@@ -194,6 +197,9 @@ void pspdisp_daemon_state_set_display(PSPdispDaemonState *state, bool display) {
 
 /**
  * @brief Tell the state if the sound is captured.
+ *
+ * @param state The state.
+ * @param sound If it's captured.
  */
 void pspdisp_daemon_state_set_sound(PSPdispDaemonState *state, bool sound) {
 	g_mutex_lock(&state->mutex);

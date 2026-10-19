@@ -123,6 +123,10 @@ uint32_t pspdisp_daemon_session_chunk_size(PSPdispComSampleRate sample_rate, uin
 
 /**
  * @brief Get the sample rate setting of the link: the one of USB or of WLAN.
+ *
+ * @param session The session, for its link.
+ * @param streaming_settings The streaming settings.
+ * @return The sample rate setting.
  */
 PSPdispComSampleRate pspdisp_daemon_session_sample_rate(PSPdispDaemonSession *session, const PSPdispSettingsStreaming *streaming_settings) {
 	return session->link->wlan ? streaming_settings->sample_rate_wlan : streaming_settings->sample_rate_usb;

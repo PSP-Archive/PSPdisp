@@ -84,12 +84,21 @@ uint16_t pspdisp_input_uinput_code(uint16_t scancode) {
 	return KEY_RESERVED;
 }
 
+/**
+ * @brief Tell if a scan code is a key of the virtual keyboard: a key code of Linux matches it.
+ *
+ * @param scancode The scan code (e.g. 0x1E, or 0xE048 for an extended key).
+ * @return `true` if it can be pressed.
+ */
 bool pspdisp_input_has_key(uint16_t scancode) {
 	return pspdisp_input_uinput_code(scancode) != KEY_RESERVED;
 }
 
 /**
  * @brief Get the scan code of a key pressed, from its hardware key code, which is its Linux key code plus 8 (on X11 and on Wayland).
+ *
+ * @param keycode The hardware key code given by the toolkit.
+ * @return The scan code, or 0 if it has none.
  */
 uint16_t pspdisp_input_scancode_of_key(uint32_t keycode) {
 	if (keycode < 8) return 0;
@@ -161,6 +170,9 @@ int pspdisp_input_uinput_create(const char *name, bool (*setup) (int fd), GError
 
 /**
  * @brief Enable the keys of the virtual keyboard: all the keys with a scan code.
+ *
+ * @param fd The uinput device, before it is created.
+ * @return `true` if they're enabled, `false` if it failed.
  */
 bool pspdisp_input_uinput_setup_keyboard(int fd) {
 	bool done = ioctl(fd, UI_SET_EVBIT, EV_KEY) == 0;
@@ -177,6 +189,9 @@ bool pspdisp_input_uinput_setup_keyboard(int fd) {
 
 /**
  * @brief Enable the buttons, the motion and the wheel of the virtual mouse.
+ *
+ * @param fd The uinput device, before it is created.
+ * @return `true` if they're enabled, `false` if it failed.
  */
 bool pspdisp_input_uinput_setup_mouse(int fd) {
 	bool done = ioctl(fd, UI_SET_EVBIT, EV_KEY) == 0 && ioctl(fd, UI_SET_EVBIT, EV_REL) == 0;
@@ -245,6 +260,11 @@ void pspdisp_input_destroy(PSPdispInput *input) {
  * @brief Press or release a key of the virtual keyboard.
  *
  * A key pressed again (e.g. by a typematic button) is not sent again, as the desktop already repeats it.
+ *
+ * @param input The devices.
+ * @param scancode The scan code of the key.
+ * @param pressed If it's pressed (`true`) or released (`false`).
+ * @return `true` if the computer took it.
  */
 bool pspdisp_input_key(PSPdispInput *input, uint16_t scancode, bool pressed) {
 	uint16_t code = pspdisp_input_uinput_code(scancode);
@@ -265,6 +285,14 @@ bool pspdisp_input_key(PSPdispInput *input, uint16_t scancode, bool pressed) {
 	return pspdisp_input_uinput_write(input->keyboard, events, 1);
 }
 
+/**
+ * @brief Press or release a button of the virtual mouse.
+ *
+ * @param input The devices.
+ * @param button The button.
+ * @param pressed If it's pressed (`true`) or released (`false`).
+ * @return `true` if the computer took it.
+ */
 bool pspdisp_input_mouse_button(PSPdispInput *input, PSPdispInputMouseButton button, bool pressed) {
 	if (pressed)
 		input->pressed_buttons |= 1 << button;
@@ -275,6 +303,14 @@ bool pspdisp_input_mouse_button(PSPdispInput *input, PSPdispInputMouseButton but
 	return pspdisp_input_uinput_write(input->mouse, events, 1);
 }
 
+/**
+ * @brief Move the virtual mouse.
+ *
+ * @param input The devices.
+ * @param x Pixels to the right (negative to the left).
+ * @param y Pixels down (negative up).
+ * @return `true` if the computer took it.
+ */
 bool pspdisp_input_mouse_move(PSPdispInput *input, int32_t x, int32_t y) {
 	struct input_event events[3] = {};
 	size_t count = 0;
@@ -287,6 +323,13 @@ bool pspdisp_input_mouse_move(PSPdispInput *input, int32_t x, int32_t y) {
 	return count == 0 || pspdisp_input_uinput_write(input->mouse, events, count);
 }
 
+/**
+ * @brief Turn the wheel of the virtual mouse.
+ *
+ * @param input The devices.
+ * @param steps Steps away from the user, scrolling up (negative towards the user, scrolling down).
+ * @return `true` if the computer took it.
+ */
 bool pspdisp_input_mouse_wheel(PSPdispInput *input, int32_t steps) {
 	// The steps, and the same in the high resolution unit (120 per step), as a real wheel sends both
 	struct input_event events[3] = {

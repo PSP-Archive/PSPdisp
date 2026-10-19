@@ -33,7 +33,14 @@ GOptionEntry pspdisp_gtk_options[] = {
 	G_OPTION_ENTRY_NULL
 };
 
-// Window component - one page per tab, as the options window of the old desktop app
+/**
+ * @brief Make and show the window of the desktop app, called by GTK when the app starts, or show it again when it's started a second time.
+ *
+ * Its pages are the tabs of the options window of the old desktop app.
+ *
+ * @param app The application.
+ * @param user_data Unused.
+ */
 void pspdisp_gtk_application_activate(GtkApplication *app, gpointer user_data) {
 	(void) user_data;
 	PSPdispUI *ui = &pspdisp_gtk_ui;
@@ -68,6 +75,13 @@ void pspdisp_gtk_application_activate(GtkApplication *app, gpointer user_data) {
 	gtk_window_present(GTK_WINDOW(window));
 }
 
+/**
+ * @brief Run the desktop app until its window is closed.
+ *
+ * @param argc The number of arguments of the command line.
+ * @param argv The arguments of the command line (see `pspdisp_gtk_options`).
+ * @return The exit status of the app, 0 when it ended well.
+ */
 int pspdisp_gtk_application_run(int argc, char **argv) {
 	GtkApplication *app = gtk_application_new("com.pspdisp.desktop", G_APPLICATION_DEFAULT_FLAGS);
 	g_application_add_main_option_entries(G_APPLICATION(app), pspdisp_gtk_options); // Parsed into their variables before "activate"
@@ -77,6 +91,13 @@ int pspdisp_gtk_application_run(int argc, char **argv) {
 	return status;
 }
 
+/**
+ * @brief Start the desktop app.
+ *
+ * @param argc The number of arguments of the command line.
+ * @param argv The arguments of the command line.
+ * @return The exit status of the app (see `pspdisp_gtk_application_run()`).
+ */
 int main(int argc, char **argv) {
 	return pspdisp_gtk_application_run(argc, argv);
 }

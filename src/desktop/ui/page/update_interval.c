@@ -15,6 +15,9 @@
 
 /**
  * @brief Set the default pause of each update interval, as the old desktop app.
+ *
+ * @param button Unused, the button.
+ * @param ui The app.
  */
 void pspdisp_gtk_page_update_interval_on_reset(GtkButton *button, PSPdispUI *ui) {
 	(void) button;
@@ -28,7 +31,12 @@ void pspdisp_gtk_page_update_interval_on_reset(GtkButton *button, PSPdispUI *ui)
 	}
 }
 
-// Delay between frames component
+/**
+ * @brief Make the group of the update intervals: the pause after each frame of each update interval, and a button to set the defaults.
+ *
+ * @param ui The app.
+ * @return The group box.
+ */
 GtkWidget *pspdisp_gtk_page_update_interval_delay_new(PSPdispUI *ui) {
 	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
 
@@ -86,7 +94,12 @@ GtkWidget *pspdisp_gtk_page_update_interval_delay_new(PSPdispUI *ui) {
 	return pspdisp_ui_component_groupbox_new("Delay between frames", box);
 }
 
-// "Update interval" page component
+/**
+ * @brief Make the "Update interval" page: the pause of each update interval.
+ *
+ * @param ui The app.
+ * @return The page.
+ */
 GtkWidget *pspdisp_gtk_page_update_interval_new(PSPdispUI *ui) {
 	GtkWidget *box;
 	GtkWidget *scroller = pspdisp_ui_component_page_new(&box);

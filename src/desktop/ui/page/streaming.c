@@ -42,6 +42,9 @@ const char *const pspdisp_gtk_page_streaming_sample_rates[] = { "11025 Hz (about
 
 /**
  * @brief Show the settings that need more than a binding: the values of the quality levels and the update intervals, and the lists of controls and presets.
+ *
+ * @param ui The app.
+ * @param page The page.
  */
 void pspdisp_gtk_page_streaming_refresh(PSPdispUI *ui, PSPdispGtkPageStreaming *page) {
 	const PSPdispSettings *settings = &ui->settings;
@@ -91,6 +94,9 @@ void pspdisp_gtk_page_streaming_refresh(PSPdispUI *ui, PSPdispGtkPageStreaming *
 
 /**
  * @brief Show what the daemon is doing, called about every second.
+ *
+ * @param ui The app.
+ * @param page The page.
  */
 void pspdisp_gtk_page_streaming_status(PSPdispUI *ui, PSPdispGtkPageStreaming *page) {
 	const PSPdispStatus *status = &ui->status;
@@ -141,6 +147,10 @@ void pspdisp_gtk_page_streaming_status(PSPdispUI *ui, PSPdispGtkPageStreaming *p
 
 /**
  * @brief Save the control chosen.
+ *
+ * @param drop_down The drop down of the controls.
+ * @param spec Unused, the property that changed.
+ * @param ui The app.
  */
 void pspdisp_gtk_page_streaming_on_control(GtkDropDown *drop_down, GParamSpec *spec, PSPdispUI *ui) {
 	(void) spec;
@@ -153,6 +163,9 @@ void pspdisp_gtk_page_streaming_on_control(GtkDropDown *drop_down, GParamSpec *s
 
 /**
  * @brief Apply the preset chosen: its streaming settings are saved, as when it's chosen on the PSP.
+ *
+ * @param button The "Apply" button, with the page in its data.
+ * @param ui The app.
  */
 void pspdisp_gtk_page_streaming_on_apply_preset(GtkButton *button, PSPdispUI *ui) {
 	PSPdispGtkPageStreaming *page = g_object_get_data(G_OBJECT(button), "page");
@@ -170,17 +183,34 @@ void pspdisp_gtk_page_streaming_on_apply_preset(GtkButton *button, PSPdispUI *ui
 	}
 }
 
+/**
+ * @brief Start the daemon.
+ *
+ * @param button Unused, the button.
+ * @param ui The app.
+ */
 void pspdisp_gtk_page_streaming_on_start(GtkButton *button, PSPdispUI *ui) {
 	(void) button;
 	pspdisp_ui_start_daemon(ui);
 }
 
+/**
+ * @brief Stop the daemon.
+ *
+ * @param button Unused, the button.
+ * @param ui The app.
+ */
 void pspdisp_gtk_page_streaming_on_stop(GtkButton *button, PSPdispUI *ui) {
 	(void) button;
 	pspdisp_ui_stop_daemon(ui);
 }
 
-// "Streaming" page component
+/**
+ * @brief Make the "Streaming" page: what the daemon is doing, the buttons to start and stop it, and the groups of the options (PSPdisp, image, sound, control and presets).
+ *
+ * @param ui The app.
+ * @return The page.
+ */
 GtkWidget *pspdisp_gtk_page_streaming_new(PSPdispUI *ui) {
 	PSPdispGtkPageStreaming *page = g_new0(PSPdispGtkPageStreaming, 1);
 	GtkWidget *box;

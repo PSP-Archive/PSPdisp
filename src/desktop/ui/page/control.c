@@ -24,6 +24,9 @@ typedef struct {
 
 /**
  * @brief Show the control files, after the settings were loaded again.
+ *
+ * @param ui The app.
+ * @param page The page.
  */
 void pspdisp_gtk_page_control_refresh(PSPdispUI *ui, PSPdispGtkPageControl *page) {
 	GString *text = g_string_new(NULL);
@@ -41,6 +44,12 @@ void pspdisp_gtk_page_control_refresh(PSPdispUI *ui, PSPdispGtkPageControl *page
 	g_string_free(text, TRUE);
 }
 
+/**
+ * @brief Open the folder of the control files, to edit or add them.
+ *
+ * @param button Unused, the button.
+ * @param ui The app.
+ */
 void pspdisp_gtk_page_control_on_open_folder(GtkButton *button, PSPdispUI *ui) {
 	(void) button;
 	char *path = pspdisp_settings_control_dir(ui->settings_dir);
@@ -48,6 +57,12 @@ void pspdisp_gtk_page_control_on_open_folder(GtkButton *button, PSPdispUI *ui) {
 	g_free(path);
 }
 
+/**
+ * @brief Load the settings again, so the list of the control files is read again.
+ *
+ * @param button Unused, the button.
+ * @param ui The app.
+ */
 void pspdisp_gtk_page_control_on_refresh(GtkButton *button, PSPdispUI *ui) {
 	(void) button;
 	pspdisp_ui_reload(ui);
@@ -55,6 +70,13 @@ void pspdisp_gtk_page_control_on_refresh(GtkButton *button, PSPdispUI *ui) {
 
 /**
  * @brief Show the scan code of the key pressed in the entry, as a control file writes it (e.g. 001E for A, E048 for up).
+ *
+ * @param controller Unused, the key controller of the entry.
+ * @param keyval Unused, the key symbol.
+ * @param keycode The hardware key code of the key.
+ * @param state Unused, the modifiers.
+ * @param entry The entry, where the scan code is shown.
+ * @return Always `TRUE`, so the key isn't typed in the entry.
  */
 gboolean pspdisp_gtk_page_control_on_key(GtkEventControllerKey *controller, guint keyval, guint keycode, GdkModifierType state, GtkWidget *entry) {
 	(void) controller;
@@ -72,7 +94,13 @@ gboolean pspdisp_gtk_page_control_on_key(GtkEventControllerKey *controller, guin
 	return TRUE; // The key isn't typed
 }
 
-// Control files editing component
+/**
+ * @brief Make the group to edit the control files: what the PSP buttons drive, the list of the control files, and the buttons to open their folder and to read them again.
+ *
+ * @param ui The app.
+ * @param page The page, whose list of the control files is made.
+ * @return The group box.
+ */
 GtkWidget *pspdisp_gtk_page_control_files_new(PSPdispUI *ui, PSPdispGtkPageControl *page) {
 	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
 
@@ -109,7 +137,11 @@ GtkWidget *pspdisp_gtk_page_control_files_new(PSPdispUI *ui, PSPdispGtkPageContr
 	return pspdisp_ui_component_groupbox_new("Edit files", box);
 }
 
-// Scancode viewer component
+/**
+ * @brief Make the group of the scan code viewer: an entry that shows the scan code of the key pressed in it, as a control file writes it.
+ *
+ * @return The group box.
+ */
 GtkWidget *pspdisp_gtk_page_control_scancode_new() {
 	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
 
@@ -137,7 +169,12 @@ GtkWidget *pspdisp_gtk_page_control_scancode_new() {
 	return pspdisp_ui_component_groupbox_new("Scancode", box);
 }
 
-// "Control" page component
+/**
+ * @brief Make the "Control" page: the control files, and the scan code viewer.
+ *
+ * @param ui The app.
+ * @return The page.
+ */
 GtkWidget *pspdisp_gtk_page_control_new(PSPdispUI *ui) {
 	PSPdispGtkPageControl *page = g_new0(PSPdispGtkPageControl, 1);
 	GtkWidget *box;

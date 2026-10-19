@@ -207,6 +207,10 @@ void pspdisp_settings_defaults(PSPdispSettings *settings) {
 
 /**
  * @brief Tell if two streaming settings are the same.
+ *
+ * @param a Streaming settings.
+ * @param b The other streaming settings.
+ * @return `true` if they're the same.
  */
 bool pspdisp_settings_streaming_equal(const PSPdispSettingsStreaming *a, const PSPdispSettingsStreaming *b) {
 	return a->quality == b->quality && a->uncompressed == b->uncompressed && a->update_interval == b->update_interval
@@ -216,6 +220,10 @@ bool pspdisp_settings_streaming_equal(const PSPdispSettingsStreaming *a, const P
 
 /**
  * @brief Tell if two settings are the same.
+ *
+ * @param a Settings.
+ * @param b The other settings.
+ * @return `true` if they're the same.
  */
 bool pspdisp_settings_equal(const PSPdispSettings *a, const PSPdispSettings *b) {
 	return a->enabled == b->enabled && a->use_usb == b->use_usb && a->use_wlan == b->use_wlan && a->higher_priority == b->higher_priority && pspdisp_settings_streaming_equal(&a->streaming, &b->streaming)
@@ -226,6 +234,9 @@ bool pspdisp_settings_equal(const PSPdispSettings *a, const PSPdispSettings *b) 
 
 /**
  * @brief Get the sample rate in Hz of a sample rate setting.
+ *
+ * @param sample_rate The sample rate setting.
+ * @return The sample rate in Hz.
  */
 uint32_t pspdisp_settings_sample_rate_hz(PSPdispComSampleRate sample_rate) {
 	return pspdisp_settings_sample_rates[MIN(sample_rate, PSPDISP_COM_SAMPLE_RATE_44100)];
@@ -234,6 +245,9 @@ uint32_t pspdisp_settings_sample_rate_hz(PSPdispComSampleRate sample_rate) {
 /**
  * @brief Find a name in a list of names, ignoring the case.
  *
+ * @param names The names.
+ * @param count The number of names.
+ * @param name The name to find (`NULL` finds nothing).
  * @return Its index, or -1 if it's not there.
  */
 int pspdisp_settings_find_name(const char *const *names, size_t count, const char *name) {
@@ -246,6 +260,9 @@ int pspdisp_settings_find_name(const char *const *names, size_t count, const cha
 /**
  * @brief Find a value in a list of values.
  *
+ * @param values The values.
+ * @param count The number of values.
+ * @param value The value to find.
  * @return Its index, or -1 if it's not there.
  */
 int pspdisp_settings_find_value(const uint32_t *values, size_t count, uint32_t value) {
@@ -258,6 +275,9 @@ int pspdisp_settings_find_value(const uint32_t *values, size_t count, uint32_t v
 /**
  * @brief Read a boolean of a key file, if it's there and valid.
  *
+ * @param file The key file.
+ * @param group The group.
+ * @param key The key.
  * @param value Where to write it, untouched otherwise.
  */
 void pspdisp_settings_read_boolean(GKeyFile *file, const char *group, const char *key, bool *value) {
@@ -272,6 +292,11 @@ void pspdisp_settings_read_boolean(GKeyFile *file, const char *group, const char
 /**
  * @brief Read an integer of a key file, if it's there and in a range.
  *
+ * @param file The key file.
+ * @param group The group.
+ * @param key The key.
+ * @param minimum The smallest valid integer.
+ * @param maximum The largest valid integer.
  * @param value Where to write it, untouched otherwise.
  */
 void pspdisp_settings_read_integer(GKeyFile *file, const char *group, const char *key, uint32_t minimum, uint32_t maximum, uint32_t *value) {
@@ -286,6 +311,9 @@ void pspdisp_settings_read_integer(GKeyFile *file, const char *group, const char
 /**
  * @brief Read a string of a key file into a buffer, if it's there and fits.
  *
+ * @param file The key file.
+ * @param group The group.
+ * @param key The key.
  * @param value Where to write it, untouched otherwise.
  * @param size The size of `value` in bytes.
  */
@@ -300,6 +328,11 @@ void pspdisp_settings_read_string(GKeyFile *file, const char *group, const char 
 /**
  * @brief Read a name of a list (e.g. a quality level), if it's there and in the list.
  *
+ * @param file The key file.
+ * @param group The group.
+ * @param key The key.
+ * @param names The names of the list.
+ * @param count The number of names.
  * @param value Where to write its index, untouched otherwise.
  */
 void pspdisp_settings_read_name(GKeyFile *file, const char *group, const char *key, const char *const *names, size_t count, uint32_t *value) {
@@ -314,6 +347,11 @@ void pspdisp_settings_read_name(GKeyFile *file, const char *group, const char *k
 /**
  * @brief Read a value of a list (e.g. a sample rate in Hz), if it's there and in the list.
  *
+ * @param file The key file.
+ * @param group The group.
+ * @param key The key.
+ * @param values The values of the list.
+ * @param count The number of values.
  * @param value Where to write its index, untouched otherwise.
  */
 void pspdisp_settings_read_value(GKeyFile *file, const char *group, const char *key, const uint32_t *values, size_t count, uint32_t *value) {
@@ -658,6 +696,9 @@ typedef struct {
 
 /**
  * @brief Set a key, the editor of `pspdisp_settings_set()`.
+ *
+ * @param file The key file of the settings, as on the disk.
+ * @param key The key to set, with its group and its value.
  */
 void pspdisp_settings_edit_key(GKeyFile *file, PSPdispSettingsKey *key) {
 	g_key_file_set_value(file, key->group, key->key, key->value);
@@ -688,6 +729,9 @@ typedef struct {
 
 /**
  * @brief Write the streaming settings that changed, the editor of `pspdisp_settings_update_streaming()`.
+ *
+ * @param file The key file of the settings, as on the disk.
+ * @param change The streaming settings before and after the change.
  */
 void pspdisp_settings_edit_streaming_changes(GKeyFile *file, PSPdispSettingsStreamingChange *change) {
 	GKeyFile *before = g_key_file_new();
@@ -730,6 +774,9 @@ bool pspdisp_settings_update_streaming(const char *dir, const PSPdispSettingsStr
 
 /**
  * @brief Write the streaming settings, the editor of `pspdisp_settings_set_streaming()`.
+ *
+ * @param file The key file of the settings, as on the disk.
+ * @param streaming The streaming settings.
  */
 void pspdisp_settings_edit_streaming(GKeyFile *file, const PSPdispSettingsStreaming *streaming) {
 	pspdisp_settings_write_streaming(file, "Streaming", streaming);
@@ -786,6 +833,8 @@ GKeyFile *pspdisp_settings_load_ini(const char *path, GError **error) {
 
 /**
  * @brief Free a preset (for `g_ptr_array_new_with_free_func()`).
+ *
+ * @param preset The preset.
  */
 void pspdisp_settings_preset_free(PSPdispSettingsPreset *preset) {
 	g_free(preset->name);
@@ -795,6 +844,8 @@ void pspdisp_settings_preset_free(PSPdispSettingsPreset *preset) {
 
 /**
  * @brief Free a control file (for `g_ptr_array_new_with_free_func()`).
+ *
+ * @param control The control file.
  */
 void pspdisp_settings_control_free(PSPdispSettingsControl *control) {
 	g_free(control->name);
@@ -804,6 +855,10 @@ void pspdisp_settings_control_free(PSPdispSettingsControl *control) {
 
 /**
  * @brief Compare two presets or two control files by their file names, for sorting them as the old desktop app (so `1-...` comes before `2-...`).
+ *
+ * @param a A pointer to a preset or a control file, in the array sorted.
+ * @param b A pointer to the other one.
+ * @return A negative number, 0 or a positive number, as `strcmp()`.
  */
 int pspdisp_settings_compare_file_names(const void *a, const void *b) {
 	const PSPdispSettingsPreset *preset_a = *(const PSPdispSettingsPreset *const *) a;

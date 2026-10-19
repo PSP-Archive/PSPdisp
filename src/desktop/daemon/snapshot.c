@@ -76,6 +76,10 @@ void pspdisp_daemon_snapshot_unref(PSPdispDaemonSnapshot *snapshot) {
 
 /**
  * @brief Tell if two lists of presets or of control files have the same names and files.
+ *
+ * @param a A list (`PSPdispSettingsPreset *` or `PSPdispSettingsControl *`).
+ * @param b The other list.
+ * @return `true` if they're the same.
  */
 bool pspdisp_daemon_snapshot_lists_equal(GPtrArray *a, GPtrArray *b) {
 	if (a->len != b->len) return false;

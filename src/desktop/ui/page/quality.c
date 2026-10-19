@@ -15,6 +15,9 @@
 
 /**
  * @brief Set the default JPEG quality of each level, as the old desktop app.
+ *
+ * @param button Unused, the button.
+ * @param ui The app.
  */
 void pspdisp_gtk_page_quality_on_reset(GtkButton *button, PSPdispUI *ui) {
 	(void) button;
@@ -28,7 +31,12 @@ void pspdisp_gtk_page_quality_on_reset(GtkButton *button, PSPdispUI *ui) {
 	}
 }
 
-// JPEG compression quality component
+/**
+ * @brief Make the group of the JPEG qualities: the quality of each quality level, and a button to set the defaults.
+ *
+ * @param ui The app.
+ * @return The group box.
+ */
 GtkWidget *pspdisp_gtk_page_quality_jpeg_new(PSPdispUI *ui) {
 	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
 
@@ -82,7 +90,12 @@ GtkWidget *pspdisp_gtk_page_quality_jpeg_new(PSPdispUI *ui) {
 	return pspdisp_ui_component_groupbox_new("JPEG compression quality", box);
 }
 
-// "Quality" page component
+/**
+ * @brief Make the "Quality" page: the JPEG quality of each quality level.
+ *
+ * @param ui The app.
+ * @return The page.
+ */
 GtkWidget *pspdisp_gtk_page_quality_new(PSPdispUI *ui) {
 	GtkWidget *box;
 	GtkWidget *scroller = pspdisp_ui_component_page_new(&box);

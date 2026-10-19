@@ -132,6 +132,12 @@ typedef struct {
 
 /**
  * @brief Read an integer as the old desktop app (`TIniFile.ReadInteger`): the default when the key is missing, empty or not a number.
+ *
+ * @param file The control file.
+ * @param section The section.
+ * @param key The key.
+ * @param fallback The default.
+ * @return The integer, or `fallback`.
  */
 int32_t pspdisp_control_file_read_integer(GKeyFile *file, const char *section, const char *key, int32_t fallback) {
 	char *value = g_key_file_get_string(file, section, key, NULL);

@@ -24,22 +24,35 @@ typedef struct {
 	GtkWidget *total_sent; // Total amount sent
 } PSPdispGtkPageAbout;
 
-// Title component - uses Pango markup to style the project name
+/**
+ * @brief Make the title of the page: the name of PSPdisp, and its copyrights.
+ *
+ * @return The label of the title.
+ */
 GtkWidget *pspdisp_gtk_page_about_title_new() {
 	GtkWidget *label = gtk_label_new(NULL);
+	// The name in big bold letters, with the Pango markup
 	gtk_label_set_markup(GTK_LABEL(label), "<span size='xx-large' weight='bold'>PSPdisp</span> © 2008-2015 JJS, © 2026 Arthur Neto");
 	gtk_label_set_xalign(GTK_LABEL(label), 0.0f);
 	return label;
 }
 
-// Version info component
+/**
+ * @brief Make the version of PSPdisp, as the build gives it.
+ *
+ * @return The label of the version.
+ */
 GtkWidget *pspdisp_gtk_page_about_version_new() {
 	GtkWidget *label = gtk_label_new("Version " PSPDISP_VERSION);
 	gtk_label_set_xalign(GTK_LABEL(label), 0.0f);
 	return label;
 }
 
-// Links component - contains useful links that the user can access
+/**
+ * @brief Make the links to the home pages: the GitHub repository of PSPdisp, and the home page of the old desktop app.
+ *
+ * @return The box of the links.
+ */
 GtkWidget *pspdisp_gtk_page_about_links_new() {
 	GtkWidget *github_link = gtk_label_new(NULL);
 	gtk_label_set_markup(GTK_LABEL(github_link), "Visit the PSPdisp GitHub repository <a href=\"https://github.com/net-0/PSPdisp\">PSPdisp</a>");
@@ -59,6 +72,9 @@ GtkWidget *pspdisp_gtk_page_about_links_new() {
 
 /**
  * @brief Show the status of the daemon, called about every second.
+ *
+ * @param ui The app.
+ * @param page The page.
  */
 void pspdisp_gtk_page_about_status(PSPdispUI *ui, PSPdispGtkPageAbout *page) {
 	const PSPdispStatus *status = &ui->status;
@@ -83,7 +99,12 @@ void pspdisp_gtk_page_about_status(PSPdispUI *ui, PSPdispGtkPageAbout *page) {
 }
 
 /**
- * @brief Add a row of the status: its name, and its value, returned to be updated.
+ * @brief Add a row to the status: its name, and its value.
+ *
+ * @param grid The grid of the status.
+ * @param row The row.
+ * @param name The name of the row.
+ * @return The label of the value, to update.
  */
 GtkWidget *pspdisp_gtk_page_about_status_row(GtkWidget *grid, int row, const char *name) {
 	GtkWidget *key = gtk_label_new(name);
@@ -97,7 +118,15 @@ GtkWidget *pspdisp_gtk_page_about_status_row(GtkWidget *grid, int row, const cha
 	return value;
 }
 
-// Status component - contains use infos about the PSP display, from the daemon (the totals are of the PSP connected)
+/**
+ * @brief Make the status of the page: how the PSP is connected and how fast it streams, as the daemon tells it.
+ *
+ * The totals are the ones of the PSP connected.
+ *
+ * @param ui The app.
+ * @param page The page, whose labels of the status are made.
+ * @return The group box of the status.
+ */
 GtkWidget *pspdisp_gtk_page_about_status_new(PSPdispUI *ui, PSPdispGtkPageAbout *page) {
 	GtkWidget *grid = gtk_grid_new();
 	gtk_grid_set_row_spacing(GTK_GRID(grid), 4);
@@ -113,7 +142,12 @@ GtkWidget *pspdisp_gtk_page_about_status_new(PSPdispUI *ui, PSPdispGtkPageAbout 
 	return pspdisp_ui_component_groupbox_new("Status", grid);
 }
 
-// "About" page component
+/**
+ * @brief Make the "About" page: the name and the version of PSPdisp, its links, and the status of the daemon.
+ *
+ * @param ui The app.
+ * @return The page.
+ */
 GtkWidget *pspdisp_gtk_page_about_new(PSPdispUI *ui) {
 	PSPdispGtkPageAbout *page = g_new0(PSPdispGtkPageAbout, 1);
 	GtkWidget *box;

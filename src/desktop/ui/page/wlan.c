@@ -56,6 +56,9 @@ char *pspdisp_gtk_page_wlan_addresses() {
 
 /**
  * @brief Show the IP addresses again (e.g. after joining a network).
+ *
+ * @param button Unused, the button.
+ * @param page The page.
  */
 void pspdisp_gtk_page_wlan_on_refresh_addresses(GtkButton *button, PSPdispGtkPageWLAN *page) {
 	(void) button;
@@ -66,6 +69,9 @@ void pspdisp_gtk_page_wlan_on_refresh_addresses(GtkButton *button, PSPdispGtkPag
 
 /**
  * @brief Remove the password, as "No password" of the old desktop app.
+ *
+ * @param button Unused, the button.
+ * @param page The page.
  */
 void pspdisp_gtk_page_wlan_on_no_password(GtkButton *button, PSPdispGtkPageWLAN *page) {
 	(void) button;
@@ -74,6 +80,9 @@ void pspdisp_gtk_page_wlan_on_no_password(GtkButton *button, PSPdispGtkPageWLAN 
 
 /**
  * @brief Show what the WLAN server is doing, called about every second.
+ *
+ * @param ui The app.
+ * @param page The page.
  */
 void pspdisp_gtk_page_wlan_status(PSPdispUI *ui, PSPdispGtkPageWLAN *page) {
 	const PSPdispStatus *status = &ui->status;
@@ -94,7 +103,12 @@ void pspdisp_gtk_page_wlan_status(PSPdispUI *ui, PSPdispGtkPageWLAN *page) {
 	g_free(text);
 }
 
-// Notifications settings component
+/**
+ * @brief Make the group of the notifications: the WLAN events that show one.
+ *
+ * @param ui The app.
+ * @return The group box.
+ */
 GtkWidget *pspdisp_gtk_page_wlan_notifications_new(PSPdispUI *ui) {
 	GtkWidget *grid = gtk_grid_new();
 	gtk_grid_set_row_spacing(GTK_GRID(grid), 6);
@@ -111,7 +125,13 @@ GtkWidget *pspdisp_gtk_page_wlan_notifications_new(PSPdispUI *ui) {
 	return pspdisp_ui_component_groupbox_new("Show notification on those events", grid);
 }
 
-// Password settings component
+/**
+ * @brief Make the group of the password: its entry, and a button to remove it.
+ *
+ * @param ui The app.
+ * @param page The page, whose password entry is made.
+ * @return The group box.
+ */
 GtkWidget *pspdisp_gtk_page_wlan_password_new(PSPdispUI *ui, PSPdispGtkPageWLAN *page) {
 	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
 	GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
@@ -139,7 +159,12 @@ GtkWidget *pspdisp_gtk_page_wlan_password_new(PSPdispUI *ui, PSPdispGtkPageWLAN 
 	return pspdisp_ui_component_groupbox_new("Password", box);
 }
 
-// Port component - the port offset of the PSP, as the instance number of the old desktop app
+/**
+ * @brief Make the group of the port: the port offset of the PSP, as the instance number of the old desktop app.
+ *
+ * @param ui The app.
+ * @return The group box.
+ */
 GtkWidget *pspdisp_gtk_page_wlan_port_new(PSPdispUI *ui) {
 	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
 	GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
@@ -158,7 +183,13 @@ GtkWidget *pspdisp_gtk_page_wlan_port_new(PSPdispUI *ui) {
 	return pspdisp_ui_component_groupbox_new("Port", box);
 }
 
-// IP address info component
+/**
+ * @brief Make the group of the IP addresses: the addresses of this computer to set on the PSP, and what the WLAN server is doing.
+ *
+ * @param ui The app.
+ * @param page The page, whose labels are made.
+ * @return The group box.
+ */
 GtkWidget *pspdisp_gtk_page_wlan_ip_address_new(PSPdispUI *ui, PSPdispGtkPageWLAN *page) {
 	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
 	GtkWidget *paragraph = pspdisp_ui_component_paragraph_new(
@@ -187,7 +218,12 @@ GtkWidget *pspdisp_gtk_page_wlan_ip_address_new(PSPdispUI *ui, PSPdispGtkPageWLA
 	return pspdisp_ui_component_groupbox_new("IP address", box);
 }
 
-// "WLAN" page component
+/**
+ * @brief Make the "WLAN" page: the notifications, the password, the port and the IP addresses of the WLAN mode.
+ *
+ * @param ui The app.
+ * @return The page.
+ */
 GtkWidget *pspdisp_gtk_page_wlan_new(PSPdispUI *ui) {
 	PSPdispGtkPageWLAN *page = g_new0(PSPdispGtkPageWLAN, 1);
 	GtkWidget *box;

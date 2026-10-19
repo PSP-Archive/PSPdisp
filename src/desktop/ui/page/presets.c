@@ -29,7 +29,9 @@ typedef struct {
 /**
  * @brief Get the preset of a row of the list.
  *
- * @return The preset (`NULL` for "<new preset>").
+ * @param page The page.
+ * @param row The row (`NULL` for none).
+ * @return The preset (`NULL` for "<new preset>", or for no row).
  */
 const PSPdispSettingsPreset *pspdisp_gtk_page_presets_of_row(PSPdispGtkPagePresets *page, GtkListBoxRow *row) {
 	if (row == NULL) return NULL;
@@ -39,6 +41,9 @@ const PSPdispSettingsPreset *pspdisp_gtk_page_presets_of_row(PSPdispGtkPagePrese
 
 /**
  * @brief Show the presets, after the settings were loaded again, keeping the one selected.
+ *
+ * @param ui The app.
+ * @param page The page.
  */
 void pspdisp_gtk_page_presets_refresh(PSPdispUI *ui, PSPdispGtkPagePresets *page) {
 	gtk_list_box_remove_all(GTK_LIST_BOX(page->list));
@@ -65,6 +70,10 @@ void pspdisp_gtk_page_presets_refresh(PSPdispUI *ui, PSPdispGtkPagePresets *page
 
 /**
  * @brief Show the name of the preset selected, and enable its buttons, as the old desktop app.
+ *
+ * @param list Unused, the list.
+ * @param row The row selected (`NULL` for none).
+ * @param page The page.
  */
 void pspdisp_gtk_page_presets_on_select(GtkListBox *list, GtkListBoxRow *row, PSPdispGtkPagePresets *page) {
 	(void) list;
@@ -83,6 +92,8 @@ void pspdisp_gtk_page_presets_on_select(GtkListBox *list, GtkListBoxRow *row, PS
 /**
  * @brief Make a file name for a new preset from its name (e.g. "my-preset.preset"), not used by another preset.
  *
+ * @param ui The app, for the presets already there.
+ * @param name The name of the new preset.
  * @return The file name, free it with `g_free()`.
  */
 char *pspdisp_gtk_page_presets_file_name(PSPdispUI *ui, const char *name) {
@@ -125,6 +136,9 @@ char *pspdisp_gtk_page_presets_file_name(PSPdispUI *ui, const char *name) {
 
 /**
  * @brief Save the streaming settings as the preset selected, or as a new one.
+ *
+ * @param button Unused, the button.
+ * @param page The page.
  */
 void pspdisp_gtk_page_presets_on_save(GtkButton *button, PSPdispGtkPagePresets *page) {
 	(void) button;
@@ -156,6 +170,9 @@ void pspdisp_gtk_page_presets_on_save(GtkButton *button, PSPdispGtkPagePresets *
 
 /**
  * @brief Apply the preset selected: its streaming settings are saved, as when it's chosen on the PSP.
+ *
+ * @param button Unused, the button.
+ * @param page The page.
  */
 void pspdisp_gtk_page_presets_on_load(GtkButton *button, PSPdispGtkPagePresets *page) {
 	(void) button;
@@ -172,6 +189,12 @@ void pspdisp_gtk_page_presets_on_load(GtkButton *button, PSPdispGtkPagePresets *
 	}
 }
 
+/**
+ * @brief Delete the file of the preset selected.
+ *
+ * @param button Unused, the button.
+ * @param page The page.
+ */
 void pspdisp_gtk_page_presets_on_delete(GtkButton *button, PSPdispGtkPagePresets *page) {
 	(void) button;
 	if (page->selected == NULL) return;
@@ -187,11 +210,23 @@ void pspdisp_gtk_page_presets_on_delete(GtkButton *button, PSPdispGtkPagePresets
 	}
 }
 
+/**
+ * @brief Load the settings again, so the list of the presets is read again.
+ *
+ * @param button Unused, the button.
+ * @param page The page.
+ */
 void pspdisp_gtk_page_presets_on_refresh(GtkButton *button, PSPdispGtkPagePresets *page) {
 	(void) button;
 	pspdisp_ui_reload(page->ui);
 }
 
+/**
+ * @brief Open the folder of the presets, to edit them.
+ *
+ * @param button Unused, the button.
+ * @param page The page.
+ */
 void pspdisp_gtk_page_presets_on_open_folder(GtkButton *button, PSPdispGtkPagePresets *page) {
 	(void) button;
 	char *path = pspdisp_settings_presets_dir(page->ui->settings_dir);
@@ -199,7 +234,13 @@ void pspdisp_gtk_page_presets_on_open_folder(GtkButton *button, PSPdispGtkPagePr
 	g_free(path);
 }
 
-// Preset files component
+/**
+ * @brief Make the group of the preset files: the name of a preset, the list of the presets, and the buttons to save, load and delete them, list them again and open their folder.
+ *
+ * @param ui The app.
+ * @param page The page, whose widgets are made.
+ * @return The group box.
+ */
 GtkWidget *pspdisp_gtk_page_presets_files_new(PSPdispUI *ui, PSPdispGtkPagePresets *page) {
 	GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
 
@@ -275,7 +316,12 @@ GtkWidget *pspdisp_gtk_page_presets_files_new(PSPdispUI *ui, PSPdispGtkPagePrese
 	return pspdisp_ui_component_groupbox_new("Preset files", box);
 }
 
-// "Presets" page component
+/**
+ * @brief Make the "Presets" page: the preset files of the streaming settings.
+ *
+ * @param ui The app.
+ * @return The page.
+ */
 GtkWidget *pspdisp_gtk_page_presets_new(PSPdispUI *ui) {
 	PSPdispGtkPagePresets *page = g_new0(PSPdispGtkPagePresets, 1);
 	page->ui = ui;

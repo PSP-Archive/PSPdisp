@@ -145,6 +145,9 @@ void pspdisp_ui_set_streaming_settings(PSPdispUI *ui, const PSPdispSettingsStrea
 
 /**
  * @brief Get the value of a binding in the settings.
+ *
+ * @param binding The binding.
+ * @return A pointer to its value, in the settings of the app.
  */
 void *pspdisp_ui_binding_value(PSPdispUIBinding *binding) {
 	return (uint8_t *) &binding->ui->settings + binding->offset;
@@ -152,6 +155,8 @@ void *pspdisp_ui_binding_value(PSPdispUIBinding *binding) {
 
 /**
  * @brief Show the setting of a binding in its widget, only if it differs (e.g. so the cursor of an entry doesn't move).
+ *
+ * @param binding The binding.
  */
 void pspdisp_ui_binding_show(PSPdispUIBinding *binding) {
 	void *value = pspdisp_ui_binding_value(binding);
@@ -183,6 +188,8 @@ void pspdisp_ui_binding_show(PSPdispUIBinding *binding) {
 
 /**
  * @brief Save the setting of a binding from its widget, when the user changes it.
+ *
+ * @param binding The binding.
  */
 void pspdisp_ui_binding_save(PSPdispUIBinding *binding) {
 	if (binding->ui->updating) return;
@@ -216,6 +223,9 @@ void pspdisp_ui_binding_save(PSPdispUIBinding *binding) {
 
 /**
  * @brief Save the setting of a binding, called by the signals of the check buttons, the spin buttons and the entries.
+ *
+ * @param widget Unused, the widget of the binding.
+ * @param binding The binding.
  */
 void pspdisp_ui_binding_on_signal(GtkWidget *widget, PSPdispUIBinding *binding) {
 	(void) widget;
@@ -224,6 +234,10 @@ void pspdisp_ui_binding_on_signal(GtkWidget *widget, PSPdispUIBinding *binding) 
 
 /**
  * @brief Save the setting of a binding, called by the notifications of the switches and the drop downs.
+ *
+ * @param widget Unused, the widget of the binding.
+ * @param spec Unused, the property that changed.
+ * @param binding The binding.
  */
 void pspdisp_ui_binding_on_notify(GObject *widget, GParamSpec *spec, PSPdispUIBinding *binding) {
 	(void) widget;
@@ -332,6 +346,9 @@ void pspdisp_ui_reload(PSPdispUI *ui) {
 
 /**
  * @brief Load the settings again after a change on the disk, the timeout planned by `pspdisp_ui_on_file_change()`.
+ *
+ * @param ui The app.
+ * @return Always `G_SOURCE_REMOVE`, it's planned again with the next change.
  */
 gboolean pspdisp_ui_on_reload(PSPdispUI *ui) {
 	ui->reload_source = 0;
@@ -341,6 +358,12 @@ gboolean pspdisp_ui_on_reload(PSPdispUI *ui) {
 
 /**
  * @brief Plan a reload of the settings, called by the monitors when a file changes.
+ *
+ * @param monitor Unused, the monitor.
+ * @param file Unused, the file that changed.
+ * @param other_file Unused.
+ * @param event What changed.
+ * @param ui The app.
  */
 void pspdisp_ui_on_file_change(GFileMonitor *monitor, GFile *file, GFile *other_file, GFileMonitorEvent event, PSPdispUI *ui) {
 	(void) monitor;
@@ -355,6 +378,10 @@ void pspdisp_ui_on_file_change(GFileMonitor *monitor, GFile *file, GFile *other_
 
 /**
  * @brief Watch a file or a folder of the settings.
+ *
+ * @param ui The app.
+ * @param path The file or folder.
+ * @param directory If it's a folder.
  */
 void pspdisp_ui_watch(PSPdispUI *ui, const char *path, bool directory) {
 	GFile *file = g_file_new_for_path(path);
@@ -369,6 +396,10 @@ void pspdisp_ui_watch(PSPdispUI *ui, const char *path, bool directory) {
 
 /**
  * @brief Send a notification of a WLAN event, as the balloons of the old desktop app.
+ *
+ * @param ui The app.
+ * @param title The title of the notification.
+ * @param body The text of the notification.
  */
 void pspdisp_ui_notify_wlan_event(PSPdispUI *ui, const char *title, const char *body) {
 	GNotification *notification = g_notification_new(title);
