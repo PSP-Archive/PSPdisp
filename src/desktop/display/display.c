@@ -111,6 +111,58 @@ PSPdispDisplay *pspdisp_display_new(PSPdispModel model, PSPdispRegion region, ui
 }
 
 /**
+ * @brief A source of the connector to release on the display thread, and the wait for it (see `pspdisp_display_release()`).
+ */
+typedef struct {
+	GSource *source; // The source to destroy and release
+	GMutex mutex; // Guards `released`
+	GCond cond; // Signaled once the source is released
+	bool released; // If the source is released
+} PSPdispDisplayRelease;
+
+/**
+ * @brief Destroy and release a source of the connector, called on the display thread.
+ *
+ * @param release The source, and the wait for it.
+ * @return Always `G_SOURCE_REMOVE`, it's done once.
+ */
+gboolean pspdisp_display_on_release(PSPdispDisplayRelease *release) {
+	g_source_destroy(release->source); // Never dispatched again (if the driver is gone, the connector already destroyed it)
+	g_source_unref(release->source); // The last reference finalizes it, where the connector removes the virtual display
+
+	g_mutex_lock(&release->mutex);
+	release->released = true;
+	g_cond_signal(&release->cond);
+	g_mutex_unlock(&release->mutex);
+	return G_SOURCE_REMOVE;
+}
+
+/**
+ * @brief Destroy and release a source of the connector on the display thread, and wait until it's done.
+ *
+ * Finalized on the display thread, the source never closes what that thread waits on (e.g. the file descriptor of EVDI) while it waits.
+ *
+ * @param display The display.
+ * @param source The source of the connector, its reference is taken.
+ */
+void pspdisp_display_release(PSPdispDisplay *display, GSource *source) {
+	PSPdispDisplayRelease release = { .source = source };
+	g_mutex_init(&release.mutex);
+	g_cond_init(&release.cond);
+
+	// Called at once on the display thread (e.g. from a handler), otherwise queued there, between two waits
+	g_main_context_invoke(display->context, G_SOURCE_FUNC(pspdisp_display_on_release), &release);
+
+	g_mutex_lock(&release.mutex);
+	while (!release.released)
+		g_cond_wait(&release.cond, &release.mutex);
+	g_mutex_unlock(&release.mutex);
+
+	g_cond_clear(&release.cond);
+	g_mutex_clear(&release.mutex);
+}
+
+/**
  * @brief Connect the display, enabling it as a device: the connector creates the virtual display, so it appears on the computer.
  *
  * The source of the connector is attached to `context`, so the handlers run on the display thread.
@@ -120,9 +172,9 @@ PSPdispDisplay *pspdisp_display_new(PSPdispModel model, PSPdispRegion region, ui
  * @return `true` if it was connected now, `false` if it was already connected or it failed.
  */
 bool pspdisp_display_connect(PSPdispDisplay *display) {
-	// A source that destroyed itself (its driver is gone) is only released, which removes the virtual display
+	// A source that destroyed itself (its driver is gone) is released first, which removes the virtual display
 	if (display->frame_source != NULL && g_source_is_destroyed(display->frame_source))
-		g_clear_pointer(&display->frame_source, g_source_unref);
+		pspdisp_display_release(display, g_steal_pointer(&display->frame_source));
 	if (display->frame_source != NULL) return false; // Already connected
 
 	GSource *frame_source = pspdisp_display_connector_connect(display->edid, display->frame_handler, display->dpms_handler, display->lost_handler, display->handler_data);
@@ -136,8 +188,8 @@ bool pspdisp_display_connect(PSPdispDisplay *display) {
 /**
  * @brief Disconnect the display, disabling it as a device: the virtual display is removed from the computer.
  *
- * Releasing the last reference to the source of the connector finalizes it, where the connector removes the virtual display.
- * It happens here, or on the display thread right after a dispatch that was still running there.
+ * The source of the connector is destroyed and released on the display thread, where the connector removes the virtual display, and it waits until it's done.
+ * It may be called from a handler, on the display thread.
  *
  * @param display The display to disconnect.
  * @return `true` if it was disconnected now, `false` if it was already disconnected.
@@ -145,9 +197,7 @@ bool pspdisp_display_connect(PSPdispDisplay *display) {
 bool pspdisp_display_disconnect(PSPdispDisplay *display) {
 	if (display->frame_source == NULL) return false; // Already disconnected
 
-	g_source_destroy(display->frame_source); // Never dispatched again (if the driver is gone, the connector already destroyed it)
-	g_source_unref(display->frame_source); // Release the reference from `pspdisp_display_connect()`, the last one finalizes it
-	display->frame_source = NULL;
+	pspdisp_display_release(display, g_steal_pointer(&display->frame_source));
 	return true;
 }
 

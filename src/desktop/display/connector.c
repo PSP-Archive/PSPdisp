@@ -58,7 +58,7 @@ typedef void (*PSPdispLostHandler) (gpointer data);
  * How it gets them, and how fast it asks for frames, is up to the connector (e.g. EVDI at the PSP refresh rate, IddCx as fast as Windows draws).
  *
  * The returned source is not attached yet: attach it to a context, whose thread then calls the handlers.
- * To disconnect, destroy and unref it: the virtual display is removed when it's finalized, which GLib never does during a dispatch.
+ * To disconnect, destroy and unref it on the thread that runs its context: the virtual display is removed when it's finalized, which mustn't happen while that thread waits on it (GLib never does it during a dispatch).
  * When the driver is gone, the source tells the lost handler and destroys itself, but the virtual display is only removed when its last reference is released.
  *
  * @param edid The identification given to the computer.
