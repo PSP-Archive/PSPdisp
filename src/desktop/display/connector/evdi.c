@@ -35,6 +35,7 @@ typedef struct {
 	GSource source; // The base source, first so this struct is also a `GSource`
 	PSPdispFrameHandler frame_handler; // Handle each new frame
 	PSPdispDPMSHandler dpms_handler; // Handle each DPMS change
+	PSPdispLostHandler lost_handler; // Handle the loss of the virtual display
 	gpointer handler_data; // Given to the handlers
 	struct evdi_event_context event_context; // Handlers called by `evdi_handle_events()`, with this connector as the user data
 	evdi_handle handle; // The opened EVDI device
@@ -203,6 +204,7 @@ gboolean pspdisp_display_connector_evdi_dispatch(GSource *source, GSourceFunc ca
 
 	if (condition & (G_IO_HUP | G_IO_ERR | G_IO_NVAL)) {
 		g_warning("%s(): the EVDI device is gone", __FUNCTION__);
+		display_connector->lost_handler(display_connector->handler_data);
 		return G_SOURCE_REMOVE;
 	}
 
@@ -289,10 +291,11 @@ bool pspdisp_display_connector_evdi_add_device() {
  * @param edid The identification given to the computer.
  * @param frame_handler Handle each new frame.
  * @param dpms_handler Handle each DPMS change.
+ * @param lost_handler Handle the loss of the virtual display.
  * @param data Given to the handlers.
  * @return The source of the display events (not attached yet), or `NULL` if it failed.
  */
-GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler, gpointer data) {
+GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler, PSPdispLostHandler lost_handler, gpointer data) {
 	evdi_handle handle = evdi_open_attached_to_fixed(NULL, 0);
 
 	// libevdi may fail to open because:
@@ -311,6 +314,7 @@ GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler
 	PSPdispDisplayConnector *display_connector = (PSPdispDisplayConnector *) source;
 	display_connector->frame_handler = frame_handler;
 	display_connector->dpms_handler = dpms_handler;
+	display_connector->lost_handler = lost_handler;
 	display_connector->handler_data = data;
 	display_connector->event_context = (struct evdi_event_context) {
 		.mode_changed_handler = (void (*)(struct evdi_mode, void*)) pspdisp_display_connector_evdi_on_mode_changed,

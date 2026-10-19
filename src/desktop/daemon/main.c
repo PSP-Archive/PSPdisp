@@ -192,6 +192,33 @@ bool pspdisp_daemon_wlan_read(void *data, void *buffer, uint32_t size, uint32_t 
 }
 
 /**
+ * @brief Copy a frame of the virtual display into the media, the frame handler of the display (see `PSPdispFrameHandler`).
+ */
+void pspdisp_daemon_on_frame(void *pixels, uint16_t stride, PSPdispPixelFormat format, PSPdispDirtyRectangle *rectangles, uint8_t rectangles_length, PSPdispDaemon *daemon) {
+	pspdisp_daemon_media_on_frame(pixels, stride, format, rectangles, rectangles_length, daemon->media);
+}
+
+/**
+ * @brief Keep the power mode of the virtual display in the media, the DPMS handler of the display (see `PSPdispDPMSHandler`).
+ */
+void pspdisp_daemon_on_dpms(PSPdispDPMSMode mode, PSPdispDaemon *daemon) {
+	pspdisp_daemon_media_on_dpms(mode, daemon->media);
+}
+
+/**
+ * @brief Tell the loss of the virtual display, the lost handler of the display (see `PSPdispLostHandler`).
+ *
+ * The PSP gets a cleared screen instead of the last frame, as when the display is turned off.
+ *
+ * @param daemon The daemon.
+ */
+void pspdisp_daemon_on_display_lost(PSPdispDaemon *daemon) {
+	g_warning("The virtual display was lost (its driver is gone), the PSP gets a black screen");
+	pspdisp_daemon_media_on_dpms(PSPDISP_DPMS_MODE_OFF, daemon->media);
+	pspdisp_daemon_state_set_display(daemon->state, false);
+}
+
+/**
  * @brief Serve a connected PSP: create the virtual display, run the session, then remove the virtual display.
  *
  * The caller has the turn (see `pspdisp_daemon_take_turn()`).
@@ -206,7 +233,7 @@ void pspdisp_daemon_serve(PSPdispDaemon *daemon, PSPdispDaemonLink *link, const 
 	pspdisp_daemon_state_connected(daemon->state, via, link->wlan);
 	pspdisp_daemon_media_reset(daemon->media);
 
-	PSPdispDisplay *display = pspdisp_display_new(PSPDISP_DAEMON_PSP_MODEL, PSPDISP_DAEMON_PSP_REGION, PSPDISP_DAEMON_PSP_SERIAL_NUMBER, (PSPdispFrameHandler) pspdisp_daemon_media_on_frame, (PSPdispDPMSHandler) pspdisp_daemon_media_on_dpms, daemon->media);
+	PSPdispDisplay *display = pspdisp_display_new(PSPDISP_DAEMON_PSP_MODEL, PSPDISP_DAEMON_PSP_REGION, PSPDISP_DAEMON_PSP_SERIAL_NUMBER, (PSPdispFrameHandler) pspdisp_daemon_on_frame, (PSPdispDPMSHandler) pspdisp_daemon_on_dpms, (PSPdispLostHandler) pspdisp_daemon_on_display_lost, daemon);
 	bool connected = pspdisp_display_connect(display);
 
 	if (!connected)

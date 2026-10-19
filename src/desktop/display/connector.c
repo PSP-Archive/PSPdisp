@@ -41,6 +41,16 @@ typedef void (*PSPdispFrameHandler) (void *pixels, uint16_t stride, PSPdispPixel
 typedef void (*PSPdispDPMSHandler) (PSPdispDPMSMode mode, gpointer data);
 
 /**
+ * @brief Type of a function pointer to handle the loss of the virtual display, when its driver is gone.
+ *
+ * Called by the connector on the thread that runs the context of its source (for a display, the display thread), once, right before its source destroys itself.
+ * It's not called when the owner of the source destroys it (see `pspdisp_display_connector_connect()`).
+ *
+ * @param data The data given with the function.
+ */
+typedef void (*PSPdispLostHandler) (gpointer data);
+
+/**
  * @brief Connect a virtual display through the connector of this platform, so it appears on the computer.
  *
  * There's one connector per platform, included below at compile time (e.g. `connector/evdi.c`), which implements this function and defines `PSPDISP_DISPLAY_CONNECTOR_NAME`.
@@ -49,15 +59,16 @@ typedef void (*PSPdispDPMSHandler) (PSPdispDPMSMode mode, gpointer data);
  *
  * The returned source is not attached yet: attach it to a context, whose thread then calls the handlers.
  * To disconnect, destroy and unref it: the virtual display is removed when it's finalized, which GLib never does during a dispatch.
- * When the driver is gone, the source destroys itself, but the virtual display is only removed when its last reference is released.
+ * When the driver is gone, the source tells the lost handler and destroys itself, but the virtual display is only removed when its last reference is released.
  *
  * @param edid The identification given to the computer.
  * @param frame_handler Handle each new frame.
  * @param dpms_handler Handle each DPMS change.
+ * @param lost_handler Handle the loss of the virtual display.
  * @param data Given to the handlers.
  * @return The source of the display events, or `NULL` if it failed.
  */
-GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler, gpointer data);
+GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler, PSPdispLostHandler lost_handler, gpointer data);
 
 // The display connector of this platform, it implements `pspdisp_display_connector_connect()` and defines `PSPDISP_DISPLAY_CONNECTOR_NAME`
 #if defined(__linux__)
