@@ -25,7 +25,7 @@
  * The settings are the desktop options that the PSP shows and changes on its "PC Settings" menu.
  *
  * DEPRECATED: every definition of this file is going to be replaced soon by a simpler protocol, easier to maintain, so don't build anything new on them.
- * Many of them are likely to go, e.g. `PSPDISP_COM_FLAG_IMAGE_IS_PNG` (the desktop never sends PNG images) or the `PSPDISP_COM_FLAG_IMAGE_IS_ROTATED_*` flags (still to be reviewed).
+ * Many of them are likely to go, e.g. `PSPDISP_COM_FLAG_IMAGE_IS_PNG` (the desktop never sends PNG images) or the `PSPDISP_COM_FLAG_IMAGE_IS_ROTATED_*` flags (the desktop never rotates the images, the display settings of the computer rotate the virtual display).
  */
 
 #define PSPDISP_COM_HEADER_MAGIC 0xAFFE0600 // First value of every frame and response header, to recognize them
