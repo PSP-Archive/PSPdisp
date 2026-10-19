@@ -27,7 +27,7 @@ typedef struct {
 // Title component - uses Pango markup to style the project name
 GtkWidget *pspdisp_gtk_page_about_title_new() {
     GtkWidget *label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<span size='xx-large' weight='bold'>PSPdisp</span> © 2008-2015 JJS, © 2026 Net-0");
+    gtk_label_set_markup(GTK_LABEL(label), "<span size='xx-large' weight='bold'>PSPdisp</span> © 2008-2015 JJS, © 2026 Arthur Neto");
     gtk_label_set_xalign(GTK_LABEL(label), 0.0f);
     return label;
 }
@@ -42,7 +42,7 @@ GtkWidget *pspdisp_gtk_page_about_version_new() {
 // Links component - contains useful links that the user can access
 GtkWidget *pspdisp_gtk_page_about_links_new() {
     GtkWidget *github_link = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(github_link), "Visit the PSPdisp GitHub repository <a href=\"https://github.com/Net-0/PSPdisp\">Net-0/PSPdisp</a>");
+    gtk_label_set_markup(GTK_LABEL(github_link), "Visit the PSPdisp GitHub repository <a href=\"https://github.com/net-0/PSPdisp\">PSPdisp</a>");
     gtk_label_set_xalign(GTK_LABEL(github_link), 0.0f);
     gtk_widget_set_margin_top(github_link, 16);
 
