@@ -47,16 +47,30 @@ typedef struct {
 } PSPdispDisplayConnector;
 
 /**
+ * @brief Tell if the connector converts a pixel format of EVDI to the PSP one.
+ *
+ * @param pixel_format The pixel format (a DRM fourcc code).
+ * @return `true` if it's converted.
+ */
+bool pspdisp_display_connector_evdi_format_supported(uint32_t pixel_format) {
+	return pixel_format == DRM_FORMAT_XRGB8888 || pixel_format == DRM_FORMAT_ARGB8888 || pixel_format == DRM_FORMAT_XBGR8888 || pixel_format == DRM_FORMAT_ABGR8888;
+}
+
+/**
  * @brief Store the new mode of the EVDI display.
  *
  * EVDI calls it (through `evdi_handle_events()`) when the compositor sets a mode on the display.
  * Its pixel format tells `pspdisp_display_connector_evdi_on_update_ready()` how to convert the pixels.
+ * With a pixel format that isn't converted, no frame is asked for until the next mode (see `pspdisp_display_connector_evdi_request_frame()`).
  *
  * @param mode The new mode: resolution, refresh rate, bits per pixel and pixel format (a DRM fourcc code).
  * @param display_connector The connector, from the `user_data` of the EVDI event context.
  */
 void pspdisp_display_connector_evdi_on_mode_changed(struct evdi_mode mode, PSPdispDisplayConnector *display_connector) {
 	display_connector->mode = mode;
+
+	if (!pspdisp_display_connector_evdi_format_supported(mode.pixel_format))
+		g_warning("%s(): unsupported pixel format %.4s, no frame until the compositor sets another mode", __FUNCTION__, (const char *) &mode.pixel_format);
 }
 
 /**
@@ -128,8 +142,7 @@ void pspdisp_display_connector_evdi_on_update_ready(int buffer_to_be_updated, PS
 			}
 			break;
 		default:
-			g_warning("%s(): unsupported pixel format %.4s", __FUNCTION__, (const char *) &display_connector->mode.pixel_format);
-			return;
+			return; // Only when the mode changed since the frame was asked for, with an unsupported pixel format (see `pspdisp_display_connector_evdi_on_mode_changed()`)
 	}
 
 	display_connector->frame_handler(pixels, PSPDISP_DISPLAY_WIDTH, PSPDISP_PIXEL_FORMAT_8888, rectangles, rectangles_length, display_connector->handler_data);
@@ -175,11 +188,13 @@ void pspdisp_display_connector_evdi_on_dpms(int dpms_mode, PSPdispDisplayConnect
  *
  * EVDI ignores a new request while the last one was not answered, so it waits for `pspdisp_display_connector_evdi_on_update_ready()`.
  * When a frame is already ready, EVDI answers right away (and sends no event), so the frame is handled here.
+ * Nothing is asked for while the pixel format of the mode isn't converted (or before the first mode), so EVDI keeps the dirty rectangles until a mode that is.
  *
  * @param display_connector The connector.
  */
 void pspdisp_display_connector_evdi_request_frame(PSPdispDisplayConnector *display_connector) {
 	if (display_connector->update_requested) return; // Still waiting for the last one
+	if (!pspdisp_display_connector_evdi_format_supported(display_connector->mode.pixel_format)) return; // Not grabbed, the dirty rectangles stay on EVDI
 
 	if (evdi_request_update(display_connector->handle, PSPDISP_EVDI_BUFFER_ID)) {
 		pspdisp_display_connector_evdi_on_update_ready(PSPDISP_EVDI_BUFFER_ID, display_connector); // Already ready, EVDI sends no event
