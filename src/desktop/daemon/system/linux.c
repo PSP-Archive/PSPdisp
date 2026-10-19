@@ -4,7 +4,7 @@
  * linux.c - What the daemon needs from Linux        *
  *                                                   *
  * Copyright © 2026 Arthur Neto                      *
- ****************************************************/
+ *****************************************************/
 
 /*
  * The system of the daemon on Linux (see `system.c`): the signals stop it, each thread has its own nice value, and root is the administrator.

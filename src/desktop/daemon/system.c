@@ -4,7 +4,7 @@
  * system.c - What the daemon needs from the system  *
  *                                                   *
  * Copyright © 2026 Arthur Neto                      *
- ****************************************************/
+ *****************************************************/
 
 /*
  * The parts of the daemon that depend on the operating system: how it's asked to stop, the priority of its threads, its process ID, and if it runs as an administrator.
