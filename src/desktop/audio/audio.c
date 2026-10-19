@@ -19,13 +19,13 @@
  * Where that sound comes from depends on the implementation of the connector of each platform.
  */
 typedef struct {
-    PSPdispModel model; // PSP generation, with the region its name shown to the user (see `pspdisp_psp_name()`)
-    PSPdispRegion region; // PSP sales region
-    PSPdispAudioHandler audio_handler; // Handle each full chunk
-    gpointer handler_data; // Given to `audio_handler`
-    uint32_t sample_rate; // Sample rate of the chunks in Hz
-    uint32_t chunk_size; // Size of each chunk in bytes
-    PSPdispAudioConnector *connector; // The connector (`NULL` while disconnected)
+	PSPdispModel model; // PSP generation, with the region its name shown to the user (see `pspdisp_psp_name()`)
+	PSPdispRegion region; // PSP sales region
+	PSPdispAudioHandler audio_handler; // Handle each full chunk
+	gpointer handler_data; // Given to `audio_handler`
+	uint32_t sample_rate; // Sample rate of the chunks in Hz
+	uint32_t chunk_size; // Size of each chunk in bytes
+	PSPdispAudioConnector *connector; // The connector (`NULL` while disconnected)
 } PSPdispAudio;
 
 /**
@@ -40,18 +40,18 @@ typedef struct {
  * @return The new audio, free it with `pspdisp_audio_destroy()`, or `NULL` if an argument is invalid.
  */
 PSPdispAudio *pspdisp_audio_new(PSPdispModel model, PSPdispRegion region, uint32_t sample_rate, uint32_t chunk_size, PSPdispAudioHandler audio_handler, gpointer data) {
-    g_return_val_if_fail(chunk_size > 0 && chunk_size % 4 == 0, NULL);
-    g_return_val_if_fail(audio_handler != NULL, NULL);
+	g_return_val_if_fail(chunk_size > 0 && chunk_size % 4 == 0, NULL);
+	g_return_val_if_fail(audio_handler != NULL, NULL);
 
-    PSPdispAudio *audio = g_new(PSPdispAudio, 1);
-    audio->model = model;
-    audio->region = region;
-    audio->audio_handler = audio_handler;
-    audio->handler_data = data;
-    audio->sample_rate = sample_rate;
-    audio->chunk_size = chunk_size;
-    audio->connector = NULL;
-    return audio;
+	PSPdispAudio *audio = g_new(PSPdispAudio, 1);
+	audio->model = model;
+	audio->region = region;
+	audio->audio_handler = audio_handler;
+	audio->handler_data = data;
+	audio->sample_rate = sample_rate;
+	audio->chunk_size = chunk_size;
+	audio->connector = NULL;
+	return audio;
 }
 
 /**
@@ -61,10 +61,10 @@ PSPdispAudio *pspdisp_audio_new(PSPdispModel model, PSPdispRegion region, uint32
  * @return `true` if it was connected now, `false` if it was already connected or it failed.
  */
 bool pspdisp_audio_connect(PSPdispAudio *audio) {
-    if (audio->connector != NULL) return false; // Already connected
+	if (audio->connector != NULL) return false; // Already connected
 
-    audio->connector = pspdisp_audio_connector_connect(audio->model, audio->region, audio->sample_rate, audio->chunk_size, audio->audio_handler, audio->handler_data);
-    return audio->connector != NULL;
+	audio->connector = pspdisp_audio_connector_connect(audio->model, audio->region, audio->sample_rate, audio->chunk_size, audio->audio_handler, audio->handler_data);
+	return audio->connector != NULL;
 }
 
 /**
@@ -77,11 +77,11 @@ bool pspdisp_audio_connect(PSPdispAudio *audio) {
  * @return `true` if it was disconnected now, `false` if it was already disconnected.
  */
 bool pspdisp_audio_disconnect(PSPdispAudio *audio) {
-    if (audio->connector == NULL) return false; // Already disconnected
+	if (audio->connector == NULL) return false; // Already disconnected
 
-    pspdisp_audio_connector_disconnect(audio->connector);
-    audio->connector = NULL;
-    return true;
+	pspdisp_audio_connector_disconnect(audio->connector);
+	audio->connector = NULL;
+	return true;
 }
 
 /**
@@ -92,7 +92,7 @@ bool pspdisp_audio_disconnect(PSPdispAudio *audio) {
  * @param audio The audio to destroy.
  */
 void pspdisp_audio_destroy(PSPdispAudio *audio) {
-    pspdisp_audio_disconnect(audio);
+	pspdisp_audio_disconnect(audio);
 
-    g_free(audio);
+	g_free(audio);
 }

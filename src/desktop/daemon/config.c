@@ -26,7 +26,7 @@
  * @brief Names of the display devices, there's only the virtual display.
  */
 const char *const pspdisp_daemon_display_devices[] = {
-    "PSPdisp virtual display",
+	"PSPdisp virtual display",
 };
 
 static_assert(G_N_ELEMENTS(pspdisp_daemon_display_devices) <= PSPDISP_COM_MAX_DISPLAY_DEVICES, "The PSP keeps at most PSPDISP_COM_MAX_DISPLAY_DEVICES display device names");

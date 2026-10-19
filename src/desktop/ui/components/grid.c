@@ -21,10 +21,10 @@
  * @return The grid.
  */
 GtkWidget *pspdisp_ui_component_grid_new() {
-    GtkWidget *grid = gtk_grid_new();
-    gtk_grid_set_row_spacing(GTK_GRID(grid), 6);
-    gtk_grid_set_column_spacing(GTK_GRID(grid), 24);
-    return grid;
+	GtkWidget *grid = gtk_grid_new();
+	gtk_grid_set_row_spacing(GTK_GRID(grid), 6);
+	gtk_grid_set_column_spacing(GTK_GRID(grid), 24);
+	return grid;
 }
 
 /**
@@ -36,7 +36,7 @@ GtkWidget *pspdisp_ui_component_grid_new() {
  * @param widget The widget of the field.
  */
 void pspdisp_ui_component_grid_add_row(GtkWidget *grid, int row, const char *name, GtkWidget *widget) {
-    gtk_grid_attach(GTK_GRID(grid), pspdisp_ui_component_field_new(name), 0, row, 1, 1);
-    gtk_widget_set_hexpand(widget, TRUE);
-    gtk_grid_attach(GTK_GRID(grid), widget, 1, row, 1, 1);
+	gtk_grid_attach(GTK_GRID(grid), pspdisp_ui_component_field_new(name), 0, row, 1, 1);
+	gtk_widget_set_hexpand(widget, TRUE);
+	gtk_grid_attach(GTK_GRID(grid), widget, 1, row, 1, 1);
 }

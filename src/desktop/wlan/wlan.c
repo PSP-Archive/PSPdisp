@@ -35,18 +35,18 @@
  * @brief The TCP server the PSPs connect to.
  */
 typedef struct {
-    GSocketListener *listener; // Listens on the port, on every network interface
-    GMutex password_mutex; // Guards `password`, which may change while a PSP connects (see `pspdisp_wlan_set_password()`)
-    char password[PSPDISP_WLAN_PASSWORD_SIZE]; // The password, padded with zeros
-    char *refused; // Address of the last PSP refused for its password (`NULL` if none), so it's told once while it connects again
+	GSocketListener *listener; // Listens on the port, on every network interface
+	GMutex password_mutex; // Guards `password`, which may change while a PSP connects (see `pspdisp_wlan_set_password()`)
+	char password[PSPDISP_WLAN_PASSWORD_SIZE]; // The password, padded with zeros
+	char *refused; // Address of the last PSP refused for its password (`NULL` if none), so it's told once while it connects again
 } PSPdispWLAN;
 
 /**
  * @brief A connection with a PSP, its password checked.
  */
 typedef struct {
-    GSocket *socket; // The connection, not blocking: the waits go through `g_socket_condition_timed_wait()`
-    char *address; // Address of the PSP (e.g. `192.168.1.20`), for the messages
+	GSocket *socket; // The connection, not blocking: the waits go through `g_socket_condition_timed_wait()`
+	char *address; // Address of the PSP (e.g. `192.168.1.20`), for the messages
 } PSPdispWLANConnection;
 
 /**
@@ -58,24 +58,24 @@ typedef struct {
  * @return The server, free it with `pspdisp_wlan_destroy()`, or `NULL` if it failed.
  */
 PSPdispWLAN *pspdisp_wlan_new(uint16_t port, const char *password, GError **error) {
-    if (strlen(password) > PSPDISP_WLAN_PASSWORD_SIZE) {
-        g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT, "the password is longer than %d characters, the PSP can't send it", PSPDISP_WLAN_PASSWORD_SIZE);
-        return NULL;
-    }
+	if (strlen(password) > PSPDISP_WLAN_PASSWORD_SIZE) {
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT, "the password is longer than %d characters, the PSP can't send it", PSPDISP_WLAN_PASSWORD_SIZE);
+		return NULL;
+	}
 
-    GSocketListener *listener = g_socket_listener_new();
+	GSocketListener *listener = g_socket_listener_new();
 
-    // On IPv4 and IPv6, but the PSP only knows IPv4
-    if (!g_socket_listener_add_inet_port(listener, port, NULL, error)) {
-        g_object_unref(listener);
-        return NULL;
-    }
+	// On IPv4 and IPv6, but the PSP only knows IPv4
+	if (!g_socket_listener_add_inet_port(listener, port, NULL, error)) {
+		g_object_unref(listener);
+		return NULL;
+	}
 
-    PSPdispWLAN *wlan = g_new0(PSPdispWLAN, 1);
-    wlan->listener = listener;
-    g_mutex_init(&wlan->password_mutex);
-    memcpy(wlan->password, password, strlen(password)); // The rest stays zero
-    return wlan;
+	PSPdispWLAN *wlan = g_new0(PSPdispWLAN, 1);
+	wlan->listener = listener;
+	g_mutex_init(&wlan->password_mutex);
+	memcpy(wlan->password, password, strlen(password)); // The rest stays zero
+	return wlan;
 }
 
 /**
@@ -86,13 +86,13 @@ PSPdispWLAN *pspdisp_wlan_new(uint16_t port, const char *password, GError **erro
  * @return `true` if it was changed, `false` if an argument is invalid.
  */
 bool pspdisp_wlan_set_password(PSPdispWLAN *wlan, const char *password) {
-    if (strlen(password) > PSPDISP_WLAN_PASSWORD_SIZE) return false;
+	if (strlen(password) > PSPDISP_WLAN_PASSWORD_SIZE) return false;
 
-    g_mutex_lock(&wlan->password_mutex);
-    memset(wlan->password, 0, sizeof(wlan->password));
-    memcpy(wlan->password, password, strlen(password));
-    g_mutex_unlock(&wlan->password_mutex);
-    return true;
+	g_mutex_lock(&wlan->password_mutex);
+	memset(wlan->password, 0, sizeof(wlan->password));
+	memcpy(wlan->password, password, strlen(password));
+	g_mutex_unlock(&wlan->password_mutex);
+	return true;
 }
 
 /**
@@ -101,11 +101,11 @@ bool pspdisp_wlan_set_password(PSPdispWLAN *wlan, const char *password) {
  * @param wlan The server to destroy.
  */
 void pspdisp_wlan_destroy(PSPdispWLAN *wlan) {
-    g_socket_listener_close(wlan->listener);
-    g_object_unref(wlan->listener);
-    g_mutex_clear(&wlan->password_mutex);
-    g_free(wlan->refused);
-    g_free(wlan);
+	g_socket_listener_close(wlan->listener);
+	g_object_unref(wlan->listener);
+	g_mutex_clear(&wlan->password_mutex);
+	g_free(wlan->refused);
+	g_free(wlan);
 }
 
 /**
@@ -121,42 +121,42 @@ void pspdisp_wlan_destroy(PSPdispWLAN *wlan) {
  * @return `true` if all the bytes were transferred.
  */
 bool pspdisp_wlan_transfer(GSocket *socket, bool sending, uint8_t *buffer, uint32_t size, gint64 deadline, GCancellable *cancellable, GError **error) {
-    uint32_t position = 0;
+	uint32_t position = 0;
 
-    while (position < size) {
-        gint64 remaining = deadline - g_get_monotonic_time();
+	while (position < size) {
+		gint64 remaining = deadline - g_get_monotonic_time();
 
-        if (remaining <= 0) {
-            g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "the PSP didn't answer in time");
-            return false;
-        }
+		if (remaining <= 0) {
+			g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "the PSP didn't answer in time");
+			return false;
+		}
 
-        if (!g_socket_condition_timed_wait(socket, sending ? G_IO_OUT : G_IO_IN, remaining, cancellable, error)) return false;
+		if (!g_socket_condition_timed_wait(socket, sending ? G_IO_OUT : G_IO_IN, remaining, cancellable, error)) return false;
 
-        GError *failure = NULL;
-        gchar *rest = (gchar *) buffer + position; // What's left to transfer
-        const gsize rest_size = size - position;
-        gssize count = sending ? g_socket_send(socket, rest, rest_size, cancellable, &failure) : g_socket_receive(socket, rest, rest_size, cancellable, &failure);
+		GError *failure = NULL;
+		gchar *rest = (gchar *) buffer + position; // What's left to transfer
+		const gsize rest_size = size - position;
+		gssize count = sending ? g_socket_send(socket, rest, rest_size, cancellable, &failure) : g_socket_receive(socket, rest, rest_size, cancellable, &failure);
 
-        if (count < 0) {
-            if (g_error_matches(failure, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) { // Woken up for nothing
-                g_error_free(failure);
-                continue;
-            }
+		if (count < 0) {
+			if (g_error_matches(failure, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) { // Woken up for nothing
+				g_error_free(failure);
+				continue;
+			}
 
-            g_propagate_error(error, failure);
-            return false;
-        }
+			g_propagate_error(error, failure);
+			return false;
+		}
 
-        if (count == 0 && !sending) {
-            g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_CONNECTION_CLOSED, "the PSP closed the connection");
-            return false;
-        }
+		if (count == 0 && !sending) {
+			g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_CONNECTION_CLOSED, "the PSP closed the connection");
+			return false;
+		}
 
-        position += count;
-    }
+		position += count;
+	}
 
-    return true;
+	return true;
 }
 
 /**
@@ -166,22 +166,22 @@ bool pspdisp_wlan_transfer(GSocket *socket, bool sending, uint8_t *buffer, uint3
  * @return The address (e.g. `192.168.1.20`, not as an IPv6 address mapping it), free it with `g_free()`.
  */
 char *pspdisp_wlan_address(GSocket *socket) {
-    GSocketAddress *remote = g_socket_get_remote_address(socket, NULL);
-    char *address = NULL;
+	GSocketAddress *remote = g_socket_get_remote_address(socket, NULL);
+	char *address = NULL;
 
-    if (G_IS_INET_SOCKET_ADDRESS(remote)) {
-        address = g_inet_address_to_string(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(remote)));
+	if (G_IS_INET_SOCKET_ADDRESS(remote)) {
+		address = g_inet_address_to_string(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(remote)));
 
-        // An IPv4 client of an IPv6 socket
-        if (g_str_has_prefix(address, "::ffff:") && strchr(address, '.') != NULL) {
-            char *ipv4 = g_strdup(address + strlen("::ffff:"));
-            g_free(address);
-            address = ipv4;
-        }
-    }
+		// An IPv4 client of an IPv6 socket
+		if (g_str_has_prefix(address, "::ffff:") && strchr(address, '.') != NULL) {
+			char *ipv4 = g_strdup(address + strlen("::ffff:"));
+			g_free(address);
+			address = ipv4;
+		}
+	}
 
-    g_clear_object(&remote);
-    return address != NULL ? address : g_strdup("unknown address");
+	g_clear_object(&remote);
+	return address != NULL ? address : g_strdup("unknown address");
 }
 
 /**
@@ -196,45 +196,45 @@ char *pspdisp_wlan_address(GSocket *socket) {
  * @return The connection, or `NULL` if it failed.
  */
 PSPdispWLANConnection *pspdisp_wlan_check(PSPdispWLAN *wlan, GSocket *socket, GCancellable *cancellable) {
-    char *address = pspdisp_wlan_address(socket);
-    uint8_t received[PSPDISP_WLAN_PASSWORD_SIZE] = {0};
-    GError *error = NULL;
+	char *address = pspdisp_wlan_address(socket);
+	uint8_t received[PSPDISP_WLAN_PASSWORD_SIZE] = {0};
+	GError *error = NULL;
 
-    g_socket_set_blocking(socket, FALSE);
-    g_socket_set_option(socket, IPPROTO_TCP, TCP_NODELAY, 1, NULL); // The frame header and its data go at once, without waiting for the PSP to acknowledge the header
+	g_socket_set_blocking(socket, FALSE);
+	g_socket_set_option(socket, IPPROTO_TCP, TCP_NODELAY, 1, NULL); // The frame header and its data go at once, without waiting for the PSP to acknowledge the header
 
-    if (!pspdisp_wlan_transfer(socket, false, received, sizeof(received), g_get_monotonic_time() + PSPDISP_WLAN_PASSWORD_TIMEOUT * 1000, cancellable, &error)) {
-        if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
-            g_debug("%s(): no password from %s: %s", __FUNCTION__, address, error->message);
-        g_error_free(error);
-        g_free(address);
-        return NULL;
-    }
+	if (!pspdisp_wlan_transfer(socket, false, received, sizeof(received), g_get_monotonic_time() + PSPDISP_WLAN_PASSWORD_TIMEOUT * 1000, cancellable, &error)) {
+		if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+			g_debug("%s(): no password from %s: %s", __FUNCTION__, address, error->message);
+		g_error_free(error);
+		g_free(address);
+		return NULL;
+	}
 
-    // As strings: what follows the null character is zeroed, then all the bytes are compared
-    size_t length = strnlen((const char *) received, sizeof(received));
-    memset(&received[length], 0, sizeof(received) - length);
+	// As strings: what follows the null character is zeroed, then all the bytes are compared
+	size_t length = strnlen((const char *) received, sizeof(received));
+	memset(&received[length], 0, sizeof(received) - length);
 
-    uint8_t difference = 0;
-    g_mutex_lock(&wlan->password_mutex);
-    for (size_t i = 0; i < sizeof(received); i++)
-        difference |= received[i] ^ (uint8_t) wlan->password[i];
-    g_mutex_unlock(&wlan->password_mutex);
+	uint8_t difference = 0;
+	g_mutex_lock(&wlan->password_mutex);
+	for (size_t i = 0; i < sizeof(received); i++)
+		difference |= received[i] ^ (uint8_t) wlan->password[i];
+	g_mutex_unlock(&wlan->password_mutex);
 
-    if (difference != 0) {
-        if (g_strcmp0(wlan->refused, address) != 0)
-            g_warning("%s(): the PSP at %s sent a wrong password, set the same on the desktop and on the PSP", __FUNCTION__, address);
-        g_free(wlan->refused);
-        wlan->refused = address;
-        return NULL;
-    }
+	if (difference != 0) {
+		if (g_strcmp0(wlan->refused, address) != 0)
+			g_warning("%s(): the PSP at %s sent a wrong password, set the same on the desktop and on the PSP", __FUNCTION__, address);
+		g_free(wlan->refused);
+		wlan->refused = address;
+		return NULL;
+	}
 
-    g_clear_pointer(&wlan->refused, g_free);
+	g_clear_pointer(&wlan->refused, g_free);
 
-    PSPdispWLANConnection *connection = g_new0(PSPdispWLANConnection, 1);
-    connection->socket = g_object_ref(socket);
-    connection->address = address;
-    return connection;
+	PSPdispWLANConnection *connection = g_new0(PSPdispWLANConnection, 1);
+	connection->socket = g_object_ref(socket);
+	connection->address = address;
+	return connection;
 }
 
 /**
@@ -248,29 +248,29 @@ PSPdispWLANConnection *pspdisp_wlan_check(PSPdispWLAN *wlan, GSocket *socket, GC
  * @return The connection, ready for the frames, close it with `pspdisp_wlan_disconnect()`, or `NULL` when cancelled.
  */
 PSPdispWLANConnection *pspdisp_wlan_connect(PSPdispWLAN *wlan, GCancellable *cancellable) {
-    while (!g_cancellable_is_cancelled(cancellable)) {
-        GError *error = NULL;
-        GSocket *socket = g_socket_listener_accept_socket(wlan->listener, NULL, cancellable, &error);
+	while (!g_cancellable_is_cancelled(cancellable)) {
+		GError *error = NULL;
+		GSocket *socket = g_socket_listener_accept_socket(wlan->listener, NULL, cancellable, &error);
 
-        if (socket == NULL) {
-            if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-                g_warning("%s(): failed to accept a connection: %s", __FUNCTION__, error->message);
-                g_usleep(PSPDISP_WLAN_ACCEPT_RETRY * 1000);
-            }
-            g_error_free(error);
-            continue;
-        }
+		if (socket == NULL) {
+			if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+				g_warning("%s(): failed to accept a connection: %s", __FUNCTION__, error->message);
+				g_usleep(PSPDISP_WLAN_ACCEPT_RETRY * 1000);
+			}
+			g_error_free(error);
+			continue;
+		}
 
-        PSPdispWLANConnection *connection = pspdisp_wlan_check(wlan, socket, cancellable);
+		PSPdispWLANConnection *connection = pspdisp_wlan_check(wlan, socket, cancellable);
 
-        if (connection == NULL)
-            g_socket_close(socket, NULL);
-        g_object_unref(socket);
+		if (connection == NULL)
+			g_socket_close(socket, NULL);
+		g_object_unref(socket);
 
-        if (connection != NULL) return connection;
-    }
+		if (connection != NULL) return connection;
+	}
 
-    return NULL;
+	return NULL;
 }
 
 /**
@@ -281,10 +281,10 @@ PSPdispWLANConnection *pspdisp_wlan_connect(PSPdispWLAN *wlan, GCancellable *can
  * @param connection The connection.
  */
 void pspdisp_wlan_disconnect(PSPdispWLANConnection *connection) {
-    g_socket_close(connection->socket, NULL);
-    g_object_unref(connection->socket);
-    g_free(connection->address);
-    g_free(connection);
+	g_socket_close(connection->socket, NULL);
+	g_object_unref(connection->socket);
+	g_free(connection->address);
+	g_free(connection);
 }
 
 /**
@@ -295,11 +295,11 @@ void pspdisp_wlan_disconnect(PSPdispWLANConnection *connection) {
  * @param error Why it failed, it's freed.
  */
 void pspdisp_wlan_tell_failure(const char *function, const char *what, GError *error) {
-    if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CONNECTION_CLOSED))
-        g_debug("%s(): %s: %s", function, what, error->message);
-    else if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
-        g_warning("%s(): %s: %s", function, what, error->message);
-    g_error_free(error);
+	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CONNECTION_CLOSED))
+		g_debug("%s(): %s: %s", function, what, error->message);
+	else if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+		g_warning("%s(): %s: %s", function, what, error->message);
+	g_error_free(error);
 }
 
 /**
@@ -312,12 +312,12 @@ void pspdisp_wlan_tell_failure(const char *function, const char *what, GError *e
  * @return `true` if it was all sent.
  */
 bool pspdisp_wlan_write(PSPdispWLANConnection *connection, const void *buffer, uint32_t size, GCancellable *cancellable) {
-    GError *error = NULL;
+	GError *error = NULL;
 
-    if (pspdisp_wlan_transfer(connection->socket, true, (uint8_t *) buffer, size, g_get_monotonic_time() + PSPDISP_WLAN_WRITE_TIMEOUT * 1000, cancellable, &error)) return true;
+	if (pspdisp_wlan_transfer(connection->socket, true, (uint8_t *) buffer, size, g_get_monotonic_time() + PSPDISP_WLAN_WRITE_TIMEOUT * 1000, cancellable, &error)) return true;
 
-    pspdisp_wlan_tell_failure(__FUNCTION__, "failed to send to the PSP", error);
-    return false;
+	pspdisp_wlan_tell_failure(__FUNCTION__, "failed to send to the PSP", error);
+	return false;
 }
 
 /**
@@ -331,10 +331,10 @@ bool pspdisp_wlan_write(PSPdispWLANConnection *connection, const void *buffer, u
  * @return `true` if they were all received.
  */
 bool pspdisp_wlan_read(PSPdispWLANConnection *connection, void *buffer, uint32_t size, uint32_t timeout, GCancellable *cancellable) {
-    GError *error = NULL;
+	GError *error = NULL;
 
-    if (pspdisp_wlan_transfer(connection->socket, false, buffer, size, g_get_monotonic_time() + (gint64) timeout * 1000, cancellable, &error)) return true;
+	if (pspdisp_wlan_transfer(connection->socket, false, buffer, size, g_get_monotonic_time() + (gint64) timeout * 1000, cancellable, &error)) return true;
 
-    pspdisp_wlan_tell_failure(__FUNCTION__, "failed to receive from the PSP", error);
-    return false;
+	pspdisp_wlan_tell_failure(__FUNCTION__, "failed to receive from the PSP", error);
+	return false;
 }

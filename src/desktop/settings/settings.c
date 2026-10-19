@@ -27,14 +27,14 @@
 #include <glib/gstdio.h>
 #include "../../shared.h"
 
-    #include <fcntl.h>
-    #include <unistd.h>
-    #include <sys/file.h>
-    #include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/file.h>
+#include <sys/stat.h>
 
 // PSPDISP_VERSION: version of the desktop app and the daemon (given by the build)
 #ifndef PSPDISP_VERSION
-    #error "PSPDISP_VERSION must be defined by the build, e.g. -DPSPDISP_VERSION='\"0.7.0-dev\"'"
+	#error "PSPDISP_VERSION must be defined by the build, e.g. -DPSPDISP_VERSION='\"0.7.0-dev\"'"
 #endif
 
 #define PSPDISP_SETTINGS_FILE_NAME   "pspdisp.conf" // The settings, in the folder of the settings
@@ -52,14 +52,14 @@
  * @brief The streaming settings: the ones the PSP shows and changes on its "PC Settings" menu, and that a preset sets.
  */
 typedef struct {
-    PSPdispComQuality quality; // JPEG quality level of the images
-    bool uncompressed; // If the images are sent uncompressed instead of JPEG
-    PSPdispComUpdateInterval update_interval; // Pause after each frame, without sound
-    bool image; // If the display is streamed, otherwise only the sound
-    bool sound; // If the sound is streamed
-    PSPdispComSampleRate sample_rate_usb; // Sample rate of the sound over USB
-    PSPdispComSampleRate sample_rate_wlan; // Sample rate of the sound over WLAN, which carries less
-    char control[PSPDISP_COM_NAME_SIZE]; // What the PSP controls drive: `PSPDISP_SETTINGS_CONTROL_GAMEPAD`, `PSPDISP_SETTINGS_CONTROL_NONE`, or the name of a control file
+	PSPdispComQuality quality; // JPEG quality level of the images
+	bool uncompressed; // If the images are sent uncompressed instead of JPEG
+	PSPdispComUpdateInterval update_interval; // Pause after each frame, without sound
+	bool image; // If the display is streamed, otherwise only the sound
+	bool sound; // If the sound is streamed
+	PSPdispComSampleRate sample_rate_usb; // Sample rate of the sound over USB
+	PSPdispComSampleRate sample_rate_wlan; // Sample rate of the sound over WLAN, which carries less
+	char control[PSPDISP_COM_NAME_SIZE]; // What the PSP controls drive: `PSPDISP_SETTINGS_CONTROL_GAMEPAD`, `PSPDISP_SETTINGS_CONTROL_NONE`, or the name of a control file
 } PSPdispSettingsStreaming;
 
 /**
@@ -68,34 +68,34 @@ typedef struct {
  * It holds no pointer, so it can be copied and compared (see `pspdisp_settings_equal()`).
  */
 typedef struct {
-    bool enabled; // If the daemon serves the PSPs ("Enabled" of the old desktop app)
-    bool use_usb; // If the PSPs plugged in USB mode are served
-    bool use_wlan; // If the PSPs connecting in WLAN mode are served
-    bool higher_priority; // If the daemon runs with a higher priority than the other programs, so the streaming stutters less ("Higher process priority" of the old desktop app)
-    PSPdispSettingsStreaming streaming; // The streaming settings
-    uint32_t jpeg_quality[PSPDISP_COM_QUALITY_HIGHEST + 1]; // JPEG quality (1 to 100) of each quality level
-    uint32_t update_interval[PSPDISP_COM_UPDATE_INTERVAL_LONGEST + 1]; // Pause in milliseconds of each update interval (the continuous one is always 0)
-    char wlan_password[PSPDISP_SETTINGS_PASSWORD_SIZE + 1]; // Password set on the PSP, for the WLAN mode (`""` for none)
-    uint32_t wlan_port_offset; // Port offset set on the PSP, for the WLAN mode (0 to `PSPDISP_SETTINGS_MAX_PORT_OFFSET`)
-    bool notify_server_started; // If the desktop app notifies when the WLAN server starts
-    bool notify_connected; // If the desktop app notifies when a PSP connects over WLAN
-    bool notify_disconnected; // If the desktop app notifies when a PSP disconnects from WLAN
+	bool enabled; // If the daemon serves the PSPs ("Enabled" of the old desktop app)
+	bool use_usb; // If the PSPs plugged in USB mode are served
+	bool use_wlan; // If the PSPs connecting in WLAN mode are served
+	bool higher_priority; // If the daemon runs with a higher priority than the other programs, so the streaming stutters less ("Higher process priority" of the old desktop app)
+	PSPdispSettingsStreaming streaming; // The streaming settings
+	uint32_t jpeg_quality[PSPDISP_COM_QUALITY_HIGHEST + 1]; // JPEG quality (1 to 100) of each quality level
+	uint32_t update_interval[PSPDISP_COM_UPDATE_INTERVAL_LONGEST + 1]; // Pause in milliseconds of each update interval (the continuous one is always 0)
+	char wlan_password[PSPDISP_SETTINGS_PASSWORD_SIZE + 1]; // Password set on the PSP, for the WLAN mode (`""` for none)
+	uint32_t wlan_port_offset; // Port offset set on the PSP, for the WLAN mode (0 to `PSPDISP_SETTINGS_MAX_PORT_OFFSET`)
+	bool notify_server_started; // If the desktop app notifies when the WLAN server starts
+	bool notify_connected; // If the desktop app notifies when a PSP connects over WLAN
+	bool notify_disconnected; // If the desktop app notifies when a PSP disconnects from WLAN
 } PSPdispSettings;
 
 /**
  * @brief A preset file, a named set of streaming settings.
  */
 typedef struct {
-    char *name; // Its name, as the PSP shows it
-    char *file_name; // Its file name, in the presets folder (e.g. `balanced.preset`)
+	char *name; // Its name, as the PSP shows it
+	char *file_name; // Its file name, in the presets folder (e.g. `balanced.preset`)
 } PSPdispSettingsPreset;
 
 /**
  * @brief A control file, telling what the PSP buttons press on the keyboard and the mouse.
  */
 typedef struct {
-    char *name; // Its name, as the PSP shows it
-    char *path; // Its path
+	char *name; // Its name, as the PSP shows it
+	char *path; // Its path
 } PSPdispSettingsControl;
 
 /**
@@ -117,33 +117,33 @@ static_assert(G_N_ELEMENTS(pspdisp_settings_sample_rates) == PSPDISP_COM_SAMPLE_
 
 // The default control files, as the old desktop app installed them
 const char pspdisp_settings_default_mouse_control[] = {
-    #embed "./defaults/mouse.control"
-    , 0
+	#embed "./defaults/mouse.control"
+	, 0
 };
 const char pspdisp_settings_default_fps_control[] = {
-    #embed "./defaults/fps.control"
-    , 0
+	#embed "./defaults/fps.control"
+	, 0
 };
 const char pspdisp_settings_default_re4_control[] = {
-    #embed "./defaults/re4.control"
-    , 0
+	#embed "./defaults/re4.control"
+	, 0
 };
 const char pspdisp_settings_default_control_template[] = {
-    #embed "./defaults/control.template"
-    , 0
+	#embed "./defaults/control.template"
+	, 0
 };
 
 /**
  * @brief The default control files, written when the control folder is created.
  */
 const struct {
-    const char *file_name; // Its file name
-    const char *content; // Its content
+	const char *file_name; // Its file name
+	const char *content; // Its content
 } pspdisp_settings_default_controls[] = {
-    { "mouse.control", pspdisp_settings_default_mouse_control },
-    { "fps.control", pspdisp_settings_default_fps_control },
-    { "re4.control", pspdisp_settings_default_re4_control },
-    { "control.template", pspdisp_settings_default_control_template }, // Not listed, as it's not a `.control` file
+	{ "mouse.control", pspdisp_settings_default_mouse_control },
+	{ "fps.control", pspdisp_settings_default_fps_control },
+	{ "re4.control", pspdisp_settings_default_re4_control },
+	{ "control.template", pspdisp_settings_default_control_template }, // Not listed, as it's not a `.control` file
 };
 
 /**
@@ -152,20 +152,20 @@ const struct {
  * With sound, the sample rate also gives the frame rate, because every frame carries a chunk of audio (about 10 frames per second at 11025 Hz, 20 at 22050 Hz and 33 at 44100 Hz).
  */
 const struct {
-    const char *file_name; // Its file name
-    const char *name; // Its name
-    PSPdispComQuality quality;
-    bool uncompressed;
-    PSPdispComUpdateInterval update_interval;
-    bool sound;
-    PSPdispComSampleRate sample_rate_usb;
-    PSPdispComSampleRate sample_rate_wlan;
+	const char *file_name; // Its file name
+	const char *name; // Its name
+	PSPdispComQuality quality;
+	bool uncompressed;
+	PSPdispComUpdateInterval update_interval;
+	bool sound;
+	PSPdispComSampleRate sample_rate_usb;
+	PSPdispComSampleRate sample_rate_wlan;
 } pspdisp_settings_default_presets[] = {
-    { "1-balanced.preset", "Balanced", PSPDISP_COM_QUALITY_MEDIUM, false, PSPDISP_COM_UPDATE_INTERVAL_CONTINUOUS, true, PSPDISP_COM_SAMPLE_RATE_22050, PSPDISP_COM_SAMPLE_RATE_11025 },
-    { "2-sharp.preset", "Sharp image", PSPDISP_COM_QUALITY_HIGHEST, false, PSPDISP_COM_UPDATE_INTERVAL_CONTINUOUS, true, PSPDISP_COM_SAMPLE_RATE_22050, PSPDISP_COM_SAMPLE_RATE_11025 },
-    { "3-smooth.preset", "Smooth motion", PSPDISP_COM_QUALITY_LOW, false, PSPDISP_COM_UPDATE_INTERVAL_CONTINUOUS, true, PSPDISP_COM_SAMPLE_RATE_44100, PSPDISP_COM_SAMPLE_RATE_11025 },
-    { "4-uncompressed.preset", "Uncompressed, no sound", PSPDISP_COM_QUALITY_HIGHEST, true, PSPDISP_COM_UPDATE_INTERVAL_CONTINUOUS, false, PSPDISP_COM_SAMPLE_RATE_22050, PSPDISP_COM_SAMPLE_RATE_11025 },
-    { "5-low-bandwidth.preset", "Low bandwidth", PSPDISP_COM_QUALITY_LOWEST, false, PSPDISP_COM_UPDATE_INTERVAL_MEDIUM, true, PSPDISP_COM_SAMPLE_RATE_11025, PSPDISP_COM_SAMPLE_RATE_11025 },
+	{ "1-balanced.preset", "Balanced", PSPDISP_COM_QUALITY_MEDIUM, false, PSPDISP_COM_UPDATE_INTERVAL_CONTINUOUS, true, PSPDISP_COM_SAMPLE_RATE_22050, PSPDISP_COM_SAMPLE_RATE_11025 },
+	{ "2-sharp.preset", "Sharp image", PSPDISP_COM_QUALITY_HIGHEST, false, PSPDISP_COM_UPDATE_INTERVAL_CONTINUOUS, true, PSPDISP_COM_SAMPLE_RATE_22050, PSPDISP_COM_SAMPLE_RATE_11025 },
+	{ "3-smooth.preset", "Smooth motion", PSPDISP_COM_QUALITY_LOW, false, PSPDISP_COM_UPDATE_INTERVAL_CONTINUOUS, true, PSPDISP_COM_SAMPLE_RATE_44100, PSPDISP_COM_SAMPLE_RATE_11025 },
+	{ "4-uncompressed.preset", "Uncompressed, no sound", PSPDISP_COM_QUALITY_HIGHEST, true, PSPDISP_COM_UPDATE_INTERVAL_CONTINUOUS, false, PSPDISP_COM_SAMPLE_RATE_22050, PSPDISP_COM_SAMPLE_RATE_11025 },
+	{ "5-low-bandwidth.preset", "Low bandwidth", PSPDISP_COM_QUALITY_LOWEST, false, PSPDISP_COM_UPDATE_INTERVAL_MEDIUM, true, PSPDISP_COM_SAMPLE_RATE_11025, PSPDISP_COM_SAMPLE_RATE_11025 },
 };
 
 /**
@@ -174,15 +174,15 @@ const struct {
  * @param streaming Where to set them.
  */
 void pspdisp_settings_streaming_defaults(PSPdispSettingsStreaming *streaming) {
-    *streaming = (PSPdispSettingsStreaming) {
-        .quality = PSPDISP_COM_QUALITY_MEDIUM,
-        .update_interval = PSPDISP_COM_UPDATE_INTERVAL_CONTINUOUS,
-        .image = true,
-        .sound = true,
-        .sample_rate_usb = PSPDISP_COM_SAMPLE_RATE_22050,
-        .sample_rate_wlan = PSPDISP_COM_SAMPLE_RATE_11025,
-    };
-    g_strlcpy(streaming->control, PSPDISP_SETTINGS_CONTROL_GAMEPAD, sizeof(streaming->control));
+	*streaming = (PSPdispSettingsStreaming) {
+		.quality = PSPDISP_COM_QUALITY_MEDIUM,
+		.update_interval = PSPDISP_COM_UPDATE_INTERVAL_CONTINUOUS,
+		.image = true,
+		.sound = true,
+		.sample_rate_usb = PSPDISP_COM_SAMPLE_RATE_22050,
+		.sample_rate_wlan = PSPDISP_COM_SAMPLE_RATE_11025,
+	};
+	g_strlcpy(streaming->control, PSPDISP_SETTINGS_CONTROL_GAMEPAD, sizeof(streaming->control));
 }
 
 /**
@@ -191,44 +191,44 @@ void pspdisp_settings_streaming_defaults(PSPdispSettingsStreaming *streaming) {
  * @param settings Where to set them.
  */
 void pspdisp_settings_defaults(PSPdispSettings *settings) {
-    *settings = (PSPdispSettings) {
-        .enabled = true,
-        .use_usb = true,
-        .use_wlan = true,
-        .higher_priority = true,
-        .jpeg_quality = { [PSPDISP_COM_QUALITY_LOWEST] = 10, [PSPDISP_COM_QUALITY_LOW] = 20, [PSPDISP_COM_QUALITY_MEDIUM] = 30, [PSPDISP_COM_QUALITY_HIGH] = 50, [PSPDISP_COM_QUALITY_HIGHEST] = 80 },
-        .update_interval = { [PSPDISP_COM_UPDATE_INTERVAL_SHORTEST] = 30, [PSPDISP_COM_UPDATE_INTERVAL_SHORT] = 40, [PSPDISP_COM_UPDATE_INTERVAL_MEDIUM] = 50, [PSPDISP_COM_UPDATE_INTERVAL_LONG] = 100, [PSPDISP_COM_UPDATE_INTERVAL_LONGEST] = 200 },
-        .notify_server_started = true,
-        .notify_connected = true,
-        .notify_disconnected = true,
-    };
-    pspdisp_settings_streaming_defaults(&settings->streaming);
+	*settings = (PSPdispSettings) {
+		.enabled = true,
+		.use_usb = true,
+		.use_wlan = true,
+		.higher_priority = true,
+		.jpeg_quality = { [PSPDISP_COM_QUALITY_LOWEST] = 10, [PSPDISP_COM_QUALITY_LOW] = 20, [PSPDISP_COM_QUALITY_MEDIUM] = 30, [PSPDISP_COM_QUALITY_HIGH] = 50, [PSPDISP_COM_QUALITY_HIGHEST] = 80 },
+		.update_interval = { [PSPDISP_COM_UPDATE_INTERVAL_SHORTEST] = 30, [PSPDISP_COM_UPDATE_INTERVAL_SHORT] = 40, [PSPDISP_COM_UPDATE_INTERVAL_MEDIUM] = 50, [PSPDISP_COM_UPDATE_INTERVAL_LONG] = 100, [PSPDISP_COM_UPDATE_INTERVAL_LONGEST] = 200 },
+		.notify_server_started = true,
+		.notify_connected = true,
+		.notify_disconnected = true,
+	};
+	pspdisp_settings_streaming_defaults(&settings->streaming);
 }
 
 /**
  * @brief Tell if two streaming settings are the same.
  */
 bool pspdisp_settings_streaming_equal(const PSPdispSettingsStreaming *a, const PSPdispSettingsStreaming *b) {
-    return a->quality == b->quality && a->uncompressed == b->uncompressed && a->update_interval == b->update_interval
-        && a->image == b->image && a->sound == b->sound && a->sample_rate_usb == b->sample_rate_usb && a->sample_rate_wlan == b->sample_rate_wlan
-        && strcmp(a->control, b->control) == 0;
+	return a->quality == b->quality && a->uncompressed == b->uncompressed && a->update_interval == b->update_interval
+		&& a->image == b->image && a->sound == b->sound && a->sample_rate_usb == b->sample_rate_usb && a->sample_rate_wlan == b->sample_rate_wlan
+		&& strcmp(a->control, b->control) == 0;
 }
 
 /**
  * @brief Tell if two settings are the same.
  */
 bool pspdisp_settings_equal(const PSPdispSettings *a, const PSPdispSettings *b) {
-    return a->enabled == b->enabled && a->use_usb == b->use_usb && a->use_wlan == b->use_wlan && a->higher_priority == b->higher_priority && pspdisp_settings_streaming_equal(&a->streaming, &b->streaming)
-        && memcmp(a->jpeg_quality, b->jpeg_quality, sizeof(a->jpeg_quality)) == 0 && memcmp(a->update_interval, b->update_interval, sizeof(a->update_interval)) == 0
-        && strcmp(a->wlan_password, b->wlan_password) == 0 && a->wlan_port_offset == b->wlan_port_offset
-        && a->notify_server_started == b->notify_server_started && a->notify_connected == b->notify_connected && a->notify_disconnected == b->notify_disconnected;
+	return a->enabled == b->enabled && a->use_usb == b->use_usb && a->use_wlan == b->use_wlan && a->higher_priority == b->higher_priority && pspdisp_settings_streaming_equal(&a->streaming, &b->streaming)
+		&& memcmp(a->jpeg_quality, b->jpeg_quality, sizeof(a->jpeg_quality)) == 0 && memcmp(a->update_interval, b->update_interval, sizeof(a->update_interval)) == 0
+		&& strcmp(a->wlan_password, b->wlan_password) == 0 && a->wlan_port_offset == b->wlan_port_offset
+		&& a->notify_server_started == b->notify_server_started && a->notify_connected == b->notify_connected && a->notify_disconnected == b->notify_disconnected;
 }
 
 /**
  * @brief Get the sample rate in Hz of a sample rate setting.
  */
 uint32_t pspdisp_settings_sample_rate_hz(PSPdispComSampleRate sample_rate) {
-    return pspdisp_settings_sample_rates[MIN(sample_rate, PSPDISP_COM_SAMPLE_RATE_44100)];
+	return pspdisp_settings_sample_rates[MIN(sample_rate, PSPDISP_COM_SAMPLE_RATE_44100)];
 }
 
 /**
@@ -237,10 +237,10 @@ uint32_t pspdisp_settings_sample_rate_hz(PSPdispComSampleRate sample_rate) {
  * @return Its index, or -1 if it's not there.
  */
 int pspdisp_settings_find_name(const char *const *names, size_t count, const char *name) {
-    for (size_t i = 0; name != NULL && i < count; i++) {
-        if (g_ascii_strcasecmp(names[i], name) == 0) return i;
-    }
-    return -1;
+	for (size_t i = 0; name != NULL && i < count; i++) {
+		if (g_ascii_strcasecmp(names[i], name) == 0) return i;
+	}
+	return -1;
 }
 
 /**
@@ -249,10 +249,10 @@ int pspdisp_settings_find_name(const char *const *names, size_t count, const cha
  * @return Its index, or -1 if it's not there.
  */
 int pspdisp_settings_find_value(const uint32_t *values, size_t count, uint32_t value) {
-    for (size_t i = 0; i < count; i++) {
-        if (values[i] == value) return i;
-    }
-    return -1;
+	for (size_t i = 0; i < count; i++) {
+		if (values[i] == value) return i;
+	}
+	return -1;
 }
 
 /**
@@ -261,12 +261,12 @@ int pspdisp_settings_find_value(const uint32_t *values, size_t count, uint32_t v
  * @param value Where to write it, untouched otherwise.
  */
 void pspdisp_settings_read_boolean(GKeyFile *file, const char *group, const char *key, bool *value) {
-    GError *error = NULL;
-    gboolean read = g_key_file_get_boolean(file, group, key, &error);
+	GError *error = NULL;
+	gboolean read = g_key_file_get_boolean(file, group, key, &error);
 
-    if (error == NULL)
-        *value = read;
-    g_clear_error(&error);
+	if (error == NULL)
+		*value = read;
+	g_clear_error(&error);
 }
 
 /**
@@ -275,12 +275,12 @@ void pspdisp_settings_read_boolean(GKeyFile *file, const char *group, const char
  * @param value Where to write it, untouched otherwise.
  */
 void pspdisp_settings_read_integer(GKeyFile *file, const char *group, const char *key, uint32_t minimum, uint32_t maximum, uint32_t *value) {
-    GError *error = NULL;
-    gint64 read = g_key_file_get_int64(file, group, key, &error);
+	GError *error = NULL;
+	gint64 read = g_key_file_get_int64(file, group, key, &error);
 
-    if (error == NULL && read >= minimum && read <= maximum)
-        *value = read;
-    g_clear_error(&error);
+	if (error == NULL && read >= minimum && read <= maximum)
+		*value = read;
+	g_clear_error(&error);
 }
 
 /**
@@ -290,11 +290,11 @@ void pspdisp_settings_read_integer(GKeyFile *file, const char *group, const char
  * @param size The size of `value` in bytes.
  */
 void pspdisp_settings_read_string(GKeyFile *file, const char *group, const char *key, char *value, size_t size) {
-    char *read = g_key_file_get_string(file, group, key, NULL);
+	char *read = g_key_file_get_string(file, group, key, NULL);
 
-    if (read != NULL && strlen(read) < size)
-        g_strlcpy(value, read, size);
-    g_free(read);
+	if (read != NULL && strlen(read) < size)
+		g_strlcpy(value, read, size);
+	g_free(read);
 }
 
 /**
@@ -303,12 +303,12 @@ void pspdisp_settings_read_string(GKeyFile *file, const char *group, const char 
  * @param value Where to write its index, untouched otherwise.
  */
 void pspdisp_settings_read_name(GKeyFile *file, const char *group, const char *key, const char *const *names, size_t count, uint32_t *value) {
-    char *read = g_key_file_get_string(file, group, key, NULL);
-    int index = pspdisp_settings_find_name(names, count, read);
+	char *read = g_key_file_get_string(file, group, key, NULL);
+	int index = pspdisp_settings_find_name(names, count, read);
 
-    if (index >= 0)
-        *value = index;
-    g_free(read);
+	if (index >= 0)
+		*value = index;
+	g_free(read);
 }
 
 /**
@@ -317,12 +317,12 @@ void pspdisp_settings_read_name(GKeyFile *file, const char *group, const char *k
  * @param value Where to write its index, untouched otherwise.
  */
 void pspdisp_settings_read_value(GKeyFile *file, const char *group, const char *key, const uint32_t *values, size_t count, uint32_t *value) {
-    uint32_t read = UINT32_MAX;
-    pspdisp_settings_read_integer(file, group, key, 0, UINT32_MAX - 1, &read);
+	uint32_t read = UINT32_MAX;
+	pspdisp_settings_read_integer(file, group, key, 0, UINT32_MAX - 1, &read);
 
-    int index = pspdisp_settings_find_value(values, count, read);
-    if (index >= 0)
-        *value = index;
+	int index = pspdisp_settings_find_value(values, count, read);
+	if (index >= 0)
+		*value = index;
 }
 
 /**
@@ -335,28 +335,28 @@ void pspdisp_settings_read_value(GKeyFile *file, const char *group, const char *
  * @param streaming The settings, changed by the keys read.
  */
 void pspdisp_settings_read_streaming(GKeyFile *file, const char *group, PSPdispSettingsStreaming *streaming) {
-    uint32_t value;
+	uint32_t value;
 
-    value = streaming->quality;
-    pspdisp_settings_read_name(file, group, "Quality", pspdisp_settings_quality_names, G_N_ELEMENTS(pspdisp_settings_quality_names), &value);
-    streaming->quality = value;
+	value = streaming->quality;
+	pspdisp_settings_read_name(file, group, "Quality", pspdisp_settings_quality_names, G_N_ELEMENTS(pspdisp_settings_quality_names), &value);
+	streaming->quality = value;
 
-    value = streaming->update_interval;
-    pspdisp_settings_read_name(file, group, "UpdateInterval", pspdisp_settings_update_interval_names, G_N_ELEMENTS(pspdisp_settings_update_interval_names), &value);
-    streaming->update_interval = value;
+	value = streaming->update_interval;
+	pspdisp_settings_read_name(file, group, "UpdateInterval", pspdisp_settings_update_interval_names, G_N_ELEMENTS(pspdisp_settings_update_interval_names), &value);
+	streaming->update_interval = value;
 
-    value = streaming->sample_rate_usb;
-    pspdisp_settings_read_value(file, group, "SampleRateUSB", pspdisp_settings_sample_rates, G_N_ELEMENTS(pspdisp_settings_sample_rates), &value);
-    streaming->sample_rate_usb = value;
+	value = streaming->sample_rate_usb;
+	pspdisp_settings_read_value(file, group, "SampleRateUSB", pspdisp_settings_sample_rates, G_N_ELEMENTS(pspdisp_settings_sample_rates), &value);
+	streaming->sample_rate_usb = value;
 
-    value = streaming->sample_rate_wlan;
-    pspdisp_settings_read_value(file, group, "SampleRateWLAN", pspdisp_settings_sample_rates, G_N_ELEMENTS(pspdisp_settings_sample_rates), &value);
-    streaming->sample_rate_wlan = value;
+	value = streaming->sample_rate_wlan;
+	pspdisp_settings_read_value(file, group, "SampleRateWLAN", pspdisp_settings_sample_rates, G_N_ELEMENTS(pspdisp_settings_sample_rates), &value);
+	streaming->sample_rate_wlan = value;
 
-    pspdisp_settings_read_boolean(file, group, "Uncompressed", &streaming->uncompressed);
-    pspdisp_settings_read_boolean(file, group, "Image", &streaming->image);
-    pspdisp_settings_read_boolean(file, group, "Sound", &streaming->sound);
-    pspdisp_settings_read_string(file, group, "Control", streaming->control, sizeof(streaming->control));
+	pspdisp_settings_read_boolean(file, group, "Uncompressed", &streaming->uncompressed);
+	pspdisp_settings_read_boolean(file, group, "Image", &streaming->image);
+	pspdisp_settings_read_boolean(file, group, "Sound", &streaming->sound);
+	pspdisp_settings_read_string(file, group, "Control", streaming->control, sizeof(streaming->control));
 }
 
 /**
@@ -367,14 +367,14 @@ void pspdisp_settings_read_streaming(GKeyFile *file, const char *group, PSPdispS
  * @param streaming The settings.
  */
 void pspdisp_settings_write_streaming(GKeyFile *file, const char *group, const PSPdispSettingsStreaming *streaming) {
-    g_key_file_set_string(file, group, "Quality", pspdisp_settings_quality_names[MIN(streaming->quality, PSPDISP_COM_QUALITY_HIGHEST)]);
-    g_key_file_set_boolean(file, group, "Uncompressed", streaming->uncompressed);
-    g_key_file_set_string(file, group, "UpdateInterval", pspdisp_settings_update_interval_names[MIN(streaming->update_interval, PSPDISP_COM_UPDATE_INTERVAL_LONGEST)]);
-    g_key_file_set_boolean(file, group, "Image", streaming->image);
-    g_key_file_set_boolean(file, group, "Sound", streaming->sound);
-    g_key_file_set_integer(file, group, "SampleRateUSB", pspdisp_settings_sample_rate_hz(streaming->sample_rate_usb));
-    g_key_file_set_integer(file, group, "SampleRateWLAN", pspdisp_settings_sample_rate_hz(streaming->sample_rate_wlan));
-    g_key_file_set_string(file, group, "Control", streaming->control);
+	g_key_file_set_string(file, group, "Quality", pspdisp_settings_quality_names[MIN(streaming->quality, PSPDISP_COM_QUALITY_HIGHEST)]);
+	g_key_file_set_boolean(file, group, "Uncompressed", streaming->uncompressed);
+	g_key_file_set_string(file, group, "UpdateInterval", pspdisp_settings_update_interval_names[MIN(streaming->update_interval, PSPDISP_COM_UPDATE_INTERVAL_LONGEST)]);
+	g_key_file_set_boolean(file, group, "Image", streaming->image);
+	g_key_file_set_boolean(file, group, "Sound", streaming->sound);
+	g_key_file_set_integer(file, group, "SampleRateUSB", pspdisp_settings_sample_rate_hz(streaming->sample_rate_usb));
+	g_key_file_set_integer(file, group, "SampleRateWLAN", pspdisp_settings_sample_rate_hz(streaming->sample_rate_wlan));
+	g_key_file_set_string(file, group, "Control", streaming->control);
 }
 
 /**
@@ -384,23 +384,23 @@ void pspdisp_settings_write_streaming(GKeyFile *file, const char *group, const P
  * @param settings The settings, changed by the keys read.
  */
 void pspdisp_settings_read(GKeyFile *file, PSPdispSettings *settings) {
-    pspdisp_settings_read_boolean(file, "General", "Enabled", &settings->enabled);
-    pspdisp_settings_read_boolean(file, "General", "USB", &settings->use_usb);
-    pspdisp_settings_read_boolean(file, "General", "WLAN", &settings->use_wlan);
-    pspdisp_settings_read_boolean(file, "General", "HigherPriority", &settings->higher_priority);
+	pspdisp_settings_read_boolean(file, "General", "Enabled", &settings->enabled);
+	pspdisp_settings_read_boolean(file, "General", "USB", &settings->use_usb);
+	pspdisp_settings_read_boolean(file, "General", "WLAN", &settings->use_wlan);
+	pspdisp_settings_read_boolean(file, "General", "HigherPriority", &settings->higher_priority);
 
-    pspdisp_settings_read_streaming(file, "Streaming", &settings->streaming);
+	pspdisp_settings_read_streaming(file, "Streaming", &settings->streaming);
 
-    for (size_t i = 0; i < G_N_ELEMENTS(settings->jpeg_quality); i++)
-        pspdisp_settings_read_integer(file, "Quality", pspdisp_settings_quality_names[i], 1, 100, &settings->jpeg_quality[i]);
-    for (size_t i = PSPDISP_COM_UPDATE_INTERVAL_SHORTEST; i < G_N_ELEMENTS(settings->update_interval); i++)
-        pspdisp_settings_read_integer(file, "UpdateInterval", pspdisp_settings_update_interval_names[i], 0, 10000, &settings->update_interval[i]);
+	for (size_t i = 0; i < G_N_ELEMENTS(settings->jpeg_quality); i++)
+		pspdisp_settings_read_integer(file, "Quality", pspdisp_settings_quality_names[i], 1, 100, &settings->jpeg_quality[i]);
+	for (size_t i = PSPDISP_COM_UPDATE_INTERVAL_SHORTEST; i < G_N_ELEMENTS(settings->update_interval); i++)
+		pspdisp_settings_read_integer(file, "UpdateInterval", pspdisp_settings_update_interval_names[i], 0, 10000, &settings->update_interval[i]);
 
-    pspdisp_settings_read_string(file, "WLAN", "Password", settings->wlan_password, sizeof(settings->wlan_password));
-    pspdisp_settings_read_integer(file, "WLAN", "PortOffset", 0, PSPDISP_SETTINGS_MAX_PORT_OFFSET, &settings->wlan_port_offset);
-    pspdisp_settings_read_boolean(file, "WLAN", "NotifyServerStarted", &settings->notify_server_started);
-    pspdisp_settings_read_boolean(file, "WLAN", "NotifyConnected", &settings->notify_connected);
-    pspdisp_settings_read_boolean(file, "WLAN", "NotifyDisconnected", &settings->notify_disconnected);
+	pspdisp_settings_read_string(file, "WLAN", "Password", settings->wlan_password, sizeof(settings->wlan_password));
+	pspdisp_settings_read_integer(file, "WLAN", "PortOffset", 0, PSPDISP_SETTINGS_MAX_PORT_OFFSET, &settings->wlan_port_offset);
+	pspdisp_settings_read_boolean(file, "WLAN", "NotifyServerStarted", &settings->notify_server_started);
+	pspdisp_settings_read_boolean(file, "WLAN", "NotifyConnected", &settings->notify_connected);
+	pspdisp_settings_read_boolean(file, "WLAN", "NotifyDisconnected", &settings->notify_disconnected);
 }
 
 /**
@@ -410,23 +410,23 @@ void pspdisp_settings_read(GKeyFile *file, PSPdispSettings *settings) {
  * @param settings The settings.
  */
 void pspdisp_settings_write(GKeyFile *file, const PSPdispSettings *settings) {
-    g_key_file_set_boolean(file, "General", "Enabled", settings->enabled);
-    g_key_file_set_boolean(file, "General", "USB", settings->use_usb);
-    g_key_file_set_boolean(file, "General", "WLAN", settings->use_wlan);
-    g_key_file_set_boolean(file, "General", "HigherPriority", settings->higher_priority);
+	g_key_file_set_boolean(file, "General", "Enabled", settings->enabled);
+	g_key_file_set_boolean(file, "General", "USB", settings->use_usb);
+	g_key_file_set_boolean(file, "General", "WLAN", settings->use_wlan);
+	g_key_file_set_boolean(file, "General", "HigherPriority", settings->higher_priority);
 
-    pspdisp_settings_write_streaming(file, "Streaming", &settings->streaming);
+	pspdisp_settings_write_streaming(file, "Streaming", &settings->streaming);
 
-    for (size_t i = 0; i < G_N_ELEMENTS(settings->jpeg_quality); i++)
-        g_key_file_set_integer(file, "Quality", pspdisp_settings_quality_names[i], settings->jpeg_quality[i]);
-    for (size_t i = PSPDISP_COM_UPDATE_INTERVAL_SHORTEST; i < G_N_ELEMENTS(settings->update_interval); i++)
-        g_key_file_set_integer(file, "UpdateInterval", pspdisp_settings_update_interval_names[i], settings->update_interval[i]);
+	for (size_t i = 0; i < G_N_ELEMENTS(settings->jpeg_quality); i++)
+		g_key_file_set_integer(file, "Quality", pspdisp_settings_quality_names[i], settings->jpeg_quality[i]);
+	for (size_t i = PSPDISP_COM_UPDATE_INTERVAL_SHORTEST; i < G_N_ELEMENTS(settings->update_interval); i++)
+		g_key_file_set_integer(file, "UpdateInterval", pspdisp_settings_update_interval_names[i], settings->update_interval[i]);
 
-    g_key_file_set_string(file, "WLAN", "Password", settings->wlan_password);
-    g_key_file_set_integer(file, "WLAN", "PortOffset", settings->wlan_port_offset);
-    g_key_file_set_boolean(file, "WLAN", "NotifyServerStarted", settings->notify_server_started);
-    g_key_file_set_boolean(file, "WLAN", "NotifyConnected", settings->notify_connected);
-    g_key_file_set_boolean(file, "WLAN", "NotifyDisconnected", settings->notify_disconnected);
+	g_key_file_set_string(file, "WLAN", "Password", settings->wlan_password);
+	g_key_file_set_integer(file, "WLAN", "PortOffset", settings->wlan_port_offset);
+	g_key_file_set_boolean(file, "WLAN", "NotifyServerStarted", settings->notify_server_started);
+	g_key_file_set_boolean(file, "WLAN", "NotifyConnected", settings->notify_connected);
+	g_key_file_set_boolean(file, "WLAN", "NotifyDisconnected", settings->notify_disconnected);
 }
 
 /**
@@ -436,7 +436,7 @@ void pspdisp_settings_write(GKeyFile *file, const PSPdispSettings *settings) {
  * @return The path, free it with `g_free()`.
  */
 char *pspdisp_settings_file_path(const char *dir) {
-    return g_build_filename(dir, PSPDISP_SETTINGS_FILE_NAME, NULL);
+	return g_build_filename(dir, PSPDISP_SETTINGS_FILE_NAME, NULL);
 }
 
 /**
@@ -446,7 +446,7 @@ char *pspdisp_settings_file_path(const char *dir) {
  * @return The path, free it with `g_free()`.
  */
 char *pspdisp_settings_presets_dir(const char *dir) {
-    return g_build_filename(dir, PSPDISP_SETTINGS_PRESETS_DIR, NULL);
+	return g_build_filename(dir, PSPDISP_SETTINGS_PRESETS_DIR, NULL);
 }
 
 /**
@@ -456,7 +456,7 @@ char *pspdisp_settings_presets_dir(const char *dir) {
  * @return The path, free it with `g_free()`.
  */
 char *pspdisp_settings_control_dir(const char *dir) {
-    return g_build_filename(dir, PSPDISP_SETTINGS_CONTROL_DIR, NULL);
+	return g_build_filename(dir, PSPDISP_SETTINGS_CONTROL_DIR, NULL);
 }
 
 /**
@@ -467,20 +467,20 @@ char *pspdisp_settings_control_dir(const char *dir) {
  * @return `true` if it exists now.
  */
 bool pspdisp_settings_make_dir(const char *path, bool *created) {
-    bool existed = g_file_test(path, G_FILE_TEST_IS_DIR);
+	bool existed = g_file_test(path, G_FILE_TEST_IS_DIR);
 
-    if (created != NULL)
-        *created = false;
-    if (existed) return true;
+	if (created != NULL)
+		*created = false;
+	if (existed) return true;
 
-    if (g_mkdir_with_parents(path, 0755) != 0) {
-        g_warning("%s(): failed to create %s: %s", __FUNCTION__, path, g_strerror(errno));
-        return false;
-    }
+	if (g_mkdir_with_parents(path, 0755) != 0) {
+		g_warning("%s(): failed to create %s: %s", __FUNCTION__, path, g_strerror(errno));
+		return false;
+	}
 
-    if (created != NULL)
-        *created = true;
-    return true;
+	if (created != NULL)
+		*created = true;
+	return true;
 }
 
 /**
@@ -493,7 +493,7 @@ bool pspdisp_settings_make_dir(const char *path, bool *created) {
  * @return `true` if it was written.
  */
 bool pspdisp_settings_write_file(const char *path, const char *content, gsize length, GError **error) {
-    return g_file_set_contents_full(path, content, length, G_FILE_SET_CONTENTS_CONSISTENT, 0644, error);
+	return g_file_set_contents_full(path, content, length, G_FILE_SET_CONTENTS_CONSISTENT, 0644, error);
 }
 
 /**
@@ -504,59 +504,59 @@ bool pspdisp_settings_write_file(const char *path, const char *content, gsize le
  * @param dir The folder of the settings.
  */
 void pspdisp_settings_install_defaults(const char *dir) {
-    bool created = false;
+	bool created = false;
 
-    pspdisp_settings_make_dir(dir, NULL);
+	pspdisp_settings_make_dir(dir, NULL);
 
-    char *presets_dir = pspdisp_settings_presets_dir(dir);
-    if (pspdisp_settings_make_dir(presets_dir, &created) && created) {
-        for (size_t i = 0; i < G_N_ELEMENTS(pspdisp_settings_default_presets); i++) {
-            GKeyFile *file = g_key_file_new();
-            PSPdispSettingsStreaming streaming;
+	char *presets_dir = pspdisp_settings_presets_dir(dir);
+	if (pspdisp_settings_make_dir(presets_dir, &created) && created) {
+		for (size_t i = 0; i < G_N_ELEMENTS(pspdisp_settings_default_presets); i++) {
+			GKeyFile *file = g_key_file_new();
+			PSPdispSettingsStreaming streaming;
 
-            pspdisp_settings_streaming_defaults(&streaming);
-            streaming.quality = pspdisp_settings_default_presets[i].quality;
-            streaming.uncompressed = pspdisp_settings_default_presets[i].uncompressed;
-            streaming.update_interval = pspdisp_settings_default_presets[i].update_interval;
-            streaming.sound = pspdisp_settings_default_presets[i].sound;
-            streaming.sample_rate_usb = pspdisp_settings_default_presets[i].sample_rate_usb;
-            streaming.sample_rate_wlan = pspdisp_settings_default_presets[i].sample_rate_wlan;
+			pspdisp_settings_streaming_defaults(&streaming);
+			streaming.quality = pspdisp_settings_default_presets[i].quality;
+			streaming.uncompressed = pspdisp_settings_default_presets[i].uncompressed;
+			streaming.update_interval = pspdisp_settings_default_presets[i].update_interval;
+			streaming.sound = pspdisp_settings_default_presets[i].sound;
+			streaming.sample_rate_usb = pspdisp_settings_default_presets[i].sample_rate_usb;
+			streaming.sample_rate_wlan = pspdisp_settings_default_presets[i].sample_rate_wlan;
 
-            g_key_file_set_string(file, "General", "Name", pspdisp_settings_default_presets[i].name);
-            pspdisp_settings_write_streaming(file, "Streaming", &streaming);
-            g_key_file_remove_key(file, "Streaming", "Control", NULL); // A preset doesn't change the control by default
+			g_key_file_set_string(file, "General", "Name", pspdisp_settings_default_presets[i].name);
+			pspdisp_settings_write_streaming(file, "Streaming", &streaming);
+			g_key_file_remove_key(file, "Streaming", "Control", NULL); // A preset doesn't change the control by default
 
-            gsize length;
-            char *content = g_key_file_to_data(file, &length, NULL);
-            char *path = g_build_filename(presets_dir, pspdisp_settings_default_presets[i].file_name, NULL);
-            GError *error = NULL;
+			gsize length;
+			char *content = g_key_file_to_data(file, &length, NULL);
+			char *path = g_build_filename(presets_dir, pspdisp_settings_default_presets[i].file_name, NULL);
+			GError *error = NULL;
 
-            if (!pspdisp_settings_write_file(path, content, length, &error)) {
-                g_warning("%s(): failed to write the preset %s: %s", __FUNCTION__, path, error->message);
-                g_error_free(error);
-            }
+			if (!pspdisp_settings_write_file(path, content, length, &error)) {
+				g_warning("%s(): failed to write the preset %s: %s", __FUNCTION__, path, error->message);
+				g_error_free(error);
+			}
 
-            g_free(path);
-            g_free(content);
-            g_key_file_free(file);
-        }
-    }
-    g_free(presets_dir);
+			g_free(path);
+			g_free(content);
+			g_key_file_free(file);
+		}
+	}
+	g_free(presets_dir);
 
-    char *control_dir = pspdisp_settings_control_dir(dir);
-    if (pspdisp_settings_make_dir(control_dir, &created) && created) {
-        for (size_t i = 0; i < G_N_ELEMENTS(pspdisp_settings_default_controls); i++) {
-            char *path = g_build_filename(control_dir, pspdisp_settings_default_controls[i].file_name, NULL);
-            GError *error = NULL;
+	char *control_dir = pspdisp_settings_control_dir(dir);
+	if (pspdisp_settings_make_dir(control_dir, &created) && created) {
+		for (size_t i = 0; i < G_N_ELEMENTS(pspdisp_settings_default_controls); i++) {
+			char *path = g_build_filename(control_dir, pspdisp_settings_default_controls[i].file_name, NULL);
+			GError *error = NULL;
 
-            if (!pspdisp_settings_write_file(path, pspdisp_settings_default_controls[i].content, strlen(pspdisp_settings_default_controls[i].content), &error)) {
-                g_warning("%s(): failed to write the control file %s: %s", __FUNCTION__, path, error->message);
-                g_error_free(error);
-            }
-            g_free(path);
-        }
-    }
-    g_free(control_dir);
+			if (!pspdisp_settings_write_file(path, pspdisp_settings_default_controls[i].content, strlen(pspdisp_settings_default_controls[i].content), &error)) {
+				g_warning("%s(): failed to write the control file %s: %s", __FUNCTION__, path, error->message);
+				g_error_free(error);
+			}
+			g_free(path);
+		}
+	}
+	g_free(control_dir);
 }
 
 /**
@@ -568,25 +568,25 @@ void pspdisp_settings_install_defaults(const char *dir) {
  * @return `true` if the file was read, or doesn't exist yet.
  */
 bool pspdisp_settings_load(const char *dir, PSPdispSettings *settings, GError **error) {
-    char *path = pspdisp_settings_file_path(dir);
-    GKeyFile *file = g_key_file_new();
-    GError *failure = NULL;
+	char *path = pspdisp_settings_file_path(dir);
+	GKeyFile *file = g_key_file_new();
+	GError *failure = NULL;
 
-    pspdisp_settings_defaults(settings);
+	pspdisp_settings_defaults(settings);
 
-    bool loaded = g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, &failure);
-    if (loaded)
-        pspdisp_settings_read(file, settings);
+	bool loaded = g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, &failure);
+	if (loaded)
+		pspdisp_settings_read(file, settings);
 
-    bool missing = !loaded && g_error_matches(failure, G_FILE_ERROR, G_FILE_ERROR_NOENT);
-    if (!loaded && !missing)
-        g_propagate_prefixed_error(error, failure, "failed to read %s: ", path);
-    else
-        g_clear_error(&failure);
+	bool missing = !loaded && g_error_matches(failure, G_FILE_ERROR, G_FILE_ERROR_NOENT);
+	if (!loaded && !missing)
+		g_propagate_prefixed_error(error, failure, "failed to read %s: ", path);
+	else
+		g_clear_error(&failure);
 
-    g_key_file_free(file);
-    g_free(path);
-    return loaded || missing;
+	g_key_file_free(file);
+	g_free(path);
+	return loaded || missing;
 }
 
 /**
@@ -602,65 +602,65 @@ bool pspdisp_settings_load(const char *dir, PSPdispSettings *settings, GError **
  * @return `true` if the file has the change now.
  */
 bool pspdisp_settings_edit(const char *dir, PSPdispSettingsEditor editor, gpointer data, GError **error) {
-    if (!pspdisp_settings_make_dir(dir, NULL)) {
-        g_set_error(error, G_FILE_ERROR, G_FILE_ERROR_FAILED, "failed to create %s", dir);
-        return false;
-    }
+	if (!pspdisp_settings_make_dir(dir, NULL)) {
+		g_set_error(error, G_FILE_ERROR, G_FILE_ERROR_FAILED, "failed to create %s", dir);
+		return false;
+	}
 
-    char *lock_path = g_build_filename(dir, PSPDISP_SETTINGS_LOCK_NAME, NULL);
-    int lock = open(lock_path, O_RDWR | O_CREAT | O_CLOEXEC, 0644);
+	char *lock_path = g_build_filename(dir, PSPDISP_SETTINGS_LOCK_NAME, NULL);
+	int lock = open(lock_path, O_RDWR | O_CREAT | O_CLOEXEC, 0644);
 
-    if (lock >= 0)
-        flock(lock, LOCK_EX);
-    g_free(lock_path);
+	if (lock >= 0)
+		flock(lock, LOCK_EX);
+	g_free(lock_path);
 
-    char *path = pspdisp_settings_file_path(dir);
-    GKeyFile *file = g_key_file_new();
-    char *before = NULL;
-    GError *failure = NULL;
+	char *path = pspdisp_settings_file_path(dir);
+	GKeyFile *file = g_key_file_new();
+	char *before = NULL;
+	GError *failure = NULL;
 
-    if (g_key_file_load_from_file(file, path, G_KEY_FILE_KEEP_COMMENTS, &failure)) {
-        before = g_key_file_to_data(file, NULL, NULL);
-    } else {
-        // A new file (or one that can't be read, which is replaced)
-        if (!g_error_matches(failure, G_FILE_ERROR, G_FILE_ERROR_NOENT))
-            g_warning("%s(): %s is unreadable, it's written again: %s", __FUNCTION__, path, failure->message);
-        g_clear_error(&failure);
-        g_key_file_free(file);
-        file = g_key_file_new();
-        g_key_file_set_comment(file, NULL, NULL, " PSPdisp settings, shared by the desktop app and the daemon (see src/desktop/settings/settings.c)", NULL);
-    }
+	if (g_key_file_load_from_file(file, path, G_KEY_FILE_KEEP_COMMENTS, &failure)) {
+		before = g_key_file_to_data(file, NULL, NULL);
+	} else {
+		// A new file (or one that can't be read, which is replaced)
+		if (!g_error_matches(failure, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+			g_warning("%s(): %s is unreadable, it's written again: %s", __FUNCTION__, path, failure->message);
+		g_clear_error(&failure);
+		g_key_file_free(file);
+		file = g_key_file_new();
+		g_key_file_set_comment(file, NULL, NULL, " PSPdisp settings, shared by the desktop app and the daemon (see src/desktop/settings/settings.c)", NULL);
+	}
 
-    editor(file, data);
+	editor(file, data);
 
-    gsize length;
-    char *after = g_key_file_to_data(file, &length, NULL);
-    bool done = g_strcmp0(before, after) == 0 || pspdisp_settings_write_file(path, after, length, error); // Unchanged, nothing written
+	gsize length;
+	char *after = g_key_file_to_data(file, &length, NULL);
+	bool done = g_strcmp0(before, after) == 0 || pspdisp_settings_write_file(path, after, length, error); // Unchanged, nothing written
 
-    g_free(after);
-    g_free(before);
-    g_key_file_free(file);
-    g_free(path);
+	g_free(after);
+	g_free(before);
+	g_key_file_free(file);
+	g_free(path);
 
-    if (lock >= 0)
-        close(lock); // Also unlocks
-    return done;
+	if (lock >= 0)
+		close(lock); // Also unlocks
+	return done;
 }
 
 /**
  * @brief A key of the settings to set, for `pspdisp_settings_edit_key()`.
  */
 typedef struct {
-    const char *group;
-    const char *key;
-    const char *value;
+	const char *group;
+	const char *key;
+	const char *value;
 } PSPdispSettingsKey;
 
 /**
  * @brief Set a key, the editor of `pspdisp_settings_set()`.
  */
 void pspdisp_settings_edit_key(GKeyFile *file, PSPdispSettingsKey *key) {
-    g_key_file_set_value(file, key->group, key->key, key->value);
+	g_key_file_set_value(file, key->group, key->key, key->value);
 }
 
 /**
@@ -674,44 +674,44 @@ void pspdisp_settings_edit_key(GKeyFile *file, PSPdispSettingsKey *key) {
  * @return `true` if the file has it now.
  */
 bool pspdisp_settings_set(const char *dir, const char *group, const char *key, const char *value, GError **error) {
-    PSPdispSettingsKey edit = { group, key, value };
-    return pspdisp_settings_edit(dir, (PSPdispSettingsEditor) pspdisp_settings_edit_key, &edit, error);
+	PSPdispSettingsKey edit = { group, key, value };
+	return pspdisp_settings_edit(dir, (PSPdispSettingsEditor) pspdisp_settings_edit_key, &edit, error);
 }
 
 /**
  * @brief Streaming settings before and after a change, for `pspdisp_settings_edit_streaming_changes()`.
  */
 typedef struct {
-    const PSPdispSettingsStreaming *before;
-    const PSPdispSettingsStreaming *after;
+	const PSPdispSettingsStreaming *before;
+	const PSPdispSettingsStreaming *after;
 } PSPdispSettingsStreamingChange;
 
 /**
  * @brief Write the streaming settings that changed, the editor of `pspdisp_settings_update_streaming()`.
  */
 void pspdisp_settings_edit_streaming_changes(GKeyFile *file, PSPdispSettingsStreamingChange *change) {
-    GKeyFile *before = g_key_file_new();
-    GKeyFile *after = g_key_file_new();
-    gsize count = 0;
+	GKeyFile *before = g_key_file_new();
+	GKeyFile *after = g_key_file_new();
+	gsize count = 0;
 
-    pspdisp_settings_write_streaming(before, "Streaming", change->before);
-    pspdisp_settings_write_streaming(after, "Streaming", change->after);
+	pspdisp_settings_write_streaming(before, "Streaming", change->before);
+	pspdisp_settings_write_streaming(after, "Streaming", change->after);
 
-    char **keys = g_key_file_get_keys(after, "Streaming", &count, NULL);
-    for (gsize i = 0; i < count; i++) {
-        char *old_value = g_key_file_get_value(before, "Streaming", keys[i], NULL);
-        char *new_value = g_key_file_get_value(after, "Streaming", keys[i], NULL);
+	char **keys = g_key_file_get_keys(after, "Streaming", &count, NULL);
+	for (gsize i = 0; i < count; i++) {
+		char *old_value = g_key_file_get_value(before, "Streaming", keys[i], NULL);
+		char *new_value = g_key_file_get_value(after, "Streaming", keys[i], NULL);
 
-        if (g_strcmp0(old_value, new_value) != 0)
-            g_key_file_set_value(file, "Streaming", keys[i], new_value);
+		if (g_strcmp0(old_value, new_value) != 0)
+			g_key_file_set_value(file, "Streaming", keys[i], new_value);
 
-        g_free(old_value);
-        g_free(new_value);
-    }
+		g_free(old_value);
+		g_free(new_value);
+	}
 
-    g_strfreev(keys);
-    g_key_file_free(after);
-    g_key_file_free(before);
+	g_strfreev(keys);
+	g_key_file_free(after);
+	g_key_file_free(before);
 }
 
 /**
@@ -724,15 +724,15 @@ void pspdisp_settings_edit_streaming_changes(GKeyFile *file, PSPdispSettingsStre
  * @return `true` if the file has the change now.
  */
 bool pspdisp_settings_update_streaming(const char *dir, const PSPdispSettingsStreaming *before, const PSPdispSettingsStreaming *after, GError **error) {
-    PSPdispSettingsStreamingChange change = { before, after };
-    return pspdisp_settings_edit(dir, (PSPdispSettingsEditor) pspdisp_settings_edit_streaming_changes, &change, error);
+	PSPdispSettingsStreamingChange change = { before, after };
+	return pspdisp_settings_edit(dir, (PSPdispSettingsEditor) pspdisp_settings_edit_streaming_changes, &change, error);
 }
 
 /**
  * @brief Write the streaming settings, the editor of `pspdisp_settings_set_streaming()`.
  */
 void pspdisp_settings_edit_streaming(GKeyFile *file, const PSPdispSettingsStreaming *streaming) {
-    pspdisp_settings_write_streaming(file, "Streaming", streaming);
+	pspdisp_settings_write_streaming(file, "Streaming", streaming);
 }
 
 /**
@@ -744,7 +744,7 @@ void pspdisp_settings_edit_streaming(GKeyFile *file, const PSPdispSettingsStream
  * @return `true` if the file has them now.
  */
 bool pspdisp_settings_set_streaming(const char *dir, const PSPdispSettingsStreaming *streaming, GError **error) {
-    return pspdisp_settings_edit(dir, (PSPdispSettingsEditor) pspdisp_settings_edit_streaming, (gpointer) streaming, error);
+	return pspdisp_settings_edit(dir, (PSPdispSettingsEditor) pspdisp_settings_edit_streaming, (gpointer) streaming, error);
 }
 
 /**
@@ -757,58 +757,58 @@ bool pspdisp_settings_set_streaming(const char *dir, const PSPdispSettingsStream
  * @return The key file, free it with `g_key_file_free()`, or `NULL` if it failed.
  */
 GKeyFile *pspdisp_settings_load_ini(const char *path, GError **error) {
-    char *content = NULL;
-    if (!g_file_get_contents(path, &content, NULL, error)) return NULL;
+	char *content = NULL;
+	if (!g_file_get_contents(path, &content, NULL, error)) return NULL;
 
-    GString *cleaned = g_string_new(NULL);
-    char **lines = g_strsplit(content, "\n", -1);
+	GString *cleaned = g_string_new(NULL);
+	char **lines = g_strsplit(content, "\n", -1);
 
-    for (char **line = lines; *line != NULL; line++) {
-        g_strchomp(*line); // Also the '\r' of the Windows line ends
-        if (g_strchug(*line)[0] == ';') continue; // A comment
-        g_string_append(cleaned, *line);
-        g_string_append_c(cleaned, '\n');
-    }
+	for (char **line = lines; *line != NULL; line++) {
+		g_strchomp(*line); // Also the '\r' of the Windows line ends
+		if (g_strchug(*line)[0] == ';') continue; // A comment
+		g_string_append(cleaned, *line);
+		g_string_append_c(cleaned, '\n');
+	}
 
-    GKeyFile *file = g_key_file_new();
-    bool loaded = g_key_file_load_from_data(file, cleaned->str, cleaned->len, G_KEY_FILE_NONE, error);
+	GKeyFile *file = g_key_file_new();
+	bool loaded = g_key_file_load_from_data(file, cleaned->str, cleaned->len, G_KEY_FILE_NONE, error);
 
-    g_strfreev(lines);
-    g_string_free(cleaned, TRUE);
-    g_free(content);
+	g_strfreev(lines);
+	g_string_free(cleaned, TRUE);
+	g_free(content);
 
-    if (!loaded) {
-        g_key_file_free(file);
-        return NULL;
-    }
-    return file;
+	if (!loaded) {
+		g_key_file_free(file);
+		return NULL;
+	}
+	return file;
 }
 
 /**
  * @brief Free a preset (for `g_ptr_array_new_with_free_func()`).
  */
 void pspdisp_settings_preset_free(PSPdispSettingsPreset *preset) {
-    g_free(preset->name);
-    g_free(preset->file_name);
-    g_free(preset);
+	g_free(preset->name);
+	g_free(preset->file_name);
+	g_free(preset);
 }
 
 /**
  * @brief Free a control file (for `g_ptr_array_new_with_free_func()`).
  */
 void pspdisp_settings_control_free(PSPdispSettingsControl *control) {
-    g_free(control->name);
-    g_free(control->path);
-    g_free(control);
+	g_free(control->name);
+	g_free(control->path);
+	g_free(control);
 }
 
 /**
  * @brief Compare two presets or two control files by their file names, for sorting them as the old desktop app (so `1-...` comes before `2-...`).
  */
 int pspdisp_settings_compare_file_names(const void *a, const void *b) {
-    const PSPdispSettingsPreset *preset_a = *(const PSPdispSettingsPreset *const *) a;
-    const PSPdispSettingsPreset *preset_b = *(const PSPdispSettingsPreset *const *) b;
-    return g_strcmp0(preset_a->file_name, preset_b->file_name);
+	const PSPdispSettingsPreset *preset_a = *(const PSPdispSettingsPreset *const *) a;
+	const PSPdispSettingsPreset *preset_b = *(const PSPdispSettingsPreset *const *) b;
+	return g_strcmp0(preset_a->file_name, preset_b->file_name);
 }
 
 /**
@@ -820,36 +820,36 @@ int pspdisp_settings_compare_file_names(const void *a, const void *b) {
  * @return The files as `PSPdispSettingsPreset` (which has the same layout as `PSPdispSettingsControl`), sorted by file name.
  */
 GPtrArray *pspdisp_settings_list_named_files(const char *path, const char *extension, bool with_path) {
-    GPtrArray *files = g_ptr_array_new_with_free_func((GDestroyNotify) pspdisp_settings_preset_free);
-    GDir *dir = g_dir_open(path, 0, NULL);
-    const char *entry;
+	GPtrArray *files = g_ptr_array_new_with_free_func((GDestroyNotify) pspdisp_settings_preset_free);
+	GDir *dir = g_dir_open(path, 0, NULL);
+	const char *entry;
 
-    static_assert(offsetof(PSPdispSettingsPreset, name) == offsetof(PSPdispSettingsControl, name) && offsetof(PSPdispSettingsPreset, file_name) == offsetof(PSPdispSettingsControl, path), "Presets and control files are listed alike");
+	static_assert(offsetof(PSPdispSettingsPreset, name) == offsetof(PSPdispSettingsControl, name) && offsetof(PSPdispSettingsPreset, file_name) == offsetof(PSPdispSettingsControl, path), "Presets and control files are listed alike");
 
-    while (dir != NULL && (entry = g_dir_read_name(dir)) != NULL) {
-        if (!g_str_has_suffix(entry, extension)) continue;
+	while (dir != NULL && (entry = g_dir_read_name(dir)) != NULL) {
+		if (!g_str_has_suffix(entry, extension)) continue;
 
-        char *file_path = g_build_filename(path, entry, NULL);
-        GKeyFile *file = pspdisp_settings_load_ini(file_path, NULL);
-        char *name = file != NULL ? g_key_file_get_string(file, "General", "Name", NULL) : NULL;
+		char *file_path = g_build_filename(path, entry, NULL);
+		GKeyFile *file = pspdisp_settings_load_ini(file_path, NULL);
+		char *name = file != NULL ? g_key_file_get_string(file, "General", "Name", NULL) : NULL;
 
-        if (name != NULL && name[0] != '\0') {
-            PSPdispSettingsPreset *named = g_new0(PSPdispSettingsPreset, 1);
-            named->name = g_strndup(name, PSPDISP_COM_NAME_SIZE - 1); // As the PSP shows it
-            named->file_name = with_path ? g_strdup(file_path) : g_strdup(entry);
-            g_ptr_array_add(files, named);
-        }
+		if (name != NULL && name[0] != '\0') {
+			PSPdispSettingsPreset *named = g_new0(PSPdispSettingsPreset, 1);
+			named->name = g_strndup(name, PSPDISP_COM_NAME_SIZE - 1); // As the PSP shows it
+			named->file_name = with_path ? g_strdup(file_path) : g_strdup(entry);
+			g_ptr_array_add(files, named);
+		}
 
-        g_free(name);
-        if (file != NULL)
-            g_key_file_free(file);
-        g_free(file_path);
-    }
+		g_free(name);
+		if (file != NULL)
+			g_key_file_free(file);
+		g_free(file_path);
+	}
 
-    if (dir != NULL)
-        g_dir_close(dir);
-    g_ptr_array_sort(files, pspdisp_settings_compare_file_names);
-    return files;
+	if (dir != NULL)
+		g_dir_close(dir);
+	g_ptr_array_sort(files, pspdisp_settings_compare_file_names);
+	return files;
 }
 
 /**
@@ -859,10 +859,10 @@ GPtrArray *pspdisp_settings_list_named_files(const char *path, const char *exten
  * @return The presets (`PSPdispSettingsPreset *`), free them with `g_ptr_array_unref()`.
  */
 GPtrArray *pspdisp_settings_presets(const char *dir) {
-    char *path = pspdisp_settings_presets_dir(dir);
-    GPtrArray *presets = pspdisp_settings_list_named_files(path, ".preset", false);
-    g_free(path);
-    return presets;
+	char *path = pspdisp_settings_presets_dir(dir);
+	GPtrArray *presets = pspdisp_settings_list_named_files(path, ".preset", false);
+	g_free(path);
+	return presets;
 }
 
 /**
@@ -872,10 +872,10 @@ GPtrArray *pspdisp_settings_presets(const char *dir) {
  * @return The control files (`PSPdispSettingsControl *`), free them with `g_ptr_array_unref()`.
  */
 GPtrArray *pspdisp_settings_controls(const char *dir) {
-    char *path = pspdisp_settings_control_dir(dir);
-    GPtrArray *controls = pspdisp_settings_list_named_files(path, ".control", true);
-    g_free(path);
-    return controls;
+	char *path = pspdisp_settings_control_dir(dir);
+	GPtrArray *controls = pspdisp_settings_list_named_files(path, ".control", true);
+	g_free(path);
+	return controls;
 }
 
 /**
@@ -888,18 +888,18 @@ GPtrArray *pspdisp_settings_controls(const char *dir) {
  * @return `true` if the preset was read.
  */
 bool pspdisp_settings_preset_load(const char *dir, const char *file_name, PSPdispSettingsStreaming *streaming, GError **error) {
-    char *presets_dir = pspdisp_settings_presets_dir(dir);
-    char *path = g_build_filename(presets_dir, file_name, NULL);
-    GKeyFile *file = pspdisp_settings_load_ini(path, error);
+	char *presets_dir = pspdisp_settings_presets_dir(dir);
+	char *path = g_build_filename(presets_dir, file_name, NULL);
+	GKeyFile *file = pspdisp_settings_load_ini(path, error);
 
-    if (file != NULL) {
-        pspdisp_settings_read_streaming(file, "Streaming", streaming);
-        g_key_file_free(file);
-    }
+	if (file != NULL) {
+		pspdisp_settings_read_streaming(file, "Streaming", streaming);
+		g_key_file_free(file);
+	}
 
-    g_free(path);
-    g_free(presets_dir);
-    return file != NULL;
+	g_free(path);
+	g_free(presets_dir);
+	return file != NULL;
 }
 
 /**
@@ -913,24 +913,24 @@ bool pspdisp_settings_preset_load(const char *dir, const char *file_name, PSPdis
  * @return `true` if it was saved.
  */
 bool pspdisp_settings_preset_save(const char *dir, const char *file_name, const char *name, const PSPdispSettingsStreaming *streaming, GError **error) {
-    char *presets_dir = pspdisp_settings_presets_dir(dir);
-    char *full_name = g_str_has_suffix(file_name, ".preset") ? g_strdup(file_name) : g_strconcat(file_name, ".preset", NULL);
-    char *path = g_build_filename(presets_dir, full_name, NULL);
-    GKeyFile *file = g_key_file_new();
+	char *presets_dir = pspdisp_settings_presets_dir(dir);
+	char *full_name = g_str_has_suffix(file_name, ".preset") ? g_strdup(file_name) : g_strconcat(file_name, ".preset", NULL);
+	char *path = g_build_filename(presets_dir, full_name, NULL);
+	GKeyFile *file = g_key_file_new();
 
-    g_key_file_set_string(file, "General", "Name", name);
-    pspdisp_settings_write_streaming(file, "Streaming", streaming);
+	g_key_file_set_string(file, "General", "Name", name);
+	pspdisp_settings_write_streaming(file, "Streaming", streaming);
 
-    gsize length;
-    char *content = g_key_file_to_data(file, &length, NULL);
-    bool saved = pspdisp_settings_make_dir(presets_dir, NULL) && pspdisp_settings_write_file(path, content, length, error);
+	gsize length;
+	char *content = g_key_file_to_data(file, &length, NULL);
+	bool saved = pspdisp_settings_make_dir(presets_dir, NULL) && pspdisp_settings_write_file(path, content, length, error);
 
-    g_free(content);
-    g_key_file_free(file);
-    g_free(path);
-    g_free(full_name);
-    g_free(presets_dir);
-    return saved;
+	g_free(content);
+	g_key_file_free(file);
+	g_free(path);
+	g_free(full_name);
+	g_free(presets_dir);
+	return saved;
 }
 
 /**
@@ -942,16 +942,16 @@ bool pspdisp_settings_preset_save(const char *dir, const char *file_name, const 
  * @return `true` if it was deleted.
  */
 bool pspdisp_settings_preset_delete(const char *dir, const char *file_name, GError **error) {
-    char *presets_dir = pspdisp_settings_presets_dir(dir);
-    char *path = g_build_filename(presets_dir, file_name, NULL);
-    bool deleted = g_remove(path) == 0;
+	char *presets_dir = pspdisp_settings_presets_dir(dir);
+	char *path = g_build_filename(presets_dir, file_name, NULL);
+	bool deleted = g_remove(path) == 0;
 
-    if (!deleted)
-        g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(errno), "failed to delete %s: %s", path, g_strerror(errno));
+	if (!deleted)
+		g_set_error(error, G_FILE_ERROR, g_file_error_from_errno(errno), "failed to delete %s: %s", path, g_strerror(errno));
 
-    g_free(path);
-    g_free(presets_dir);
-    return deleted;
+	g_free(path);
+	g_free(presets_dir);
+	return deleted;
 }
 
 /**
@@ -961,8 +961,8 @@ bool pspdisp_settings_preset_delete(const char *dir, const char *file_name, GErr
  * @return The folder, free it with `g_free()`.
  */
 char *pspdisp_settings_dir_resolve(const char *option) {
-    if (option != NULL)
-        return g_canonicalize_filename(option, NULL);
+	if (option != NULL)
+		return g_canonicalize_filename(option, NULL);
 
-    return g_build_filename(g_get_user_config_dir(), "pspdisp", NULL);
+	return g_build_filename(g_get_user_config_dir(), "pspdisp", NULL);
 }

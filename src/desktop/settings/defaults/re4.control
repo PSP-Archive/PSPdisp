@@ -4,7 +4,7 @@
 ; the right analog stick to the DPad.
 ;
 ; For best experience, set RE4 to 800x600 windowed
-; and PSPdisp to 800x450 static viewport. 
+; and PSPdisp to 800x450 static viewport.
 
 [Info]
 Version=0.3.0.0

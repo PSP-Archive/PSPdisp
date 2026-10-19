@@ -31,16 +31,16 @@
  * @brief Watch of the PSPs using a udev monitor, created by `pspdisp_usb_watch_new()`.
  */
 struct PSPdispUSBWatch {
-    struct udev *udev; // The udev context
-    struct udev_monitor *monitor; // Plugs and unplugs of the USB devices, told once udev applied its rules
-    GQueue *present; // Paths of the PSPs plugged when the watch started (`char *`), given first as plugs
+	struct udev *udev; // The udev context
+	struct udev_monitor *monitor; // Plugs and unplugs of the USB devices, told once udev applied its rules
+	GQueue *present; // Paths of the PSPs plugged when the watch started (`char *`), given first as plugs
 };
 
 /**
  * @brief A PSP opened through usbfs, created by `pspdisp_usb_device_open()`.
  */
 struct PSPdispUSBDevice {
-    int fd; // The usbfs file of the PSP, opened for reading and writing
+	int fd; // The usbfs file of the PSP, opened for reading and writing
 };
 
 /**
@@ -52,10 +52,10 @@ struct PSPdispUSBDevice {
  * @return `true` if it's a PSP.
  */
 bool pspdisp_usb_usbfs_is_psp(struct udev_device *device) {
-    const char *product = udev_device_get_property_value(device, "PRODUCT");
-    unsigned int vendor_id = 0, product_id = 0;
+	const char *product = udev_device_get_property_value(device, "PRODUCT");
+	unsigned int vendor_id = 0, product_id = 0;
 
-    return product != NULL && sscanf(product, "%x/%x", &vendor_id, &product_id) == 2 && pspdisp_usb_is_psp(vendor_id, product_id);
+	return product != NULL && sscanf(product, "%x/%x", &vendor_id, &product_id) == 2 && pspdisp_usb_is_psp(vendor_id, product_id);
 }
 
 /**
@@ -66,43 +66,43 @@ bool pspdisp_usb_usbfs_is_psp(struct udev_device *device) {
  * @return The new watch, or `NULL` if it failed.
  */
 PSPdispUSBWatch *pspdisp_usb_watch_new() {
-    struct udev *udev = udev_new();
-    struct udev_monitor *monitor = udev != NULL ? udev_monitor_new_from_netlink(udev, "udev") : NULL;
+	struct udev *udev = udev_new();
+	struct udev_monitor *monitor = udev != NULL ? udev_monitor_new_from_netlink(udev, "udev") : NULL;
 
-    if (monitor == NULL || udev_monitor_filter_add_match_subsystem_devtype(monitor, "usb", "usb_device") < 0 || udev_monitor_enable_receiving(monitor) < 0) {
-        g_warning("%s(): failed to watch the USB devices with udev", __FUNCTION__);
-        udev_monitor_unref(monitor);
-        udev_unref(udev);
-        return NULL;
-    }
+	if (monitor == NULL || udev_monitor_filter_add_match_subsystem_devtype(monitor, "usb", "usb_device") < 0 || udev_monitor_enable_receiving(monitor) < 0) {
+		g_warning("%s(): failed to watch the USB devices with udev", __FUNCTION__);
+		udev_monitor_unref(monitor);
+		udev_unref(udev);
+		return NULL;
+	}
 
-    PSPdispUSBWatch *watch = g_new0(PSPdispUSBWatch, 1);
-    watch->udev = udev;
-    watch->monitor = monitor;
-    watch->present = g_queue_new();
+	PSPdispUSBWatch *watch = g_new0(PSPdispUSBWatch, 1);
+	watch->udev = udev;
+	watch->monitor = monitor;
+	watch->present = g_queue_new();
 
-    // The USB devices of Sony (only they have `idVendor`, not their interfaces), then their product
-    char vendor_id[5];
-    g_snprintf(vendor_id, sizeof(vendor_id), "%04x", PSPDISP_USB_VENDOR_ID);
+	// The USB devices of Sony (only they have `idVendor`, not their interfaces), then their product
+	char vendor_id[5];
+	g_snprintf(vendor_id, sizeof(vendor_id), "%04x", PSPDISP_USB_VENDOR_ID);
 
-    struct udev_enumerate *enumerate = udev_enumerate_new(udev);
-    udev_enumerate_add_match_subsystem(enumerate, "usb");
-    udev_enumerate_add_match_sysattr(enumerate, "idVendor", vendor_id);
-    udev_enumerate_scan_devices(enumerate);
+	struct udev_enumerate *enumerate = udev_enumerate_new(udev);
+	udev_enumerate_add_match_subsystem(enumerate, "usb");
+	udev_enumerate_add_match_sysattr(enumerate, "idVendor", vendor_id);
+	udev_enumerate_scan_devices(enumerate);
 
-    struct udev_list_entry *entry;
-    udev_list_entry_foreach(entry, udev_enumerate_get_list_entry(enumerate)) {
-        struct udev_device *device = udev_device_new_from_syspath(udev, udev_list_entry_get_name(entry));
-        if (device == NULL) continue;
+	struct udev_list_entry *entry;
+	udev_list_entry_foreach(entry, udev_enumerate_get_list_entry(enumerate)) {
+		struct udev_device *device = udev_device_new_from_syspath(udev, udev_list_entry_get_name(entry));
+		if (device == NULL) continue;
 
-        const char *devnode = udev_device_get_devnode(device);
-        if (devnode != NULL && pspdisp_usb_usbfs_is_psp(device))
-            g_queue_push_tail(watch->present, g_strdup(devnode));
-        udev_device_unref(device);
-    }
+		const char *devnode = udev_device_get_devnode(device);
+		if (devnode != NULL && pspdisp_usb_usbfs_is_psp(device))
+			g_queue_push_tail(watch->present, g_strdup(devnode));
+		udev_device_unref(device);
+	}
 
-    udev_enumerate_unref(enumerate);
-    return watch;
+	udev_enumerate_unref(enumerate);
+	return watch;
 }
 
 /**
@@ -111,10 +111,10 @@ PSPdispUSBWatch *pspdisp_usb_watch_new() {
  * @param watch The watch to destroy.
  */
 void pspdisp_usb_watch_destroy(PSPdispUSBWatch *watch) {
-    udev_monitor_unref(watch->monitor);
-    udev_unref(watch->udev);
-    g_queue_free_full(watch->present, g_free);
-    g_free(watch);
+	udev_monitor_unref(watch->monitor);
+	udev_unref(watch->udev);
+	g_queue_free_full(watch->present, g_free);
+	g_free(watch);
 }
 
 /**
@@ -124,7 +124,7 @@ void pspdisp_usb_watch_destroy(PSPdispUSBWatch *watch) {
  * @param poll Where to write it.
  */
 void pspdisp_usb_watch_make_pollfd(PSPdispUSBWatch *watch, GPollFD *poll) {
-    *poll = (GPollFD) { .fd = udev_monitor_get_fd(watch->monitor), .events = G_IO_IN };
+	*poll = (GPollFD) { .fd = udev_monitor_get_fd(watch->monitor), .events = G_IO_IN };
 }
 
 /**
@@ -138,31 +138,31 @@ void pspdisp_usb_watch_make_pollfd(PSPdispUSBWatch *watch, GPollFD *poll) {
  * @return `true` if there was one, `false` if there's none for now.
  */
 bool pspdisp_usb_watch_next(PSPdispUSBWatch *watch, bool *plugged, char **path) {
-    if (!g_queue_is_empty(watch->present)) {
-        *plugged = true;
-        *path = g_queue_pop_head(watch->present);
-        return true;
-    }
+	if (!g_queue_is_empty(watch->present)) {
+		*plugged = true;
+		*path = g_queue_pop_head(watch->present);
+		return true;
+	}
 
-    struct udev_device *device;
+	struct udev_device *device;
 
-    // The socket doesn't block, so it gives `NULL` once it's empty
-    while ((device = udev_monitor_receive_device(watch->monitor)) != NULL) {
-        const char *action = udev_device_get_action(device);
-        const char *devnode = udev_device_get_devnode(device);
-        bool added = g_strcmp0(action, "add") == 0;
-        bool found = (added || g_strcmp0(action, "remove") == 0) && devnode != NULL && pspdisp_usb_usbfs_is_psp(device);
+	// The socket doesn't block, so it gives `NULL` once it's empty
+	while ((device = udev_monitor_receive_device(watch->monitor)) != NULL) {
+		const char *action = udev_device_get_action(device);
+		const char *devnode = udev_device_get_devnode(device);
+		bool added = g_strcmp0(action, "add") == 0;
+		bool found = (added || g_strcmp0(action, "remove") == 0) && devnode != NULL && pspdisp_usb_usbfs_is_psp(device);
 
-        if (found) {
-            *plugged = added;
-            *path = g_strdup(devnode);
-        }
-        udev_device_unref(device);
+		if (found) {
+			*plugged = added;
+			*path = g_strdup(devnode);
+		}
+		udev_device_unref(device);
 
-        if (found) return true;
-    }
+		if (found) return true;
+	}
 
-    return false;
+	return false;
 }
 
 /**
@@ -175,45 +175,45 @@ bool pspdisp_usb_watch_next(PSPdispUSBWatch *watch, bool *plugged, char **path) 
  * @return The opened PSP, or `NULL` if it failed.
  */
 PSPdispUSBDevice *pspdisp_usb_device_open(const char *path, GError **error) {
-    int fd = open(path, O_RDWR | O_CLOEXEC);
+	int fd = open(path, O_RDWR | O_CLOEXEC);
 
-    if (fd < 0) {
-        int code = errno;
+	if (fd < 0) {
+		int code = errno;
 
-        if (code == EACCES || code == EPERM)
-            g_set_error(error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED, "the PSP is plugged (%s), but there's no access to it, install the udev rule (sudo make install) then plug the PSP again", path);
-        else
-            g_set_error(error, G_IO_ERROR, g_io_error_from_errno(code), "failed to open the PSP (%s): %s", path, g_strerror(code));
-        return NULL;
-    }
+		if (code == EACCES || code == EPERM)
+			g_set_error(error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED, "the PSP is plugged (%s), but there's no access to it, install the udev rule (sudo make install) then plug the PSP again", path);
+		else
+			g_set_error(error, G_IO_ERROR, g_io_error_from_errno(code), "failed to open the PSP (%s): %s", path, g_strerror(code));
+		return NULL;
+	}
 
-    // usbfs gives the device descriptor first, in the CPU byte order: it must still be a PSP, as the path of an unplugged one may go to another device
-    struct usb_device_descriptor descriptor;
+	// usbfs gives the device descriptor first, in the CPU byte order: it must still be a PSP, as the path of an unplugged one may go to another device
+	struct usb_device_descriptor descriptor;
 
-    if (read(fd, &descriptor, USB_DT_DEVICE_SIZE) != USB_DT_DEVICE_SIZE || !pspdisp_usb_is_psp(descriptor.idVendor, descriptor.idProduct)) {
-        g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "%s is not a PSP anymore", path);
-        close(fd);
-        return NULL;
-    }
+	if (read(fd, &descriptor, USB_DT_DEVICE_SIZE) != USB_DT_DEVICE_SIZE || !pspdisp_usb_is_psp(descriptor.idVendor, descriptor.idProduct)) {
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "%s is not a PSP anymore", path);
+		close(fd);
+		return NULL;
+	}
 
-    // The interface, after disconnecting the kernel driver bound to it (if any), but not another program using it through usbfs
-    struct usbdevfs_disconnect_claim claim = { .interface = PSPDISP_USB_INTERFACE, .flags = USBDEVFS_DISCONNECT_CLAIM_EXCEPT_DRIVER, .driver = "usbfs" };
+	// The interface, after disconnecting the kernel driver bound to it (if any), but not another program using it through usbfs
+	struct usbdevfs_disconnect_claim claim = { .interface = PSPDISP_USB_INTERFACE, .flags = USBDEVFS_DISCONNECT_CLAIM_EXCEPT_DRIVER, .driver = "usbfs" };
 
-    if (ioctl(fd, USBDEVFS_DISCONNECT_CLAIM, &claim) < 0) {
-        int code = errno;
+	if (ioctl(fd, USBDEVFS_DISCONNECT_CLAIM, &claim) < 0) {
+		int code = errno;
 
-        if (code == EBUSY)
-            g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "the PSP (%s) is used by another program", path);
-        else
-            g_set_error(error, G_IO_ERROR, g_io_error_from_errno(code), "failed to claim the interface of the PSP (%s): %s", path, g_strerror(code));
-        close(fd);
-        return NULL;
-    }
+		if (code == EBUSY)
+			g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "the PSP (%s) is used by another program", path);
+		else
+			g_set_error(error, G_IO_ERROR, g_io_error_from_errno(code), "failed to claim the interface of the PSP (%s): %s", path, g_strerror(code));
+		close(fd);
+		return NULL;
+	}
 
-    // No SET_INTERFACE: the PSP drops the read it posts for the handshake magic on attach, and only posts another on the next attach (a replug)
-    PSPdispUSBDevice *device = g_new0(PSPdispUSBDevice, 1);
-    device->fd = fd;
-    return device;
+	// No SET_INTERFACE: the PSP drops the read it posts for the handshake magic on attach, and only posts another on the next attach (a replug)
+	PSPdispUSBDevice *device = g_new0(PSPdispUSBDevice, 1);
+	device->fd = fd;
+	return device;
 }
 
 /**
@@ -222,11 +222,11 @@ PSPdispUSBDevice *pspdisp_usb_device_open(const char *path, GError **error) {
  * @param device The opened PSP.
  */
 void pspdisp_usb_device_close(PSPdispUSBDevice *device) {
-    unsigned int interface = PSPDISP_USB_INTERFACE;
+	unsigned int interface = PSPDISP_USB_INTERFACE;
 
-    ioctl(device->fd, USBDEVFS_RELEASEINTERFACE, &interface);
-    close(device->fd);
-    g_free(device);
+	ioctl(device->fd, USBDEVFS_RELEASEINTERFACE, &interface);
+	close(device->fd);
+	g_free(device);
 }
 
 /**
@@ -236,9 +236,9 @@ void pspdisp_usb_device_close(PSPdispUSBDevice *device) {
  * @return The error, in the `G_IO_ERROR` domain.
  */
 GError *pspdisp_usb_usbfs_error(int code) {
-    if (code == ENODEV || code == ESHUTDOWN)
-        return g_error_new_literal(G_IO_ERROR, G_IO_ERROR_NOT_CONNECTED, "the PSP was unplugged");
-    return g_error_new_literal(G_IO_ERROR, g_io_error_from_errno(code), g_strerror(code));
+	if (code == ENODEV || code == ESHUTDOWN)
+		return g_error_new_literal(G_IO_ERROR, G_IO_ERROR_NOT_CONNECTED, "the PSP was unplugged");
+	return g_error_new_literal(G_IO_ERROR, g_io_error_from_errno(code), g_strerror(code));
 }
 
 /**
@@ -257,93 +257,93 @@ GError *pspdisp_usb_usbfs_error(int code) {
  * @return `true` if all the URBs completed.
  */
 bool pspdisp_usb_usbfs_run(PSPdispUSBDevice *device, uint8_t endpoint, uint8_t *buffer, uint32_t size, gint64 deadline, GCancellable *cancellable, uint32_t *transferred, GError **error) {
-    uint32_t count = (size + PSPDISP_USB_USBFS_URB_SIZE - 1) / PSPDISP_USB_USBFS_URB_SIZE;
-    struct usbdevfs_urb *urbs = g_new0(struct usbdevfs_urb, count);
-    bool *running = g_new0(bool, count); // If each URB was submitted and not reaped yet
-    uint32_t running_count = 0;
-    GError *failure = NULL; // The first failure, the transfer stops on it
+	uint32_t count = (size + PSPDISP_USB_USBFS_URB_SIZE - 1) / PSPDISP_USB_USBFS_URB_SIZE;
+	struct usbdevfs_urb *urbs = g_new0(struct usbdevfs_urb, count);
+	bool *running = g_new0(bool, count); // If each URB was submitted and not reaped yet
+	uint32_t running_count = 0;
+	GError *failure = NULL; // The first failure, the transfer stops on it
 
-    for (uint32_t i = 0; i < count && failure == NULL; i++) {
-        urbs[i].type = USBDEVFS_URB_TYPE_BULK;
-        urbs[i].endpoint = endpoint;
-        urbs[i].buffer = buffer + i * PSPDISP_USB_USBFS_URB_SIZE;
-        urbs[i].buffer_length = MIN(size - i * PSPDISP_USB_USBFS_URB_SIZE, PSPDISP_USB_USBFS_URB_SIZE);
+	for (uint32_t i = 0; i < count && failure == NULL; i++) {
+		urbs[i].type = USBDEVFS_URB_TYPE_BULK;
+		urbs[i].endpoint = endpoint;
+		urbs[i].buffer = buffer + i * PSPDISP_USB_USBFS_URB_SIZE;
+		urbs[i].buffer_length = MIN(size - i * PSPDISP_USB_USBFS_URB_SIZE, PSPDISP_USB_USBFS_URB_SIZE);
 
-        if (ioctl(device->fd, USBDEVFS_SUBMITURB, &urbs[i]) == 0) {
-            running[i] = true;
-            running_count++;
-        } else {
-            failure = pspdisp_usb_usbfs_error(errno);
-        }
-    }
+		if (ioctl(device->fd, USBDEVFS_SUBMITURB, &urbs[i]) == 0) {
+			running[i] = true;
+			running_count++;
+		} else {
+			failure = pspdisp_usb_usbfs_error(errno);
+		}
+	}
 
-    // usbfs is writable when a URB completed, and hangs up when the PSP is unplugged
-    GPollFD fds[2] = { { .fd = device->fd, .events = G_IO_OUT } };
-    int fds_count = 1 + g_cancellable_make_pollfd(cancellable, &fds[1]);
-    bool discarded = false;
+	// usbfs is writable when a URB completed, and hangs up when the PSP is unplugged
+	GPollFD fds[2] = { { .fd = device->fd, .events = G_IO_OUT } };
+	int fds_count = 1 + g_cancellable_make_pollfd(cancellable, &fds[1]);
+	bool discarded = false;
 
-    while (running_count > 0) {
-        // On a failure, the URBs still running are discarded, then they complete right away
-        if (failure != NULL && !discarded) {
-            for (uint32_t i = 0; i < count; i++) {
-                if (running[i])
-                    ioctl(device->fd, USBDEVFS_DISCARDURB, &urbs[i]);
-            }
-            discarded = true;
-        }
+	while (running_count > 0) {
+		// On a failure, the URBs still running are discarded, then they complete right away
+		if (failure != NULL && !discarded) {
+			for (uint32_t i = 0; i < count; i++) {
+				if (running[i])
+					ioctl(device->fd, USBDEVFS_DISCARDURB, &urbs[i]);
+			}
+			discarded = true;
+		}
 
-        struct usbdevfs_urb *urb = NULL;
-        int result = ioctl(device->fd, discarded ? USBDEVFS_REAPURB : USBDEVFS_REAPURBNDELAY, &urb);
-        int code = errno;
+		struct usbdevfs_urb *urb = NULL;
+		int result = ioctl(device->fd, discarded ? USBDEVFS_REAPURB : USBDEVFS_REAPURBNDELAY, &urb);
+		int code = errno;
 
-        if (result == 0) {
-            if (urb >= urbs && urb < urbs + count) {
-                const size_t index = urb - urbs; // Only once it's known to be one of `urbs`
+		if (result == 0) {
+			if (urb >= urbs && urb < urbs + count) {
+				const size_t index = urb - urbs; // Only once it's known to be one of `urbs`
 
-                if (running[index]) {
-                    running[index] = false;
-                    running_count--;
-                    if (urb->status != 0 && failure == NULL)
-                        failure = pspdisp_usb_usbfs_error(-urb->status);
-                }
-            }
-            continue;
-        }
+				if (running[index]) {
+					running[index] = false;
+					running_count--;
+					if (urb->status != 0 && failure == NULL)
+						failure = pspdisp_usb_usbfs_error(-urb->status);
+				}
+			}
+			continue;
+		}
 
-        if (code == EINTR) continue;
-        if (code != EAGAIN) { // `ENODEV`: the PSP was unplugged, its URBs are gone
-            if (failure == NULL)
-                failure = pspdisp_usb_usbfs_error(code);
-            break;
-        }
+		if (code == EINTR) continue;
+		if (code != EAGAIN) { // `ENODEV`: the PSP was unplugged, its URBs are gone
+			if (failure == NULL)
+				failure = pspdisp_usb_usbfs_error(code);
+			break;
+		}
 
-        // None completed yet: wait for one, until the deadline or the cancellation
-        gint64 remaining = deadline - g_get_monotonic_time();
-        int ready = remaining > 0 ? g_poll(fds, fds_count, (int) ((remaining + 999) / 1000)) : 0;
+		// None completed yet: wait for one, until the deadline or the cancellation
+		gint64 remaining = deadline - g_get_monotonic_time();
+		int ready = remaining > 0 ? g_poll(fds, fds_count, (int) ((remaining + 999) / 1000)) : 0;
 
-        if (!g_cancellable_set_error_if_cancelled(cancellable, &failure) && ready == 0) {
-            failure = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "the PSP didn't answer in time");
-        }
-    }
+		if (!g_cancellable_set_error_if_cancelled(cancellable, &failure) && ready == 0) {
+			failure = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_TIMED_OUT, "the PSP didn't answer in time");
+		}
+	}
 
-    if (fds_count > 1)
-        g_cancellable_release_fd(cancellable);
+	if (fds_count > 1)
+		g_cancellable_release_fd(cancellable);
 
-    *transferred = 0;
-    for (uint32_t i = 0; i < count; i++) {
-        *transferred += urbs[i].actual_length;
-        if (urbs[i].actual_length < urbs[i].buffer_length) break;
-    }
+	*transferred = 0;
+	for (uint32_t i = 0; i < count; i++) {
+		*transferred += urbs[i].actual_length;
+		if (urbs[i].actual_length < urbs[i].buffer_length) break;
+	}
 
-    g_free(urbs);
-    g_free(running);
+	g_free(urbs);
+	g_free(running);
 
-    if (failure != NULL) {
-        g_propagate_error(error, failure);
-        return false;
-    }
+	if (failure != NULL) {
+		g_propagate_error(error, failure);
+		return false;
+	}
 
-    return true;
+	return true;
 }
 
 /**
@@ -363,23 +363,23 @@ bool pspdisp_usb_usbfs_run(PSPdispUSBDevice *device, uint8_t endpoint, uint8_t *
  * @return `true` if the transfer is done.
  */
 bool pspdisp_usb_device_transfer(PSPdispUSBDevice *device, uint8_t endpoint, void *buffer, uint32_t size, uint32_t timeout, GCancellable *cancellable, uint32_t *transferred, GError **error) {
-    gint64 deadline = g_get_monotonic_time() + (gint64) timeout * 1000;
+	gint64 deadline = g_get_monotonic_time() + (gint64) timeout * 1000;
 
-    *transferred = 0;
-    if (g_cancellable_set_error_if_cancelled(cancellable, error)) return false;
+	*transferred = 0;
+	if (g_cancellable_set_error_if_cancelled(cancellable, error)) return false;
 
-    if (!(endpoint & USB_DIR_IN))
-        return pspdisp_usb_usbfs_run(device, endpoint, buffer, size, deadline, cancellable, transferred, error);
+	if (!(endpoint & USB_DIR_IN))
+		return pspdisp_usb_usbfs_run(device, endpoint, buffer, size, deadline, cancellable, transferred, error);
 
-    while (*transferred < size) {
-        uint32_t length = MIN(size - *transferred, PSPDISP_USB_USBFS_URB_SIZE);
-        uint32_t received = 0;
-        bool done = pspdisp_usb_usbfs_run(device, endpoint, (uint8_t *) buffer + *transferred, length, deadline, cancellable, &received, error);
+	while (*transferred < size) {
+		uint32_t length = MIN(size - *transferred, PSPDISP_USB_USBFS_URB_SIZE);
+		uint32_t received = 0;
+		bool done = pspdisp_usb_usbfs_run(device, endpoint, (uint8_t *) buffer + *transferred, length, deadline, cancellable, &received, error);
 
-        *transferred += received;
-        if (!done) return false;
-        if (received < length) break; // A short packet, the end of the transfer
-    }
+		*transferred += received;
+		if (!done) return false;
+		if (received < length) break; // A short packet, the end of the transfer
+	}
 
-    return true;
+	return true;
 }

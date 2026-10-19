@@ -48,7 +48,7 @@ typedef struct PSPdispUSBDevice PSPdispUSBDevice;
  * @return `true` for the USBHostFS driver of the PSP, as type B or C.
  */
 bool pspdisp_usb_is_psp(uint32_t vendor_id, uint32_t product_id) {
-    return vendor_id == PSPDISP_USB_VENDOR_ID && (product_id == PSPDISP_USB_PRODUCT_ID_TYPE_B || product_id == PSPDISP_USB_PRODUCT_ID_TYPE_C);
+	return vendor_id == PSPDISP_USB_VENDOR_ID && (product_id == PSPDISP_USB_PRODUCT_ID_TYPE_B || product_id == PSPDISP_USB_PRODUCT_ID_TYPE_C);
 }
 
 /**
@@ -125,7 +125,7 @@ bool pspdisp_usb_device_transfer(PSPdispUSBDevice *device, uint8_t endpoint, voi
 
 // The USB host of this platform, it declares `PSPdispUSBWatch` and `PSPdispUSBDevice`, implements their functions and defines `PSPDISP_USB_HOST_NAME`
 #if defined(__linux__)
-    #include "./host/usbfs.c"
+	#include "./host/usbfs.c"
 #else
-    #error "Unsupported platform"
+	#error "Unsupported platform"
 #endif

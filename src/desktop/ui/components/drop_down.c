@@ -24,14 +24,14 @@
  * @param selected The item to select.
  */
 void pspdisp_ui_component_drop_down_set_items(GtkStringList *list, GtkWidget *drop_down, const char *const *items, guint selected) {
-    guint count = g_list_model_get_n_items(G_LIST_MODEL(list));
-    bool same = count == g_strv_length((char **) items);
+	guint count = g_list_model_get_n_items(G_LIST_MODEL(list));
+	bool same = count == g_strv_length((char **) items);
 
-    for (guint i = 0; same && i < count; i++)
-        same = strcmp(gtk_string_list_get_string(list, i), items[i]) == 0;
-    if (!same)
-        gtk_string_list_splice(list, 0, count, items);
+	for (guint i = 0; same && i < count; i++)
+		same = strcmp(gtk_string_list_get_string(list, i), items[i]) == 0;
+	if (!same)
+		gtk_string_list_splice(list, 0, count, items);
 
-    if (gtk_drop_down_get_selected(GTK_DROP_DOWN(drop_down)) != selected)
-        gtk_drop_down_set_selected(GTK_DROP_DOWN(drop_down), selected);
+	if (gtk_drop_down_get_selected(GTK_DROP_DOWN(drop_down)) != selected)
+		gtk_drop_down_set_selected(GTK_DROP_DOWN(drop_down), selected);
 }

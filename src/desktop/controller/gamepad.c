@@ -21,18 +21,18 @@
  * @brief Buttons of the virtual gamepad, combined with bitwise OR, named after their place (as the Xbox buttons A, B, X and Y aren't at the same place as the Nintendo ones).
  */
 typedef enum: uint16_t {
-    PSPDISP_GAMEPAD_BUTTON_SOUTH          = 1 << 0,  // Bottom face button, A on Xbox, cross on PlayStation
-    PSPDISP_GAMEPAD_BUTTON_EAST           = 1 << 1,  // Right face button, B on Xbox, circle on PlayStation
-    PSPDISP_GAMEPAD_BUTTON_WEST           = 1 << 2,  // Left face button, X on Xbox, square on PlayStation
-    PSPDISP_GAMEPAD_BUTTON_NORTH          = 1 << 3,  // Top face button, Y on Xbox, triangle on PlayStation
-    PSPDISP_GAMEPAD_BUTTON_LEFT_SHOULDER  = 1 << 4,  // Left shoulder button, LB on Xbox
-    PSPDISP_GAMEPAD_BUTTON_RIGHT_SHOULDER = 1 << 5,  // Right shoulder button, RB on Xbox
-    PSPDISP_GAMEPAD_BUTTON_BACK           = 1 << 6,  // Back on Xbox, select on PlayStation
-    PSPDISP_GAMEPAD_BUTTON_START          = 1 << 7,  // Start
-    PSPDISP_GAMEPAD_BUTTON_DPAD_UP        = 1 << 8,  // Up of the directional pad
-    PSPDISP_GAMEPAD_BUTTON_DPAD_DOWN      = 1 << 9,  // Down of the directional pad
-    PSPDISP_GAMEPAD_BUTTON_DPAD_LEFT      = 1 << 10, // Left of the directional pad
-    PSPDISP_GAMEPAD_BUTTON_DPAD_RIGHT     = 1 << 11, // Right of the directional pad
+	PSPDISP_GAMEPAD_BUTTON_SOUTH          = 1 << 0,  // Bottom face button, A on Xbox, cross on PlayStation
+	PSPDISP_GAMEPAD_BUTTON_EAST           = 1 << 1,  // Right face button, B on Xbox, circle on PlayStation
+	PSPDISP_GAMEPAD_BUTTON_WEST           = 1 << 2,  // Left face button, X on Xbox, square on PlayStation
+	PSPDISP_GAMEPAD_BUTTON_NORTH          = 1 << 3,  // Top face button, Y on Xbox, triangle on PlayStation
+	PSPDISP_GAMEPAD_BUTTON_LEFT_SHOULDER  = 1 << 4,  // Left shoulder button, LB on Xbox
+	PSPDISP_GAMEPAD_BUTTON_RIGHT_SHOULDER = 1 << 5,  // Right shoulder button, RB on Xbox
+	PSPDISP_GAMEPAD_BUTTON_BACK           = 1 << 6,  // Back on Xbox, select on PlayStation
+	PSPDISP_GAMEPAD_BUTTON_START          = 1 << 7,  // Start
+	PSPDISP_GAMEPAD_BUTTON_DPAD_UP        = 1 << 8,  // Up of the directional pad
+	PSPDISP_GAMEPAD_BUTTON_DPAD_DOWN      = 1 << 9,  // Down of the directional pad
+	PSPDISP_GAMEPAD_BUTTON_DPAD_LEFT      = 1 << 10, // Left of the directional pad
+	PSPDISP_GAMEPAD_BUTTON_DPAD_RIGHT     = 1 << 11, // Right of the directional pad
 } PSPdispGamepadButton;
 
 /**
@@ -41,9 +41,9 @@ typedef enum: uint16_t {
  * The parts an Xbox controller has but the PSP doesn't (the right stick, the triggers, the guide button and the stick buttons) stay at rest.
  */
 typedef struct {
-    uint16_t buttons; // The pressed buttons, `PSPdispGamepadButton` bits
-    int16_t left_x; // Left stick, from the left (-32768) to the right (32767), 0 when centered
-    int16_t left_y; // Left stick, from the top (-32768) to the bottom (32767), 0 when centered
+	uint16_t buttons; // The pressed buttons, `PSPdispGamepadButton` bits
+	int16_t left_x; // Left stick, from the left (-32768) to the right (32767), 0 when centered
+	int16_t left_y; // Left stick, from the top (-32768) to the bottom (32767), 0 when centered
 } PSPdispGamepadState;
 
 /**
@@ -82,8 +82,8 @@ void pspdisp_gamepad_destroy(PSPdispGamepad *gamepad);
 
 // The virtual gamepad of this platform, it declares `PSPdispGamepad`, implements its functions and defines `PSPDISP_GAMEPAD_NAME`
 #if defined(__linux__)
-    #include "./gamepad/uinput.c"
+	#include "./gamepad/uinput.c"
 #else
-    // TODO: impl it
-    #error "Unsupported platform: there's no virtual gamepad for it yet"
+	// TODO: impl it
+	#error "Unsupported platform: there's no virtual gamepad for it yet"
 #endif

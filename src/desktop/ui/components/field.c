@@ -21,7 +21,7 @@
  * @return The label of the name.
  */
 GtkWidget *pspdisp_ui_component_field_new(const char *text) {
-    GtkWidget *label = gtk_label_new(text);
-    gtk_label_set_xalign(GTK_LABEL(label), 0.0f);
-    return label;
+	GtkWidget *label = gtk_label_new(text);
+	gtk_label_set_xalign(GTK_LABEL(label), 0.0f);
+	return label;
 }

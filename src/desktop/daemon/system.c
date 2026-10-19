@@ -53,7 +53,7 @@ bool pspdisp_daemon_system_runs_as_administrator();
 
 // The implementation of this platform
 #if defined(__linux__)
-    #include "./system/linux.c"
+	#include "./system/linux.c"
 #else
-    #error "Unsupported platform"
+	#error "Unsupported platform"
 #endif

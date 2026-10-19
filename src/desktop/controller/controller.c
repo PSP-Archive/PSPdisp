@@ -33,29 +33,29 @@
  * @brief The PSP buttons, with the gamepad button each one drives.
  */
 const struct {
-    PSPdispButton psp; // The PSP button
-    PSPdispGamepadButton gamepad; // The gamepad button
+	PSPdispButton psp; // The PSP button
+	PSPdispGamepadButton gamepad; // The gamepad button
 } pspdisp_controller_buttons[] = {
-    { PSPDISP_BUTTON_CROSS,    PSPDISP_GAMEPAD_BUTTON_SOUTH },
-    { PSPDISP_BUTTON_CIRCLE,   PSPDISP_GAMEPAD_BUTTON_EAST },
-    { PSPDISP_BUTTON_SQUARE,   PSPDISP_GAMEPAD_BUTTON_WEST },
-    { PSPDISP_BUTTON_TRIANGLE, PSPDISP_GAMEPAD_BUTTON_NORTH },
-    { PSPDISP_BUTTON_L,        PSPDISP_GAMEPAD_BUTTON_LEFT_SHOULDER },
-    { PSPDISP_BUTTON_R,        PSPDISP_GAMEPAD_BUTTON_RIGHT_SHOULDER },
-    { PSPDISP_BUTTON_SELECT,   PSPDISP_GAMEPAD_BUTTON_BACK },
-    { PSPDISP_BUTTON_START,    PSPDISP_GAMEPAD_BUTTON_START },
-    { PSPDISP_BUTTON_UP,       PSPDISP_GAMEPAD_BUTTON_DPAD_UP },
-    { PSPDISP_BUTTON_DOWN,     PSPDISP_GAMEPAD_BUTTON_DPAD_DOWN },
-    { PSPDISP_BUTTON_LEFT,     PSPDISP_GAMEPAD_BUTTON_DPAD_LEFT },
-    { PSPDISP_BUTTON_RIGHT,    PSPDISP_GAMEPAD_BUTTON_DPAD_RIGHT },
+	{ PSPDISP_BUTTON_CROSS,    PSPDISP_GAMEPAD_BUTTON_SOUTH },
+	{ PSPDISP_BUTTON_CIRCLE,   PSPDISP_GAMEPAD_BUTTON_EAST },
+	{ PSPDISP_BUTTON_SQUARE,   PSPDISP_GAMEPAD_BUTTON_WEST },
+	{ PSPDISP_BUTTON_TRIANGLE, PSPDISP_GAMEPAD_BUTTON_NORTH },
+	{ PSPDISP_BUTTON_L,        PSPDISP_GAMEPAD_BUTTON_LEFT_SHOULDER },
+	{ PSPDISP_BUTTON_R,        PSPDISP_GAMEPAD_BUTTON_RIGHT_SHOULDER },
+	{ PSPDISP_BUTTON_SELECT,   PSPDISP_GAMEPAD_BUTTON_BACK },
+	{ PSPDISP_BUTTON_START,    PSPDISP_GAMEPAD_BUTTON_START },
+	{ PSPDISP_BUTTON_UP,       PSPDISP_GAMEPAD_BUTTON_DPAD_UP },
+	{ PSPDISP_BUTTON_DOWN,     PSPDISP_GAMEPAD_BUTTON_DPAD_DOWN },
+	{ PSPDISP_BUTTON_LEFT,     PSPDISP_GAMEPAD_BUTTON_DPAD_LEFT },
+	{ PSPDISP_BUTTON_RIGHT,    PSPDISP_GAMEPAD_BUTTON_DPAD_RIGHT },
 };
 
 /**
  * @brief The virtual controller, driven by the PSP: a gamepad, or a keyboard and a mouse pressed as a control file says.
  */
 typedef struct {
-    PSPdispGamepad *gamepad; // The virtual gamepad of the platform (`NULL` with a control file)
-    PSPdispControlFile *control_file; // The control file, with its virtual keyboard and mouse (`NULL` with the gamepad)
+	PSPdispGamepad *gamepad; // The virtual gamepad of the platform (`NULL` with a control file)
+	PSPdispControlFile *control_file; // The control file, with its virtual keyboard and mouse (`NULL` with the gamepad)
 } PSPdispController;
 
 /**
@@ -65,12 +65,12 @@ typedef struct {
  * @return The controller, free it with `pspdisp_controller_destroy()`, or `NULL` if it failed.
  */
 PSPdispController *pspdisp_controller_new(GError **error) {
-    PSPdispGamepad *gamepad = pspdisp_gamepad_new(PSPDISP_CONTROLLER_NAME, error);
-    if (gamepad == NULL) return NULL;
+	PSPdispGamepad *gamepad = pspdisp_gamepad_new(PSPDISP_CONTROLLER_NAME, error);
+	if (gamepad == NULL) return NULL;
 
-    PSPdispController *controller = g_new0(PSPdispController, 1);
-    controller->gamepad = gamepad;
-    return controller;
+	PSPdispController *controller = g_new0(PSPdispController, 1);
+	controller->gamepad = gamepad;
+	return controller;
 }
 
 /**
@@ -81,12 +81,12 @@ PSPdispController *pspdisp_controller_new(GError **error) {
  * @return The controller, free it with `pspdisp_controller_destroy()`, or `NULL` if it failed.
  */
 PSPdispController *pspdisp_controller_new_control_file(const char *path, GError **error) {
-    PSPdispControlFile *control_file = pspdisp_control_file_new(path, error);
-    if (control_file == NULL) return NULL;
+	PSPdispControlFile *control_file = pspdisp_control_file_new(path, error);
+	if (control_file == NULL) return NULL;
 
-    PSPdispController *controller = g_new0(PSPdispController, 1);
-    controller->control_file = control_file;
-    return controller;
+	PSPdispController *controller = g_new0(PSPdispController, 1);
+	controller->control_file = control_file;
+	return controller;
 }
 
 /**
@@ -95,11 +95,11 @@ PSPdispController *pspdisp_controller_new_control_file(const char *path, GError 
  * @param controller The controller to destroy.
  */
 void pspdisp_controller_destroy(PSPdispController *controller) {
-    if (controller->gamepad != NULL)
-        pspdisp_gamepad_destroy(controller->gamepad);
-    if (controller->control_file != NULL)
-        pspdisp_control_file_destroy(controller->control_file);
-    g_free(controller);
+	if (controller->gamepad != NULL)
+		pspdisp_gamepad_destroy(controller->gamepad);
+	if (controller->control_file != NULL)
+		pspdisp_control_file_destroy(controller->control_file);
+	g_free(controller);
 }
 
 /**
@@ -109,7 +109,7 @@ void pspdisp_controller_destroy(PSPdispController *controller) {
  * @return `true` with a control file that enables it.
  */
 bool pspdisp_controller_enables_osk(PSPdispController *controller) {
-    return controller->control_file != NULL && controller->control_file->enable_osk;
+	return controller->control_file != NULL && controller->control_file->enable_osk;
 }
 
 /**
@@ -119,7 +119,7 @@ bool pspdisp_controller_enables_osk(PSPdispController *controller) {
  * @return The count, since the controller was created.
  */
 uint32_t pspdisp_controller_open_menu_requests(PSPdispController *controller) {
-    return controller->control_file != NULL ? controller->control_file->open_menu_requests : 0;
+	return controller->control_file != NULL ? controller->control_file->open_menu_requests : 0;
 }
 
 /**
@@ -134,23 +134,23 @@ uint32_t pspdisp_controller_open_menu_requests(PSPdispController *controller) {
  * @return The state of the gamepad.
  */
 PSPdispGamepadState pspdisp_controller_map(uint32_t buttons, uint8_t analog_x, uint8_t analog_y) {
-    PSPdispGamepadState state = {0};
+	PSPdispGamepadState state = {0};
 
-    for (size_t i = 0; i < G_N_ELEMENTS(pspdisp_controller_buttons); i++)
-        if (buttons & pspdisp_controller_buttons[i].psp)
-            state.buttons |= pspdisp_controller_buttons[i].gamepad;
+	for (size_t i = 0; i < G_N_ELEMENTS(pspdisp_controller_buttons); i++)
+		if (buttons & pspdisp_controller_buttons[i].psp)
+			state.buttons |= pspdisp_controller_buttons[i].gamepad;
 
-    double x = analog_x - PSPDISP_CONTROLLER_CENTER;
-    double y = analog_y - PSPDISP_CONTROLLER_CENTER;
-    double distance = sqrt(x * x + y * y);
+	double x = analog_x - PSPDISP_CONTROLLER_CENTER;
+	double y = analog_y - PSPDISP_CONTROLLER_CENTER;
+	double distance = sqrt(x * x + y * y);
 
-    if (distance > PSPDISP_CONTROLLER_DEAD_ZONE) {
-        double scale = MIN((distance - PSPDISP_CONTROLLER_DEAD_ZONE) / (PSPDISP_CONTROLLER_CENTER - PSPDISP_CONTROLLER_DEAD_ZONE), 1.0) / distance; // To a distance from 0 to 1
-        state.left_x = (int16_t) lround(x * scale * 32767);
-        state.left_y = (int16_t) lround(y * scale * 32767);
-    }
+	if (distance > PSPDISP_CONTROLLER_DEAD_ZONE) {
+		double scale = MIN((distance - PSPDISP_CONTROLLER_DEAD_ZONE) / (PSPDISP_CONTROLLER_CENTER - PSPDISP_CONTROLLER_DEAD_ZONE), 1.0) / distance; // To a distance from 0 to 1
+		state.left_x = (int16_t) lround(x * scale * 32767);
+		state.left_y = (int16_t) lround(y * scale * 32767);
+	}
 
-    return state;
+	return state;
 }
 
 /**
@@ -165,11 +165,11 @@ PSPdispGamepadState pspdisp_controller_map(uint32_t buttons, uint8_t analog_x, u
  * @return `true` if the computer took it.
  */
 bool pspdisp_controller_update(PSPdispController *controller, uint32_t buttons, uint8_t analog_x, uint8_t analog_y) {
-    if (controller->control_file != NULL) {
-        pspdisp_control_file_update(controller->control_file, buttons, analog_x, analog_y);
-        return true;
-    }
+	if (controller->control_file != NULL) {
+		pspdisp_control_file_update(controller->control_file, buttons, analog_x, analog_y);
+		return true;
+	}
 
-    PSPdispGamepadState state = pspdisp_controller_map(buttons, analog_x, analog_y);
-    return pspdisp_gamepad_update(controller->gamepad, &state);
+	PSPdispGamepadState state = pspdisp_controller_map(buttons, analog_x, analog_y);
+	return pspdisp_gamepad_update(controller->gamepad, &state);
 }

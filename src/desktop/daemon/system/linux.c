@@ -29,8 +29,8 @@
  * @param data Given to the handler.
  */
 void pspdisp_daemon_system_watch_stop(GSourceFunc handler, gpointer data) {
-    g_unix_signal_add(SIGINT, handler, data);
-    g_unix_signal_add(SIGTERM, handler, data);
+	g_unix_signal_add(SIGINT, handler, data);
+	g_unix_signal_add(SIGTERM, handler, data);
 }
 
 /**
@@ -42,18 +42,18 @@ void pspdisp_daemon_system_watch_stop(GSourceFunc handler, gpointer data) {
  * @param higher If the priority is higher than the one of the other programs.
  */
 void pspdisp_daemon_system_set_priority(bool higher) {
-    const int nice = higher ? PSPDISP_DAEMON_SYSTEM_HIGHER_PRIORITY : 0;
-    GDir *tasks = g_dir_open("/proc/self/task", 0, NULL);
-    const char *task;
+	const int nice = higher ? PSPDISP_DAEMON_SYSTEM_HIGHER_PRIORITY : 0;
+	GDir *tasks = g_dir_open("/proc/self/task", 0, NULL);
+	const char *task;
 
-    while (tasks != NULL && (task = g_dir_read_name(tasks)) != NULL) {
-        if (setpriority(PRIO_PROCESS, g_ascii_strtoull(task, NULL, 10), nice) != 0)
-            g_debug("%s(): failed to set the priority of the thread %s: %s", __FUNCTION__, task, g_strerror(errno));
-    }
-    if (tasks != NULL)
-        g_dir_close(tasks);
-    else
-        setpriority(PRIO_PROCESS, 0, nice);
+	while (tasks != NULL && (task = g_dir_read_name(tasks)) != NULL) {
+		if (setpriority(PRIO_PROCESS, g_ascii_strtoull(task, NULL, 10), nice) != 0)
+			g_debug("%s(): failed to set the priority of the thread %s: %s", __FUNCTION__, task, g_strerror(errno));
+	}
+	if (tasks != NULL)
+		g_dir_close(tasks);
+	else
+		setpriority(PRIO_PROCESS, 0, nice);
 }
 
 /**
@@ -62,7 +62,7 @@ void pspdisp_daemon_system_set_priority(bool higher) {
  * @return The process ID.
  */
 int64_t pspdisp_daemon_system_pid() {
-    return getpid();
+	return getpid();
 }
 
 /**
@@ -71,5 +71,5 @@ int64_t pspdisp_daemon_system_pid() {
  * @return `true` if its effective user ID is 0.
  */
 bool pspdisp_daemon_system_runs_as_administrator() {
-    return geteuid() == 0;
+	return geteuid() == 0;
 }

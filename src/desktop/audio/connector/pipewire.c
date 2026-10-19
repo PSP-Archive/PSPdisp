@@ -35,13 +35,13 @@
  * The stream events run on the thread of its thread loop, where the chunks are filled and handed to the handler.
  */
 struct PSPdispAudioConnector {
-    struct pw_thread_loop *loop; // Loop of the stream events, on its own thread
-    struct pw_stream *stream; // The output, the stream shown as a sink
-    PSPdispAudioHandler audio_handler; // Handle each full chunk
-    gpointer handler_data; // Given to `audio_handler`
-    uint8_t *chunk; // The chunk being filled
-    uint32_t chunk_size; // The size of a chunk in bytes
-    uint32_t chunk_length; // How many bytes of `chunk` are filled
+	struct pw_thread_loop *loop; // Loop of the stream events, on its own thread
+	struct pw_stream *stream; // The output, the stream shown as a sink
+	PSPdispAudioHandler audio_handler; // Handle each full chunk
+	gpointer handler_data; // Given to `audio_handler`
+	uint8_t *chunk; // The chunk being filled
+	uint32_t chunk_size; // The size of a chunk in bytes
+	uint32_t chunk_length; // How many bytes of `chunk` are filled
 };
 
 /**
@@ -52,24 +52,24 @@ struct PSPdispAudioConnector {
  * @param size The size of the samples in bytes.
  */
 void pspdisp_audio_connector_pipewire_push(PSPdispAudioConnector *audio_connector, const uint8_t *data, uint32_t size) {
-    uint32_t position = 0;
+	uint32_t position = 0;
 
-    while (position < size) {
-        uint32_t count = MIN(size - position, audio_connector->chunk_size - audio_connector->chunk_length);
-        uint8_t *end = audio_connector->chunk + audio_connector->chunk_length; // Where the chunk goes on
+	while (position < size) {
+		uint32_t count = MIN(size - position, audio_connector->chunk_size - audio_connector->chunk_length);
+		uint8_t *end = audio_connector->chunk + audio_connector->chunk_length; // Where the chunk goes on
 
-        if (data != NULL)
-            memcpy(end, data + position, count);
-        else
-            memset(end, 0, count);
-        audio_connector->chunk_length += count;
-        position += count;
+		if (data != NULL)
+			memcpy(end, data + position, count);
+		else
+			memset(end, 0, count);
+		audio_connector->chunk_length += count;
+		position += count;
 
-        if (audio_connector->chunk_length == audio_connector->chunk_size) {
-            audio_connector->audio_handler((const int16_t *) audio_connector->chunk, audio_connector->chunk_size, audio_connector->handler_data);
-            audio_connector->chunk_length = 0;
-        }
-    }
+		if (audio_connector->chunk_length == audio_connector->chunk_size) {
+			audio_connector->audio_handler((const int16_t *) audio_connector->chunk, audio_connector->chunk_size, audio_connector->handler_data);
+			audio_connector->chunk_length = 0;
+		}
+	}
 }
 
 /**
@@ -81,15 +81,15 @@ void pspdisp_audio_connector_pipewire_push(PSPdispAudioConnector *audio_connecto
  * @param error Why it failed, with `PW_STREAM_STATE_ERROR`.
  */
 void pspdisp_audio_connector_pipewire_on_state_changed(void *data, enum pw_stream_state old, enum pw_stream_state state, const char *error) {
-    PSPdispAudioConnector *audio_connector = data;
+	PSPdispAudioConnector *audio_connector = data;
 
-    // The chunk being filled would otherwise start the next sound, so it's completed with silence
-    if (old == PW_STREAM_STATE_STREAMING && audio_connector->chunk_length > 0)
-        pspdisp_audio_connector_pipewire_push(audio_connector, NULL, audio_connector->chunk_size - audio_connector->chunk_length);
+	// The chunk being filled would otherwise start the next sound, so it's completed with silence
+	if (old == PW_STREAM_STATE_STREAMING && audio_connector->chunk_length > 0)
+		pspdisp_audio_connector_pipewire_push(audio_connector, NULL, audio_connector->chunk_size - audio_connector->chunk_length);
 
-    if (state == PW_STREAM_STATE_ERROR && old != PW_STREAM_STATE_CONNECTING)
-        g_warning("%s(): the sound for the PSP stopped: %s", __FUNCTION__, error);
-    pw_thread_loop_signal(audio_connector->loop, false);
+	if (state == PW_STREAM_STATE_ERROR && old != PW_STREAM_STATE_CONNECTING)
+		g_warning("%s(): the sound for the PSP stopped: %s", __FUNCTION__, error);
+	pw_thread_loop_signal(audio_connector->loop, false);
 }
 
 /**
@@ -98,26 +98,26 @@ void pspdisp_audio_connector_pipewire_on_state_changed(void *data, enum pw_strea
  * @param data The connector.
  */
 void pspdisp_audio_connector_pipewire_on_process(void *data) {
-    PSPdispAudioConnector *audio_connector = data;
-    struct pw_buffer *buffer = pw_stream_dequeue_buffer(audio_connector->stream);
-    if (buffer == NULL) return;
+	PSPdispAudioConnector *audio_connector = data;
+	struct pw_buffer *buffer = pw_stream_dequeue_buffer(audio_connector->stream);
+	if (buffer == NULL) return;
 
-    struct spa_data *samples = &buffer->buffer->datas[0];
-    if (samples->data != NULL && samples->chunk != NULL) {
-        uint32_t offset = MIN(samples->chunk->offset, samples->maxsize);
-        uint32_t size = MIN(samples->chunk->size, samples->maxsize - offset);
-        bool empty = (samples->chunk->flags & SPA_CHUNK_FLAG_EMPTY) != 0; // Silence, the samples may hold anything
+	struct spa_data *samples = &buffer->buffer->datas[0];
+	if (samples->data != NULL && samples->chunk != NULL) {
+		uint32_t offset = MIN(samples->chunk->offset, samples->maxsize);
+		uint32_t size = MIN(samples->chunk->size, samples->maxsize - offset);
+		bool empty = (samples->chunk->flags & SPA_CHUNK_FLAG_EMPTY) != 0; // Silence, the samples may hold anything
 
-        pspdisp_audio_connector_pipewire_push(audio_connector, empty ? NULL : SPA_PTROFF(samples->data, offset, uint8_t), size);
-    }
+		pspdisp_audio_connector_pipewire_push(audio_connector, empty ? NULL : SPA_PTROFF(samples->data, offset, uint8_t), size);
+	}
 
-    pw_stream_queue_buffer(audio_connector->stream, buffer);
+	pw_stream_queue_buffer(audio_connector->stream, buffer);
 }
 
 const struct pw_stream_events pspdisp_audio_connector_pipewire_events = {
-    PW_VERSION_STREAM_EVENTS,
-    .state_changed = pspdisp_audio_connector_pipewire_on_state_changed,
-    .process = pspdisp_audio_connector_pipewire_on_process,
+	PW_VERSION_STREAM_EVENTS,
+	.state_changed = pspdisp_audio_connector_pipewire_on_state_changed,
+	.process = pspdisp_audio_connector_pipewire_on_process,
 };
 
 /**
@@ -134,53 +134,53 @@ const struct pw_stream_events pspdisp_audio_connector_pipewire_events = {
  * @return The connector, or `NULL` if it failed.
  */
 PSPdispAudioConnector *pspdisp_audio_connector_connect(PSPdispModel model, PSPdispRegion region, uint32_t sample_rate, uint32_t chunk_size, PSPdispAudioHandler audio_handler, gpointer data) {
-    const char *name = pspdisp_psp_name(model, region);
-    pw_init(NULL, NULL);
+	const char *name = pspdisp_psp_name(model, region);
+	pw_init(NULL, NULL);
 
-    PSPdispAudioConnector *audio_connector = g_new0(PSPdispAudioConnector, 1);
-    audio_connector->audio_handler = audio_handler;
-    audio_connector->handler_data = data;
-    audio_connector->chunk = g_malloc0(chunk_size);
-    audio_connector->chunk_size = chunk_size;
-    audio_connector->chunk_length = 0;
-    audio_connector->loop = pw_thread_loop_new("pspdisp-audio", NULL);
+	PSPdispAudioConnector *audio_connector = g_new0(PSPdispAudioConnector, 1);
+	audio_connector->audio_handler = audio_handler;
+	audio_connector->handler_data = data;
+	audio_connector->chunk = g_malloc0(chunk_size);
+	audio_connector->chunk_size = chunk_size;
+	audio_connector->chunk_length = 0;
+	audio_connector->loop = pw_thread_loop_new("pspdisp-audio", NULL);
 
-    // The stream itself is the output, shown as a sink
-    struct pw_properties *properties = pw_properties_new(
-        PW_KEY_MEDIA_TYPE, "Audio", PW_KEY_MEDIA_CATEGORY, "Capture", PW_KEY_MEDIA_CLASS, "Audio/Sink", PW_KEY_APP_NAME, "PSPdisp",
-        PW_KEY_NODE_NAME, PSPDISP_PIPEWIRE_SINK, PW_KEY_NODE_DESCRIPTION, name, NULL);
+	// The stream itself is the output, shown as a sink
+	struct pw_properties *properties = pw_properties_new(
+		PW_KEY_MEDIA_TYPE, "Audio", PW_KEY_MEDIA_CATEGORY, "Capture", PW_KEY_MEDIA_CLASS, "Audio/Sink", PW_KEY_APP_NAME, "PSPdisp",
+		PW_KEY_NODE_NAME, PSPDISP_PIPEWIRE_SINK, PW_KEY_NODE_DESCRIPTION, name, NULL);
 
-    // 16-bit stereo at the asked sample rate, PipeWire converts the sound to it
-    uint8_t pod[1024];
-    struct spa_pod_builder builder = SPA_POD_BUILDER_INIT(pod, sizeof(pod));
-    const struct spa_pod *format = spa_format_audio_raw_build(&builder, SPA_PARAM_EnumFormat, &SPA_AUDIO_INFO_RAW_INIT(.format = SPA_AUDIO_FORMAT_S16_LE, .rate = sample_rate, .channels = 2, .position = { SPA_AUDIO_CHANNEL_FL, SPA_AUDIO_CHANNEL_FR }));
+	// 16-bit stereo at the asked sample rate, PipeWire converts the sound to it
+	uint8_t pod[1024];
+	struct spa_pod_builder builder = SPA_POD_BUILDER_INIT(pod, sizeof(pod));
+	const struct spa_pod *format = spa_format_audio_raw_build(&builder, SPA_PARAM_EnumFormat, &SPA_AUDIO_INFO_RAW_INIT(.format = SPA_AUDIO_FORMAT_S16_LE, .rate = sample_rate, .channels = 2, .position = { SPA_AUDIO_CHANNEL_FL, SPA_AUDIO_CHANNEL_FR }));
 
-    bool ready = false;
-    const char *error = NULL;
-    pw_thread_loop_start(audio_connector->loop);
-    pw_thread_loop_lock(audio_connector->loop);
+	bool ready = false;
+	const char *error = NULL;
+	pw_thread_loop_start(audio_connector->loop);
+	pw_thread_loop_lock(audio_connector->loop);
 
-    // Not linked to anything by the session manager (no `PW_STREAM_FLAG_AUTOCONNECT`), the apps are linked to it
-    audio_connector->stream = pw_stream_new_simple(pw_thread_loop_get_loop(audio_connector->loop), name, properties, &pspdisp_audio_connector_pipewire_events, audio_connector);
+	// Not linked to anything by the session manager (no `PW_STREAM_FLAG_AUTOCONNECT`), the apps are linked to it
+	audio_connector->stream = pw_stream_new_simple(pw_thread_loop_get_loop(audio_connector->loop), name, properties, &pspdisp_audio_connector_pipewire_events, audio_connector);
 
-    if (audio_connector->stream != NULL && pw_stream_connect(audio_connector->stream, PW_DIRECTION_INPUT, PW_ID_ANY, PW_STREAM_FLAG_MAP_BUFFERS, &format, 1) >= 0) {
-        enum pw_stream_state state;
-        while ((state = pw_stream_get_state(audio_connector->stream, &error)) == PW_STREAM_STATE_CONNECTING) pw_thread_loop_wait(audio_connector->loop);
-        ready = state == PW_STREAM_STATE_PAUSED || state == PW_STREAM_STATE_STREAMING;
-    }
+	if (audio_connector->stream != NULL && pw_stream_connect(audio_connector->stream, PW_DIRECTION_INPUT, PW_ID_ANY, PW_STREAM_FLAG_MAP_BUFFERS, &format, 1) >= 0) {
+		enum pw_stream_state state;
+		while ((state = pw_stream_get_state(audio_connector->stream, &error)) == PW_STREAM_STATE_CONNECTING) pw_thread_loop_wait(audio_connector->loop);
+		ready = state == PW_STREAM_STATE_PAUSED || state == PW_STREAM_STATE_STREAMING;
+	}
 
-    if (!ready)
-        g_warning("%s(): failed to add the \"%s\" sound output: %s", __FUNCTION__, name, error != NULL ? error : "PipeWire doesn't run");
-    else
-        g_message("Added the \"%s\" sound output, choose it in the sound settings to play on the PSP", name);
-    pw_thread_loop_unlock(audio_connector->loop);
+	if (!ready)
+		g_warning("%s(): failed to add the \"%s\" sound output: %s", __FUNCTION__, name, error != NULL ? error : "PipeWire doesn't run");
+	else
+		g_message("Added the \"%s\" sound output, choose it in the sound settings to play on the PSP", name);
+	pw_thread_loop_unlock(audio_connector->loop);
 
-    if (!ready) {
-        pspdisp_audio_connector_disconnect(audio_connector);
-        return NULL;
-    }
+	if (!ready) {
+		pspdisp_audio_connector_disconnect(audio_connector);
+		return NULL;
+	}
 
-    return audio_connector;
+	return audio_connector;
 }
 
 /**
@@ -191,14 +191,14 @@ PSPdispAudioConnector *pspdisp_audio_connector_connect(PSPdispModel model, PSPdi
  * @param audio_connector The connector.
  */
 void pspdisp_audio_connector_disconnect(PSPdispAudioConnector *audio_connector) {
-    pw_thread_loop_stop(audio_connector->loop);
+	pw_thread_loop_stop(audio_connector->loop);
 
-    // The sound played on the output moves to another output
-    if (audio_connector->stream != NULL)
-        pw_stream_destroy(audio_connector->stream);
-    pw_thread_loop_destroy(audio_connector->loop);
-    pw_deinit();
+	// The sound played on the output moves to another output
+	if (audio_connector->stream != NULL)
+		pw_stream_destroy(audio_connector->stream);
+	pw_thread_loop_destroy(audio_connector->loop);
+	pw_deinit();
 
-    g_free(audio_connector->chunk);
-    g_free(audio_connector);
+	g_free(audio_connector->chunk);
+	g_free(audio_connector);
 }

@@ -58,7 +58,7 @@ void pspdisp_audio_connector_disconnect(PSPdispAudioConnector *audio_connector);
 
 // The audio connector of this platform, it declares `PSPdispAudioConnector`, implements its functions and defines `PSPDISP_AUDIO_CONNECTOR_NAME`
 #if defined(__linux__)
-    #include "./connector/pipewire.c"
+	#include "./connector/pipewire.c"
 #else
-    #error "Unsupported platform"
+	#error "Unsupported platform"
 #endif

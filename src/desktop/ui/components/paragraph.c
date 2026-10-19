@@ -21,10 +21,10 @@
  * @return The label of the paragraph.
  */
 GtkWidget *pspdisp_ui_component_paragraph_new(const char *text) {
-    GtkWidget *label = gtk_label_new(text);
-    gtk_label_set_wrap(GTK_LABEL(label), TRUE);
-    gtk_label_set_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD);
-    gtk_label_set_xalign(GTK_LABEL(label), 0.0f);
-    gtk_label_set_max_width_chars(GTK_LABEL(label), 60);
-    return label;
+	GtkWidget *label = gtk_label_new(text);
+	gtk_label_set_wrap(GTK_LABEL(label), TRUE);
+	gtk_label_set_wrap_mode(GTK_LABEL(label), PANGO_WRAP_WORD);
+	gtk_label_set_xalign(GTK_LABEL(label), 0.0f);
+	gtk_label_set_max_width_chars(GTK_LABEL(label), 60);
+	return label;
 }
