@@ -32,11 +32,12 @@
 #define PSPDISP_CONTROL_FILE_MAX_SCANCODES 8  // Max keys pressed together by a button
 #define PSPDISP_CONTROL_FILE_DEAD_ZONE     70 // Default dead zone of the analog stick, as the old desktop app
 
-// The directions of the analog stick, as buttons, in bits the PSP doesn't send in user mode (as the old desktop app)
-#define PSPDISP_CONTROL_FILE_ANALOG_UP    0x100000
-#define PSPDISP_CONTROL_FILE_ANALOG_RIGHT 0x200000
-#define PSPDISP_CONTROL_FILE_ANALOG_DOWN  0x400000
-#define PSPDISP_CONTROL_FILE_ANALOG_LEFT  0x800000
+// The directions of the analog stick, as buttons (as the old desktop app), in 24 bits as the buttons (see `PSPdispButton`)
+// They take the bits of the last 4 buttons (volume up and down, screen and note), which the PSP doesn't send in user mode
+#define PSPDISP_CONTROL_FILE_ANALOG_UP   0b000100000000000000000000
+#define PSPDISP_CONTROL_FILE_ANALOG_RIGHT 0b001000000000000000000000
+#define PSPDISP_CONTROL_FILE_ANALOG_DOWN  0b010000000000000000000000
+#define PSPDISP_CONTROL_FILE_ANALOG_LEFT  0b100000000000000000000000
 
 #define PSPDISP_CONTROL_FILE_CHARACTER_SHIFT 24 // The on-screen keyboard of the PSP sends the character typed in the highest byte of the buttons
 

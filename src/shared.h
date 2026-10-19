@@ -72,28 +72,29 @@ typedef struct {
  * Values match `PspCtrlButtons` from `pspctrl.h` (the bits of `SceCtrlData.Buttons`).
  *
  * The PSP app reads them in user mode, so it only sends the first 12, the others are only readable in kernel mode.
+ * They only take the 24 lowest bits of the 32 of the buttons: the PSP app sends the character typed on its on-screen keyboard in the highest 8 instead (see `PSPdispComResponseHeader.buttons`).
  */
 typedef enum: uint32_t {
-    PSPDISP_BUTTON_SELECT   = 0x000001, // Select
-    PSPDISP_BUTTON_START    = 0x000008, // Start
-    PSPDISP_BUTTON_UP       = 0x000010, // Up of the directional pad
-    PSPDISP_BUTTON_RIGHT    = 0x000020, // Right of the directional pad
-    PSPDISP_BUTTON_DOWN     = 0x000040, // Down of the directional pad
-    PSPDISP_BUTTON_LEFT     = 0x000080, // Left of the directional pad
-    PSPDISP_BUTTON_L        = 0x000100, // Left shoulder button ("L trigger")
-    PSPDISP_BUTTON_R        = 0x000200, // Right shoulder button ("R trigger")
-    PSPDISP_BUTTON_TRIANGLE = 0x001000, // Triangle, the top face button
-    PSPDISP_BUTTON_CIRCLE   = 0x002000, // Circle, the right face button
-    PSPDISP_BUTTON_CROSS    = 0x004000, // Cross, the bottom face button
-    PSPDISP_BUTTON_SQUARE   = 0x008000, // Square, the left face button
-    PSPDISP_BUTTON_HOME     = 0x010000, // Home (kernel mode only)
-    PSPDISP_BUTTON_HOLD     = 0x020000, // Hold switch (kernel mode only)
-    PSPDISP_BUTTON_WLAN_UP  = 0x040000, // WLAN switch turned on (kernel mode only)
-    PSPDISP_BUTTON_REMOTE   = 0x080000, // Remote control connected (kernel mode only)
-    PSPDISP_BUTTON_VOLUP    = 0x100000, // Volume up (kernel mode only)
-    PSPDISP_BUTTON_VOLDOWN  = 0x200000, // Volume down (kernel mode only)
-    PSPDISP_BUTTON_SCREEN   = 0x400000, // Screen, the brightness button (kernel mode only)
-    PSPDISP_BUTTON_NOTE     = 0x800000, // Note, the sound button (kernel mode only)
+    PSPDISP_BUTTON_SELECT   = 0b000000000000000000000001, // Select
+    PSPDISP_BUTTON_START    = 0b000000000000000000001000, // Start
+    PSPDISP_BUTTON_UP       = 0b000000000000000000010000, // Up of the directional pad
+    PSPDISP_BUTTON_RIGHT    = 0b000000000000000000100000, // Right of the directional pad
+    PSPDISP_BUTTON_DOWN     = 0b000000000000000001000000, // Down of the directional pad
+    PSPDISP_BUTTON_LEFT     = 0b000000000000000010000000, // Left of the directional pad
+    PSPDISP_BUTTON_L        = 0b000000000000000100000000, // Left shoulder button ("L trigger")
+    PSPDISP_BUTTON_R        = 0b000000000000001000000000, // Right shoulder button ("R trigger")
+    PSPDISP_BUTTON_TRIANGLE = 0b000000000001000000000000, // Triangle, the top face button
+    PSPDISP_BUTTON_CIRCLE   = 0b000000000010000000000000, // Circle, the right face button
+    PSPDISP_BUTTON_CROSS    = 0b000000000100000000000000, // Cross, the bottom face button
+    PSPDISP_BUTTON_SQUARE   = 0b000000001000000000000000, // Square, the left face button
+    PSPDISP_BUTTON_HOME     = 0b000000010000000000000000, // Home (kernel mode only)
+    PSPDISP_BUTTON_HOLD     = 0b000000100000000000000000, // Hold switch (kernel mode only)
+    PSPDISP_BUTTON_WLAN_UP  = 0b000001000000000000000000, // WLAN switch turned on (kernel mode only)
+    PSPDISP_BUTTON_REMOTE   = 0b000010000000000000000000, // Remote control connected (kernel mode only)
+    PSPDISP_BUTTON_VOLUP    = 0b000100000000000000000000, // Volume up (kernel mode only)
+    PSPDISP_BUTTON_VOLDOWN  = 0b001000000000000000000000, // Volume down (kernel mode only)
+    PSPDISP_BUTTON_SCREEN   = 0b010000000000000000000000, // Screen, the brightness button (kernel mode only)
+    PSPDISP_BUTTON_NOTE     = 0b100000000000000000000000, // Note, the sound button (kernel mode only)
 } PSPdispButton;
 
 /**

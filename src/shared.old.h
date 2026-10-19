@@ -42,25 +42,25 @@
  * Only `PSPDISP_COM_FLAG_CONTAINS_SETTINGS_DATA` and `PSPDISP_COM_FLAG_FORCE_UPDATE` are used in a response header.
  */
 typedef enum: uint32_t {
-    PSPDISP_COM_FLAG_CONTAINS_IMAGE_DATA      = 0x00000001, // Frame: an image follows the header (`image_size` bytes)
-    PSPDISP_COM_FLAG_CONTAINS_AUDIO_DATA      = 0x00000002, // Frame: an audio chunk follows the image (see `PSPDISP_COM_FLAG_AUDIO_CHUNK_2240` and `PSPDISP_COM_FLAG_AUDIO_CHUNK_2688`)
-    PSPDISP_COM_FLAG_CONTAINS_SETTINGS_DATA   = 0x00000004, // Frame: the settings follow the audio (`settings_size` bytes), response: it's a `PSPdispComSettingsResponse` with settings changed on the PSP
-    PSPDISP_COM_FLAG_ENABLE_OSK               = 0x00000008, // Frame: the PSP may open its on-screen keyboard (Danzeff) with the Select button
-    PSPDISP_COM_FLAG_IMAGE_IS_JPEG            = 0x00000010, // Frame: the image is a JPEG
-    PSPDISP_COM_FLAG_IMAGE_IS_PNG             = 0x00000020, // Frame: the image is a PNG (the PSP decodes it, but the desktop never sends one)
-    PSPDISP_COM_FLAG_IMAGE_IS_UNCOMPRESSED    = 0x00000040, // Frame: the image is uncompressed, 24 bpp in B,G,R order with the rows bottom-up (a Windows bitmap without its headers)
-    PSPDISP_COM_FLAG_IMAGE_IS_ROTATED_90_DEG  = 0x00000100, // Frame: the image is 272x480 and the PSP draws it rotated by 90 degrees
-    PSPDISP_COM_FLAG_IMAGE_IS_ROTATED_180_DEG = 0x00000200, // Frame: the image is 480x272 and the PSP draws it rotated by 180 degrees
-    PSPDISP_COM_FLAG_IMAGE_IS_ROTATED_270_DEG = 0x00000400, // Frame: the image is 272x480 and the PSP draws it rotated by 270 degrees
-    PSPDISP_COM_FLAG_IMAGE_ROTATION_MASK      = 0x00000700, // Mask of the 3 rotation flags, without any the image is 480x272 and not rotated
-    PSPDISP_COM_FLAG_AUDIO_11025_HZ           = 0x00001000, // Frame: the audio sample rate is 11025 Hz
-    PSPDISP_COM_FLAG_AUDIO_22050_HZ           = 0x00002000, // Frame: the audio sample rate is 22050 Hz
-    PSPDISP_COM_FLAG_AUDIO_44100_HZ           = 0x00004000, // Frame: the audio sample rate is 44100 Hz
-    PSPDISP_COM_FLAG_AUDIO_CHUNK_2240         = 0x00010000, // Frame: the audio chunk is 2240 samples of 16 bits, stereo (4480 bytes, used at 11025 and 22050 Hz)
-    PSPDISP_COM_FLAG_AUDIO_CHUNK_2688         = 0x00020000, // Frame: the audio chunk is 2688 samples of 16 bits, stereo (5376 bytes, used at 44100 Hz)
-    PSPDISP_COM_FLAG_AUDIO_SAMPLE_RATE_MASK   = 0x00037000, // Mask of the 3 sample rate flags and the 2 chunk flags, the PSP restarts its audio when they change
-    PSPDISP_COM_FLAG_IMAGE_CLEAR_SCREEN       = 0x00100000, // Frame: no image, the PSP clears its screen (the display streaming is disabled)
-    PSPDISP_COM_FLAG_FORCE_UPDATE             = 0x01000000, // Response: the PSP asks for a new image even if the desktop didn't change (e.g. after closing its menu)
+    PSPDISP_COM_FLAG_CONTAINS_IMAGE_DATA      = 0b00000000000000000000000000000001, // Frame: an image follows the header (`image_size` bytes)
+    PSPDISP_COM_FLAG_CONTAINS_AUDIO_DATA      = 0b00000000000000000000000000000010, // Frame: an audio chunk follows the image (see `PSPDISP_COM_FLAG_AUDIO_CHUNK_2240` and `PSPDISP_COM_FLAG_AUDIO_CHUNK_2688`)
+    PSPDISP_COM_FLAG_CONTAINS_SETTINGS_DATA   = 0b00000000000000000000000000000100, // Frame: the settings follow the audio (`settings_size` bytes), response: it's a `PSPdispComSettingsResponse` with settings changed on the PSP
+    PSPDISP_COM_FLAG_ENABLE_OSK               = 0b00000000000000000000000000001000, // Frame: the PSP may open its on-screen keyboard (Danzeff) with the Select button
+    PSPDISP_COM_FLAG_IMAGE_IS_JPEG            = 0b00000000000000000000000000010000, // Frame: the image is a JPEG
+    PSPDISP_COM_FLAG_IMAGE_IS_PNG             = 0b00000000000000000000000000100000, // Frame: the image is a PNG (the PSP decodes it, but the desktop never sends one)
+    PSPDISP_COM_FLAG_IMAGE_IS_UNCOMPRESSED    = 0b00000000000000000000000001000000, // Frame: the image is uncompressed, 24 bpp in B,G,R order with the rows bottom-up (a Windows bitmap without its headers)
+    PSPDISP_COM_FLAG_IMAGE_IS_ROTATED_90_DEG  = 0b00000000000000000000000100000000, // Frame: the image is 272x480 and the PSP draws it rotated by 90 degrees
+    PSPDISP_COM_FLAG_IMAGE_IS_ROTATED_180_DEG = 0b00000000000000000000001000000000, // Frame: the image is 480x272 and the PSP draws it rotated by 180 degrees
+    PSPDISP_COM_FLAG_IMAGE_IS_ROTATED_270_DEG = 0b00000000000000000000010000000000, // Frame: the image is 272x480 and the PSP draws it rotated by 270 degrees
+    PSPDISP_COM_FLAG_IMAGE_ROTATION_MASK      = 0b00000000000000000000011100000000, // Mask of the 3 rotation flags, without any the image is 480x272 and not rotated
+    PSPDISP_COM_FLAG_AUDIO_11025_HZ           = 0b00000000000000000001000000000000, // Frame: the audio sample rate is 11025 Hz
+    PSPDISP_COM_FLAG_AUDIO_22050_HZ           = 0b00000000000000000010000000000000, // Frame: the audio sample rate is 22050 Hz
+    PSPDISP_COM_FLAG_AUDIO_44100_HZ           = 0b00000000000000000100000000000000, // Frame: the audio sample rate is 44100 Hz
+    PSPDISP_COM_FLAG_AUDIO_CHUNK_2240         = 0b00000000000000010000000000000000, // Frame: the audio chunk is 2240 samples of 16 bits, stereo (4480 bytes, used at 11025 and 22050 Hz)
+    PSPDISP_COM_FLAG_AUDIO_CHUNK_2688         = 0b00000000000000100000000000000000, // Frame: the audio chunk is 2688 samples of 16 bits, stereo (5376 bytes, used at 44100 Hz)
+    PSPDISP_COM_FLAG_AUDIO_SAMPLE_RATE_MASK   = 0b00000000000000110111000000000000, // Mask of the 3 sample rate flags and the 2 chunk flags, the PSP restarts its audio when they change
+    PSPDISP_COM_FLAG_IMAGE_CLEAR_SCREEN       = 0b00000000000100000000000000000000, // Frame: no image, the PSP clears its screen (the display streaming is disabled)
+    PSPDISP_COM_FLAG_FORCE_UPDATE             = 0b00000001000000000000000000000000, // Response: the PSP asks for a new image even if the desktop didn't change (e.g. after closing its menu)
 } PSPdispComFlags;
 
 /**
@@ -195,7 +195,7 @@ static_assert(sizeof(PSPdispComFrameHeader) == 16, "A frame header must be 16 by
 typedef struct {
     uint32_t magic;   // Always `PSPDISP_COM_HEADER_MAGIC`
     uint32_t flags;   // Combination of `PSPdispComFlags`: `PSPDISP_COM_FLAG_CONTAINS_SETTINGS_DATA` and `PSPDISP_COM_FLAG_FORCE_UPDATE`
-    uint32_t buttons; // Pressed buttons, the `PSP_CTRL_*` bits of `SceCtrlData.Buttons` from `pspctrl.h` (none while the PSP menu is open)
+    uint32_t buttons; // Pressed buttons, the `PSP_CTRL_*` bits of `SceCtrlData.Buttons` from `pspctrl.h` (none while the PSP menu is open), or only the character typed on its on-screen keyboard in the highest 8 bits while it's open (255 for none)
     uint8_t analog_x; // Analog stick position from the left (0) to the right (255), `SceCtrlData.Lx` (127 while the PSP menu is open)
     uint8_t analog_y; // Analog stick position from the top (0) to the bottom (255), `SceCtrlData.Ly` (127 while the PSP menu is open)
 } PSPdispComResponseHeader;
