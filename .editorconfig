@@ -1,5 +1,26 @@
+# EditorConfig (https://editorconfig.org): how the editors indent and save the files of this repository
 root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
 
 [*.{yml,yaml}]
 indent_style = space
 indent_size = 2
+
+# The C code of src/: tabs, shown 4 columns wide
+[src/**.{c,h}]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+
+# make needs a tab before each command
+[Makefile*]
+indent_style = tab
+
+# Two trailing spaces are a line break in Markdown
+[*.md]
+trim_trailing_whitespace = false
