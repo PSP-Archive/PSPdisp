@@ -1,7 +1,7 @@
 /*****************************************************
  * SPDX-License-Identifier: BSD-3-Clause             *
  *                                                   *
- * shared.h - Common metadata betwen PSP and Desktop *
+ * shared.h - Metadata shared by PSP and Desktop     *
  *                                                   *
  *  This file shall only define static symbols.      *
  *                                                   *

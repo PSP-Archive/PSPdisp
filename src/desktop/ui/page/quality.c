@@ -1,3 +1,11 @@
+/*****************************************************
+ * SPDX-License-Identifier: BSD-3-Clause             *
+ *                                                   *
+ * quality.c - "Quality" page of the desktop app     *
+ *                                                   *
+ * Copyright © 2026 Arthur Neto                      *
+ *****************************************************/
+
 #pragma once
 
 #include <gtk/gtk.h>

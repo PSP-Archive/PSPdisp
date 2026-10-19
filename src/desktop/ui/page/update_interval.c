@@ -1,3 +1,11 @@
+/*****************************************************
+ * SPDX-License-Identifier: BSD-3-Clause             *
+ *                                                   *
+ * update_interval.c - "Update interval" page        *
+ *                                                   *
+ * Copyright © 2026 Arthur Neto                      *
+ *****************************************************/
+
 #pragma once
 
 #include <gtk/gtk.h>
