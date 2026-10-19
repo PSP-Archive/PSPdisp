@@ -25,7 +25,7 @@
 /**
  * @brief Names of the display devices, there's only the virtual display.
  */
-static const char *const pspdisp_daemon_display_devices[] = {
+const char *const pspdisp_daemon_display_devices[] = {
     "PSPdisp virtual display",
 };
 

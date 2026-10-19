@@ -107,28 +107,28 @@ typedef struct {
 typedef void (*PSPdispSettingsEditor) (GKeyFile *file, gpointer data);
 
 // Names of the settings values in the files, by their value in the protocol
-static const char *const pspdisp_settings_quality_names[] = { "Lowest", "Low", "Medium", "High", "Highest" };
-static const char *const pspdisp_settings_update_interval_names[] = { "Continuous", "Shortest", "Short", "Medium", "Long", "Longest" };
-static const uint32_t pspdisp_settings_sample_rates[] = { 11025, 22050, 44100 };
+const char *const pspdisp_settings_quality_names[] = { "Lowest", "Low", "Medium", "High", "Highest" };
+const char *const pspdisp_settings_update_interval_names[] = { "Continuous", "Shortest", "Short", "Medium", "Long", "Longest" };
+const uint32_t pspdisp_settings_sample_rates[] = { 11025, 22050, 44100 };
 
 static_assert(G_N_ELEMENTS(pspdisp_settings_quality_names) == PSPDISP_COM_QUALITY_HIGHEST + 1, "A name for each quality level");
 static_assert(G_N_ELEMENTS(pspdisp_settings_update_interval_names) == PSPDISP_COM_UPDATE_INTERVAL_LONGEST + 1, "A name for each update interval");
 static_assert(G_N_ELEMENTS(pspdisp_settings_sample_rates) == PSPDISP_COM_SAMPLE_RATE_44100 + 1, "A value for each sample rate");
 
 // The default control files, as the old desktop app installed them
-static const char pspdisp_settings_default_mouse_control[] = {
+const char pspdisp_settings_default_mouse_control[] = {
     #embed "./defaults/mouse.control"
     , 0
 };
-static const char pspdisp_settings_default_fps_control[] = {
+const char pspdisp_settings_default_fps_control[] = {
     #embed "./defaults/fps.control"
     , 0
 };
-static const char pspdisp_settings_default_re4_control[] = {
+const char pspdisp_settings_default_re4_control[] = {
     #embed "./defaults/re4.control"
     , 0
 };
-static const char pspdisp_settings_default_control_template[] = {
+const char pspdisp_settings_default_control_template[] = {
     #embed "./defaults/control.template"
     , 0
 };
@@ -136,7 +136,7 @@ static const char pspdisp_settings_default_control_template[] = {
 /**
  * @brief The default control files, written when the control folder is created.
  */
-static const struct {
+const struct {
     const char *file_name; // Its file name
     const char *content; // Its content
 } pspdisp_settings_default_controls[] = {
@@ -151,7 +151,7 @@ static const struct {
  *
  * With sound, the sample rate also gives the frame rate, because every frame carries a chunk of audio (about 10 frames per second at 11025 Hz, 20 at 22050 Hz and 33 at 44100 Hz).
  */
-static const struct {
+const struct {
     const char *file_name; // Its file name
     const char *name; // Its name
     PSPdispComQuality quality;

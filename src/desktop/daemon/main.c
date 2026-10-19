@@ -84,13 +84,13 @@ typedef struct {
     int higher_priority; // 1 if the threads have a higher priority, 0 if not (-1 before it's set), only used on the main thread
 } PSPdispDaemon;
 
-static char *pspdisp_daemon_option_config_dir = NULL; // `--config-dir`
-static gboolean pspdisp_daemon_option_version = FALSE; // `--version`
+char *pspdisp_daemon_option_config_dir = NULL; // `--config-dir`
+gboolean pspdisp_daemon_option_version = FALSE; // `--version`
 
 /**
  * @brief The options of the command line.
  */
-static GOptionEntry pspdisp_daemon_options[] = {
+GOptionEntry pspdisp_daemon_options[] = {
     { "config-dir", 'c', 0, G_OPTION_ARG_FILENAME, &pspdisp_daemon_option_config_dir, "Folder of the settings, shared with the desktop app (default: ~/.config/pspdisp)", "DIR" },
     { "version", 'v', 0, G_OPTION_ARG_NONE, &pspdisp_daemon_option_version, "Print the version and quit", NULL },
     G_OPTION_ENTRY_NULL

@@ -114,7 +114,7 @@ void pspdisp_audio_connector_pipewire_on_process(void *data) {
     pw_stream_queue_buffer(audio_connector->stream, buffer);
 }
 
-static const struct pw_stream_events pspdisp_audio_connector_pipewire_events = {
+const struct pw_stream_events pspdisp_audio_connector_pipewire_events = {
     PW_VERSION_STREAM_EVENTS,
     .state_changed = pspdisp_audio_connector_pipewire_on_state_changed,
     .process = pspdisp_audio_connector_pipewire_on_process,

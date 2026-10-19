@@ -32,7 +32,7 @@
 /**
  * @brief The PSP buttons, with the gamepad button each one drives.
  */
-static const struct {
+const struct {
     PSPdispButton psp; // The PSP button
     PSPdispGamepadButton gamepad; // The gamepad button
 } pspdisp_controller_buttons[] = {

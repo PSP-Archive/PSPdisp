@@ -43,7 +43,7 @@
 /**
  * @brief The sections of the buttons, with the button each one is about.
  */
-static const struct {
+const struct {
     const char *section; // The section in the control file
     uint32_t button; // The button bit (`PSPdispButton` or an analog direction)
 } pspdisp_control_file_buttons[] = {
@@ -92,7 +92,7 @@ typedef enum {
     PSPDISP_CONTROL_FILE_MOUSE_MOVE_ANALOG,
 } PSPdispControlFileMouse;
 
-static const char *const pspdisp_control_file_mouse_names[] = {
+const char *const pspdisp_control_file_mouse_names[] = {
     "Left", "Right", "Middle", "DoubleClick", "WheelUp", "WheelDown", "MouseMoveUp", "MouseMoveDown", "MouseMoveLeft", "MouseMoveRight", "MouseMoveAnalog",
 };
 

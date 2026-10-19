@@ -42,7 +42,7 @@ struct PSPdispInput {
 /**
  * @brief The extended keys (scan codes after 0xE0), with their key codes.
  */
-static const struct {
+const struct {
     uint16_t scancode; // The scan code, with its 0xE0
     uint16_t code; // The key code
 } pspdisp_input_uinput_extended_keys[] = {
@@ -61,7 +61,7 @@ static const struct {
 /**
  * @brief The key codes of the mouse buttons, by `PSPdispInputMouseButton`.
  */
-static const uint16_t pspdisp_input_uinput_buttons[] = {
+const uint16_t pspdisp_input_uinput_buttons[] = {
     [PSPDISP_INPUT_MOUSE_LEFT] = BTN_LEFT,
     [PSPDISP_INPUT_MOUSE_RIGHT] = BTN_RIGHT,
     [PSPDISP_INPUT_MOUSE_MIDDLE] = BTN_MIDDLE,

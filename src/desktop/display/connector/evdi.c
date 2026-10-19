@@ -242,7 +242,7 @@ void pspdisp_display_connector_evdi_finalize(GSource *source) {
  *
  * No `prepare` nor `check`: GLib dispatches the source when the EVDI file descriptor is ready (it's added with `g_source_add_unix_fd()`) or the ready time is reached.
  */
-static GSourceFuncs pspdisp_display_connector_evdi_source_funcs = {
+GSourceFuncs pspdisp_display_connector_evdi_source_funcs = {
     .dispatch = pspdisp_display_connector_evdi_dispatch,
     .finalize = pspdisp_display_connector_evdi_finalize,
 };

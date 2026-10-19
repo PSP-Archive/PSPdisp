@@ -43,7 +43,7 @@ struct PSPdispGamepad {
 /**
  * @brief The buttons of `xpad` for an Xbox 360 controller, with the gamepad button each one shows (0 for one the PSP doesn't have).
  */
-static const struct {
+const struct {
     uint16_t code; // The key code
     PSPdispGamepadButton button; // The button of the gamepad
 } pspdisp_gamepad_uinput_buttons[] = {
@@ -63,7 +63,7 @@ static const struct {
 /**
  * @brief The axes of `xpad` for an Xbox 360 controller, with their ranges.
  */
-static const struct uinput_abs_setup pspdisp_gamepad_uinput_axes[] = {
+const struct uinput_abs_setup pspdisp_gamepad_uinput_axes[] = {
     { .code = ABS_X,     .absinfo = { .minimum = -32768, .maximum = 32767, .fuzz = 16, .flat = 128 } }, // Left stick, the analog stick of the PSP
     { .code = ABS_Y,     .absinfo = { .minimum = -32768, .maximum = 32767, .fuzz = 16, .flat = 128 } },
     { .code = ABS_Z,     .absinfo = { .minimum = 0, .maximum = 255 } }, // Left trigger
