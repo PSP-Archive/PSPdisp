@@ -1,0 +1,12 @@
+# clangd configuration, for the clangd language support (see https://clangd.llvm.org/config).
+
+CompileFlags:
+  Add:
+    # GCC-only pragmas that clang ignores, e.g. `scalar_storage_order`
+    - -Wno-unknown-pragmas
+    # The doc comments checked against the code (e.g. a `@param` that isn't a parameter of the function)
+    - -Wdocumentation
+
+# The doc comments are Doxygen (`@brief`, `@param`, `@return`), shown as such on hover instead of as plain text
+Documentation:
+  CommentFormat: Doxygen
