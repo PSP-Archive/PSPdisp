@@ -11,6 +11,7 @@
  *
  * The key codes of Linux were made from the PC scan codes, so the scan codes from 0x01 to 0x58 are the same numbers, and only the extended keys need a table.
  * The keyboard doesn't repeat the keys held: the desktop does it, as with a real keyboard.
+ * A character is typed with the keys that write it in the keyboard layout of the desktop (see `keymap.c`), or as on a US keyboard without a layout.
  *
  * Writing to `/dev/uinput` needs root, or the `input` group on some distributions.
  */
@@ -24,6 +25,7 @@
 #include <sys/ioctl.h>
 #include <linux/uinput.h>
 #include "../input.c" // Its declarations (when `input.c` includes this file, it already has them and this include is skipped)
+#include "./keymap.c"
 
 #define PSPDISP_INPUT_NAME "uinput" // User friendly name of this virtual keyboard and mouse
 
@@ -37,6 +39,7 @@ struct PSPdispInput {
 	int mouse; // The uinput mouse
 	uint8_t pressed_keys[(KEY_MAX + 1) / 8]; // The keys pressed (one bit per key code), released when unplugged
 	uint8_t pressed_buttons; // The mouse buttons pressed (one bit per `PSPdispInputMouseButton`), released when unplugged
+	PSPdispInputKeymap *keymap; // The keyboard layout of the desktop, to type the characters (`NULL` without one: they're typed as on a US keyboard)
 };
 
 /**
@@ -92,6 +95,54 @@ uint16_t pspdisp_input_uinput_code(uint16_t scancode) {
  */
 bool pspdisp_input_has_key(uint16_t scancode) {
 	return pspdisp_input_uinput_code(scancode) != KEY_RESERVED;
+}
+
+/**
+ * @brief Tell if a key code of Linux is a key of the virtual keyboard.
+ *
+ * @param code The key code.
+ * @return `true` if it can be pressed.
+ */
+bool pspdisp_input_uinput_has_code(uint16_t code) {
+	if (code >= KEY_ESC && code <= PSPDISP_INPUT_UINPUT_LAST_BASIC) return pspdisp_input_has_key(code);
+
+	for (size_t i = 0; i < G_N_ELEMENTS(pspdisp_input_uinput_extended_keys); i++)
+		if (pspdisp_input_uinput_extended_keys[i].code == code)
+			return true;
+	return false;
+}
+
+/**
+ * @brief Find the keys that type an ASCII character on a US keyboard: Shift if needed, then its key.
+ *
+ * @param character The character.
+ * @param keys Where to write the key codes of Linux to press together, in order, 2 at most.
+ * @return The number of keys, or 0 if no key types it.
+ */
+size_t pspdisp_input_uinput_find_us(uint32_t character, uint16_t *keys) {
+	static const char *const unshifted = "1234567890-=qwertyuiop[]asdfghjkl;'`\\zxcvbnm,./ ";
+	static const char *const shifted = "!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL:\"~|ZXCVBNM<>? ";
+	static const uint16_t codes[] = {
+		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_EQUAL,
+		KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T, KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P, KEY_LEFTBRACE, KEY_RIGHTBRACE,
+		KEY_A, KEY_S, KEY_D, KEY_F, KEY_G, KEY_H, KEY_J, KEY_K, KEY_L, KEY_SEMICOLON, KEY_APOSTROPHE, KEY_GRAVE, KEY_BACKSLASH,
+		KEY_Z, KEY_X, KEY_C, KEY_V, KEY_B, KEY_N, KEY_M, KEY_COMMA, KEY_DOT, KEY_SLASH, KEY_SPACE,
+	};
+	static_assert(G_N_ELEMENTS(codes) == 48, "A key code for each character of the US layout");
+
+	if (character < ' ' || character >= 0x7F) return 0;
+
+	const char *found = strchr(unshifted, (int) character);
+	const bool shift = found == NULL;
+	if (shift)
+		found = strchr(shifted, (int) character);
+	if (found == NULL) return 0;
+
+	size_t count = 0;
+	if (shift)
+		keys[count++] = KEY_LEFTSHIFT;
+	keys[count++] = codes[found - (shift ? shifted : unshifted)];
+	return count;
 }
 
 /**
@@ -229,6 +280,9 @@ PSPdispInput *pspdisp_input_new(const char *name, GError **error) {
 	PSPdispInput *input = g_new0(PSPdispInput, 1);
 	input->keyboard = keyboard;
 	input->mouse = mouse;
+	input->keymap = pspdisp_input_keymap_new();
+	if (input->keymap == NULL)
+		g_message("No keyboard layout of the desktop (no Wayland or X11 display), the characters are typed as on a US keyboard");
 	return input;
 }
 
@@ -253,6 +307,8 @@ void pspdisp_input_destroy(PSPdispInput *input) {
 	ioctl(input->mouse, UI_DEV_DESTROY);
 	close(input->keyboard);
 	close(input->mouse);
+	if (input->keymap != NULL)
+		pspdisp_input_keymap_destroy(input->keymap);
 	g_free(input);
 }
 
@@ -283,6 +339,33 @@ bool pspdisp_input_key(PSPdispInput *input, uint16_t scancode, bool pressed) {
 
 	struct input_event events[2] = { { .type = EV_KEY, .code = code, .value = pressed } };
 	return pspdisp_input_uinput_write(input->keyboard, events, 1);
+}
+
+/**
+ * @brief Type a character, with the keys that write it in the keyboard layout of the desktop, or as on a US keyboard without a layout.
+ *
+ * Without a layout, only the ASCII characters are typed.
+ *
+ * @param input The devices.
+ * @param character The character, a Unicode code point.
+ * @return `true` if the computer took it, `false` if no key types it.
+ */
+bool pspdisp_input_type(PSPdispInput *input, uint32_t character) {
+	uint16_t keys[PSPDISP_INPUT_KEYMAP_MAX_KEYS];
+	const size_t count = input->keymap != NULL ? pspdisp_input_keymap_find(input->keymap, character, pspdisp_input_uinput_has_code, keys) : pspdisp_input_uinput_find_us(character, keys);
+	if (count == 0) return false;
+
+	// The modifiers then the key pressed, and released in the reverse order, each in its own frame as a real keyboard sends them
+	bool done = true;
+	for (size_t i = 0; done && i < count; i++) {
+		struct input_event events[2] = { { .type = EV_KEY, .code = keys[i], .value = 1 } };
+		done = pspdisp_input_uinput_write(input->keyboard, events, 1);
+	}
+	for (size_t i = count; i > 0; i--) {
+		struct input_event events[2] = { { .type = EV_KEY, .code = keys[i - 1], .value = 0 } };
+		done = pspdisp_input_uinput_write(input->keyboard, events, 1) && done;
+	}
+	return done;
 }
 
 /**

@@ -81,6 +81,15 @@ uint16_t pspdisp_input_scancode_of_key(uint32_t keycode);
 bool pspdisp_input_key(PSPdispInput *input, uint16_t scancode, bool pressed);
 
 /**
+ * @brief Type a character, as the keyboard layout of the computer writes it, implemented by the platform.
+ *
+ * @param input The devices.
+ * @param character The character, a Unicode code point.
+ * @return `true` if the computer took it, `false` if no key types it.
+ */
+bool pspdisp_input_type(PSPdispInput *input, uint32_t character);
+
+/**
  * @brief Press or release a button of the virtual mouse, implemented by the platform.
  *
  * @param input The devices.

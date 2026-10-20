@@ -409,28 +409,17 @@ void pspdisp_control_file_release(PSPdispControlFile *control, PSPdispControlFil
 }
 
 /**
- * @brief Type a character of the on-screen keyboard of the PSP, as the keys of a US keyboard.
+ * @brief Type a character of the on-screen keyboard of the PSP, as the keyboard layout of the desktop writes it.
  *
  * The PSP sends 1 for left, 2 for right, 8 for backspace and 10 for enter, the other codes are the characters.
- * As the keys are the ones of a US keyboard, some characters differ with another layout of the desktop (e.g. `z` and `y` on a German one).
  *
  * @param control The control file.
  * @param character The character code.
  */
 void pspdisp_control_file_type(PSPdispControlFile *control, uint8_t character) {
-	static const char *const unshifted = "1234567890-=qwertyuiop[]asdfghjkl;'`\\zxcvbnm,./ ";
-	static const char *const shifted = "!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL:\"~|ZXCVBNM<>? ";
-	static const uint16_t scancodes[] = {
-		0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D,
-		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B,
-		0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2B,
-		0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x39,
-	};
-	static_assert(G_N_ELEMENTS(scancodes) == 48, "A scan code for each character of the US layout");
-
 	uint16_t scancode = 0;
-	bool shift = false;
 
+	// The keys, the same in every layout
 	if (character == 1)
 		scancode = 0xE04B; // Left
 	else if (character == 2)
@@ -439,26 +428,13 @@ void pspdisp_control_file_type(PSPdispControlFile *control, uint8_t character) {
 		scancode = 0x0E; // Backspace
 	else if (character == 10)
 		scancode = 0x1C; // Enter
-	else if (character >= ' ' && character < 0x7F) {
-		const char *found = strchr(unshifted, character);
-		shift = found == NULL;
-		if (found == NULL)
-			found = strchr(shifted, character);
-		if (found != NULL)
-			scancode = scancodes[found - (shift ? shifted : unshifted)];
-	}
 
-	if (scancode == 0) {
+	if (scancode != 0) {
+		pspdisp_input_key(control->input, scancode, true);
+		pspdisp_input_key(control->input, scancode, false);
+	} else if (character < ' ' || !pspdisp_input_type(control->input, character)) {
 		g_debug("%s(): the character %u of the on-screen keyboard has no key", __FUNCTION__, character);
-		return;
 	}
-
-	if (shift)
-		pspdisp_input_key(control->input, 0x2A, true);
-	pspdisp_input_key(control->input, scancode, true);
-	pspdisp_input_key(control->input, scancode, false);
-	if (shift)
-		pspdisp_input_key(control->input, 0x2A, false);
 }
 
 /**
