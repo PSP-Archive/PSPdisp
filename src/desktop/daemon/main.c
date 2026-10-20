@@ -161,6 +161,11 @@ bool pspdisp_daemon_on_sound(bool enabled, uint32_t sample_rate, uint32_t chunk_
 
 /**
  * @brief Send a whole buffer over USB, the `write` of the USB session link.
+ *
+ * @param data The transport of the link (`PSPdispDaemonLinkData *`).
+ * @param buffer The data to send.
+ * @param size The size of `buffer` in bytes.
+ * @return `true` if it was sent, `false` if it failed.
  */
 bool pspdisp_daemon_usb_write(void *data, const void *buffer, uint32_t size) {
 	PSPdispDaemonLinkData *link = data;
@@ -169,6 +174,12 @@ bool pspdisp_daemon_usb_write(void *data, const void *buffer, uint32_t size) {
 
 /**
  * @brief Receive exactly `size` bytes over USB, the `read` of the USB session link.
+ *
+ * @param data The transport of the link (`PSPdispDaemonLinkData *`).
+ * @param buffer Where to write the data.
+ * @param size The number of bytes to receive.
+ * @param timeout How long to wait for them, in milliseconds.
+ * @return `true` if they were received, `false` if it failed.
  */
 bool pspdisp_daemon_usb_read(void *data, void *buffer, uint32_t size, uint32_t timeout) {
 	PSPdispDaemonLinkData *link = data;
@@ -177,6 +188,11 @@ bool pspdisp_daemon_usb_read(void *data, void *buffer, uint32_t size, uint32_t t
 
 /**
  * @brief Send a whole buffer over WLAN, the `write` of the WLAN session link.
+ *
+ * @param data The transport of the link (`PSPdispDaemonLinkData *`).
+ * @param buffer The data to send.
+ * @param size The size of `buffer` in bytes.
+ * @return `true` if it was sent, `false` if it failed.
  */
 bool pspdisp_daemon_wlan_write(void *data, const void *buffer, uint32_t size) {
 	PSPdispDaemonLinkData *link = data;
@@ -185,6 +201,12 @@ bool pspdisp_daemon_wlan_write(void *data, const void *buffer, uint32_t size) {
 
 /**
  * @brief Receive exactly `size` bytes over WLAN, the `read` of the WLAN session link.
+ *
+ * @param data The transport of the link (`PSPdispDaemonLinkData *`).
+ * @param buffer Where to write the data.
+ * @param size The number of bytes to receive.
+ * @param timeout How long to wait for them, in milliseconds.
+ * @return `true` if they were received, `false` if it failed.
  */
 bool pspdisp_daemon_wlan_read(void *data, void *buffer, uint32_t size, uint32_t timeout) {
 	PSPdispDaemonLinkData *link = data;
@@ -193,6 +215,13 @@ bool pspdisp_daemon_wlan_read(void *data, void *buffer, uint32_t size, uint32_t 
 
 /**
  * @brief Copy a frame of the virtual display into the media, the frame handler of the display (see `PSPdispFrameHandler`).
+ *
+ * @param pixels The frame buffer.
+ * @param stride The number of pixels per row in the frame buffer.
+ * @param format The pixel format of the frame buffer.
+ * @param rectangles The dirty rectangles.
+ * @param rectangles_length The number of dirty rectangles.
+ * @param daemon The daemon.
  */
 void pspdisp_daemon_on_frame(void *pixels, uint16_t stride, PSPdispPixelFormat format, PSPdispDirtyRectangle *rectangles, uint8_t rectangles_length, PSPdispDaemon *daemon) {
 	pspdisp_daemon_media_on_frame(pixels, stride, format, rectangles, rectangles_length, daemon->media);
@@ -200,6 +229,9 @@ void pspdisp_daemon_on_frame(void *pixels, uint16_t stride, PSPdispPixelFormat f
 
 /**
  * @brief Keep the power mode of the virtual display in the media, the DPMS handler of the display (see `PSPdispDPMSHandler`).
+ *
+ * @param mode The DPMS mode.
+ * @param daemon The daemon.
  */
 void pspdisp_daemon_on_dpms(PSPdispDPMSMode mode, PSPdispDaemon *daemon) {
 	pspdisp_daemon_media_on_dpms(mode, daemon->media);
@@ -543,6 +575,13 @@ gboolean pspdisp_daemon_on_stop(PSPdispDaemon *daemon) {
 	return G_SOURCE_CONTINUE;
 }
 
+/**
+ * @brief Run the daemon until it is asked to stop (see the top of this file).
+ *
+ * @param argc The number of arguments of the command line.
+ * @param argv The arguments of the command line (see `pspdisp_daemon_options`).
+ * @return 0 once it stopped (or after `--version`), 1 if it couldn't start.
+ */
 int main(int argc, char **argv) {
 	GOptionContext *options = g_option_context_new("- stream the desktop to a PSP");
 	GError *error = NULL;
