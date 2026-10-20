@@ -7,12 +7,12 @@
  *****************************************************/
 
 /*
- * A virtual keyboard and a virtual mouse that the computer sees as plugged devices, pressed by the control files (see `control_file.c`).
+ * A virtual keyboard and a virtual mouse for the computer, pressed by the control files (see `control_file.c`).
  *
  * The keys are PC scan codes (set 1, with 0xE0 before the extended keys, e.g. 0xE048 for up), as in the control files of the old desktop app.
  * They tell the place of a key on the keyboard, whatever its layout (e.g. 0x10 is the key of Q on a QWERTY keyboard, and of A on an AZERTY one).
  *
- * Its implementation varies with the platform, chosen at compile time: uinput on Linux (`input/uinput.c`).
+ * Its implementation varies with the platform, chosen at compile time: uinput on Linux (`input/uinput.c`), SendInput on Windows (`input/sendinput.c`).
  */
 
 #pragma once
@@ -37,16 +37,16 @@ typedef enum {
 typedef struct PSPdispInput PSPdispInput;
 
 /**
- * @brief Plug a virtual keyboard and a virtual mouse into the computer, implemented by the platform.
+ * @brief Make a virtual keyboard and a virtual mouse for the computer, implemented by the platform.
  *
- * @param name The name the computer shows for them, before " keyboard" and " mouse".
+ * @param name The name the computer shows for them (if it shows them), before " keyboard" and " mouse".
  * @param error Where to tell why it failed, ready to be shown to the user (e.g. the permission it needs).
- * @return The devices, unplug them with `pspdisp_input_destroy()`, or `NULL` if it failed.
+ * @return The devices, destroy them with `pspdisp_input_destroy()`, or `NULL` if it failed.
  */
 PSPdispInput *pspdisp_input_new(const char *name, GError **error);
 
 /**
- * @brief Unplug the virtual keyboard and mouse, implemented by the platform.
+ * @brief Destroy the virtual keyboard and mouse, implemented by the platform.
  *
  * The keys and buttons still pressed are released first.
  *
@@ -81,11 +81,11 @@ uint16_t pspdisp_input_scancode_of_key(uint32_t keycode);
 bool pspdisp_input_key(PSPdispInput *input, uint16_t scancode, bool pressed);
 
 /**
- * @brief Type a character, as the keyboard layout of the computer writes it, implemented by the platform.
+ * @brief Type a character, whatever the keyboard layout of the computer, implemented by the platform.
  *
  * @param input The devices.
  * @param character The character, a Unicode code point.
- * @return `true` if the computer took it, `false` if no key types it.
+ * @return `true` if the computer took it.
  */
 bool pspdisp_input_type(PSPdispInput *input, uint32_t character);
 
