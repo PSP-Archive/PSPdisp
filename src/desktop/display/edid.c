@@ -26,6 +26,8 @@
 #include <glib.h>
 #include "../../shared.h"
 
+#define PSPDISP_DISPLAY_MAX_SCALE 4 // Biggest scale of the PSP resolution in the modes of the EDID (1920x1088), the frames are scaled down from
+
 // All the types below are packed, to match the EDID bytes.
 // Their bit-fields are declared from bit 7 to bit 0 whatever the host, thanks to the big-endian scalar storage order.
 // Both pragmas are reset after the types, so they don't leak into the functions below and the files that include this one.
@@ -672,6 +674,36 @@ PSPdispEDIDDetailedTiming pspdisp_display_edid_detailed_timing(uint32_t pixel_cl
 }
 
 /**
+ * @brief Create the detailed timing of a mode of the PSP resolution scaled up, with the reduced blanking of VESA CVT (as `cvt -r`), at 59.94 Hz.
+ *
+ * @param scale How many times the PSP resolution, from 1 (480x272) to `PSPDISP_DISPLAY_MAX_SCALE`.
+ * @param width_mm The horizontal image size in mm.
+ * @param height_mm The vertical image size in mm.
+ * @return The detailed timing, or a zeroed one if an argument is invalid.
+ */
+PSPdispEDIDDetailedTiming pspdisp_display_edid_scaled_timing(const uint8_t scale, const uint16_t width_mm, const uint16_t height_mm) {
+	g_return_val_if_fail(scale >= 1 && scale <= PSPDISP_DISPLAY_MAX_SCALE, (PSPdispEDIDDetailedTiming) {});
+
+	const uint16_t width = PSPDISP_DISPLAY_WIDTH * scale;
+	const uint16_t height = PSPDISP_DISPLAY_HEIGHT * scale;
+
+	// Vertical blanking of at least 460 µs, from the line period estimated by CVT, and 19 lines (3 of front porch, 10 of sync, 6 of back porch)
+	const uint32_t line_ns = (1000000000000 / 59940 - 460000) / height;
+	const uint16_t vertical_blanking = MAX(460000 / line_ns + 1, 19);
+
+	// 160 pixels of horizontal blanking (48 of front porch, 32 of sync)
+	const uint64_t total = (uint64_t) (width + 160) * (height + vertical_blanking);
+
+	// At 59.94 Hz, rounded to the 10 kHz of the EDID
+	const uint32_t pixel_clock_khz = (total * 59940 + 5000000) / 10000000 * 10;
+
+	PSPdispEDIDDetailedTiming detailed_timing = pspdisp_display_edid_detailed_timing(pixel_clock_khz, width, 160, height, vertical_blanking, 48, 32, 3, 10, width_mm, height_mm);
+	detailed_timing.sync_type = PSPDISP_EDID_SYNC_TYPE_DIGITAL_SEPARATE;
+	detailed_timing.hsync_positive = true; // +hsync -vsync, as CVT with reduced blanking
+	return detailed_timing;
+}
+
+/**
  * @brief Create an EDID display descriptor that holds a text (e.g. the product name).
  *
  * The text is ASCII, cut at 13 characters, and when shorter it's terminated by `0x0A` (`'\\n'`; line-break) and padded with `0x20` (`' '`; space).
@@ -767,7 +799,8 @@ PSPdispEDIDManufactureDate pspdisp_display_edid_release_date(PSPdispModel model,
 /**
  * @brief Create the EDID of a PSP, the identification its virtual display gives to the computer.
  *
- * It's an EDID 1.4 base block (no extension blocks) of a digital display with only the PSP native mode: 480x272 at 59.94 Hz (9 MHz pixel clock), sRGB colours and DPMS support.
+ * It's an EDID 1.4 base block (no extension blocks) of a digital display with sRGB colours and DPMS support.
+ * Its modes are the PSP resolution scaled up 4 times (1920x1088, the preferred one), 2 times (960x544) and as it is (480x272), all at 59.94 Hz, the 3 that fit next to the product name.
  *
  * The model gives the screen size (3.8" on the PSP Go, 4.3" on the others), and with the region the product name (see `pspdisp_psp_name()`).
  *
@@ -784,10 +817,6 @@ PSPdispEDID pspdisp_display_edid_new(PSPdispModel model, PSPdispRegion region, u
 	uint16_t width_mm = model != PSPDISP_MODEL_05G ? 95 : 84;
 	uint16_t height_mm = model != PSPDISP_MODEL_05G ? 54 : 47;
 
-	// 480x272 at 59.94 Hz: 525 x 286 pixels in total at 9 MHz, as the PSP LCD
-	PSPdispEDIDDetailedTiming detailed_timing = pspdisp_display_edid_detailed_timing(9000, PSPDISP_DISPLAY_WIDTH, 45, PSPDISP_DISPLAY_HEIGHT, 14, 2, 41, 2, 10, width_mm, height_mm);
-	detailed_timing.sync_type = PSPDISP_EDID_SYNC_TYPE_DIGITAL_SEPARATE;
-
 	PSPdispEDID edid = {
 		.header = PSPDISP_EDID_HEADER,
 		.manufacturer_id = pspdisp_display_edid_pnp_id('L', 'N', 'X'), // The Linux Foundation (LNX), not the best choice but I don't have a PNP ID, and if I used Sony's (SNY) I might get some legal issue, and it's *most* of the time just a identification info
@@ -801,22 +830,13 @@ PSPdispEDID pspdisp_display_edid_new(PSPdispModel model, PSPdispRegion region, u
 		.features = { .dpms_active_off = true, .color_type = PSPDISP_EDID_COLOR_TYPE_RGB444, .srgb_default = true, .preferred_timing_native = true },
 		.chromaticity = pspdisp_display_edid_chromaticity(0.640, 0.330, 0.300, 0.600, 0.150, 0.060, 0.3127, 0.3290), // sRGB primaries, D65 white point
 		.established_timings = {}, // No VGA-era mode fits the PSP
+		// No range limits descriptor, which EDID 1.4 only needs with continuous frequency, so the 4 descriptors hold the 3 modes and the product name
 		.descriptors = {
-			{ .detailed_timing = detailed_timing },
-			{ .display = {
-				.tag = PSPDISP_EDID_TAG_RANGE_LIMITS,
-				.range_limits = {
-					.vertical_rate_min = 59,
-					.vertical_rate_max = 61,
-					.horizontal_rate_min = 17, // 17.14 kHz
-					.horizontal_rate_max = 18,
-					.pixel_clock_max = 1, // 10 MHz
-					.timing_support = PSPDISP_EDID_TIMING_SUPPORT_RANGE_LIMITS_ONLY,
-					.timing_data = { '\n', ' ', ' ', ' ', ' ', ' ', ' ' },
-				},
-			} },
+			// The PSP resolution scaled up, as many apps don't fit in the PSP one, the frames are scaled down to it (see `pspdisp_display_scale()`)
+			{ .detailed_timing = pspdisp_display_edid_scaled_timing(4, width_mm, height_mm) }, // 1920x1088, the first is the preferred mode
+			{ .detailed_timing = pspdisp_display_edid_scaled_timing(2, width_mm, height_mm) }, // 960x544
+			{ .detailed_timing = pspdisp_display_edid_scaled_timing(1, width_mm, height_mm) }, // 480x272, the PSP one
 			pspdisp_display_edid_text_descriptor(PSPDISP_EDID_TAG_PRODUCT_NAME, pspdisp_psp_name(model, region)),
-			pspdisp_display_edid_text_descriptor(PSPDISP_EDID_TAG_ALPHANUMERIC_DATA, "PSPdisp"), // Just some extra descriptor info ;V
 		},
 		.extension_count = 0,
 	};

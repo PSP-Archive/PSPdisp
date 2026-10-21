@@ -34,15 +34,15 @@
  */
 typedef struct {
 	GSource source; // The base source, first so this struct is also a `GSource`
-	PSPdispFrameHandler frame_handler; // Handle each new frame
+	PSPdispConnectorFrameHandler frame_handler; // Handle each new frame
 	PSPdispDPMSHandler dpms_handler; // Handle each DPMS change
 	PSPdispLostHandler lost_handler; // Handle the loss of the virtual display
 	gpointer handler_data; // Given to the handlers
 	struct evdi_event_context event_context; // Handlers called by `evdi_handle_events()`, with this connector as the user data
 	evdi_handle handle; // The opened EVDI device
 	gpointer fd_tag; // Tag of the EVDI file descriptor on this source, to query its conditions
-	struct evdi_buffer buffer; // Buffer registered on EVDI, where `evdi_grab_pixels()` copies the dirty rectangles (on the mode pixel format)
-	uint32_t *pixels; // Frame converted to `PSPDISP_PIXEL_FORMAT_8888`, only the dirty rectangles are updated on each frame
+	struct evdi_buffer buffer; // Buffer registered on EVDI, where `evdi_grab_pixels()` copies the dirty rectangles (on the mode pixel format), of the size of the mode (`NULL` until the first mode)
+	uint32_t *pixels; // Frame converted to `PSPDISP_PIXEL_FORMAT_8888`, of the size of the mode, only the dirty rectangles are updated on each frame
 	struct evdi_mode mode; // The current mode (resolution, refresh rate and pixel format), from the last mode change
 	bool update_requested; // If an update was asked with `evdi_request_update()` and EVDI did not answer yet
 } PSPdispDisplayConnector;
@@ -55,6 +55,34 @@ typedef struct {
  */
 bool pspdisp_display_connector_evdi_format_supported(uint32_t pixel_format) {
 	return pixel_format == DRM_FORMAT_XRGB8888 || pixel_format == DRM_FORMAT_ARGB8888 || pixel_format == DRM_FORMAT_XBGR8888 || pixel_format == DRM_FORMAT_ABGR8888;
+}
+
+/**
+ * @brief Register a buffer of the size of a mode on EVDI, where the frames are grabbed into, instead of the previous one.
+ *
+ * @param display_connector The connector.
+ * @param width The width of the mode in pixels.
+ * @param height The height of the mode in lines.
+ */
+void pspdisp_display_connector_evdi_set_buffer(PSPdispDisplayConnector *display_connector, int width, int height) {
+	if (display_connector->buffer.buffer != NULL) {
+		evdi_unregister_buffer(display_connector->handle, PSPDISP_EVDI_BUFFER_ID);
+		g_free(display_connector->buffer.buffer);
+		g_free(display_connector->pixels);
+	}
+
+	const size_t pixel_count = (size_t) width * height;
+	display_connector->buffer = (struct evdi_buffer) {
+		.id = PSPDISP_EVDI_BUFFER_ID,
+		.buffer = g_new0(uint32_t, pixel_count),
+		.width = width,
+		.height = height,
+		.stride = width * 4,
+		.rects = NULL,
+		.rect_count = 0,
+	};
+	display_connector->pixels = g_new0(uint32_t, pixel_count);
+	evdi_register_buffer(display_connector->handle, display_connector->buffer);
 }
 
 /**
@@ -72,6 +100,10 @@ void pspdisp_display_connector_evdi_on_mode_changed(struct evdi_mode mode, PSPdi
 
 	if (!pspdisp_display_connector_evdi_format_supported(mode.pixel_format))
 		g_warning("%s(): unsupported pixel format %.4s, no frame until the compositor sets another mode", __FUNCTION__, (const char *) &mode.pixel_format);
+
+	// EVDI only grabs into a buffer of the size of the mode
+	if (mode.width > 0 && mode.height > 0 && (mode.width != display_connector->buffer.width || mode.height != display_connector->buffer.height))
+		pspdisp_display_connector_evdi_set_buffer(display_connector, mode.width, mode.height);
 }
 
 /**
@@ -81,6 +113,7 @@ void pspdisp_display_connector_evdi_on_mode_changed(struct evdi_mode mode, PSPdi
  * But when `evdi_request_update()` returns `true`, the frame is already ready and EVDI does not send the event, so it must be called directly.
  *
  * Only the dirty rectangles are converted into `display_connector->pixels`, the rest keeps the previous frames, so it always holds a full frame.
+ * The frame has the size of the mode, the display scales it to the PSP resolution.
  * Nothing is handed to the frame handler when the pixel format is unsupported.
  *
  * @param buffer_to_be_updated The ID of the buffer asked on `evdi_request_update()`, always `PSPDISP_EVDI_BUFFER_ID`.
@@ -106,6 +139,7 @@ void pspdisp_display_connector_evdi_on_update_ready(int buffer_to_be_updated, PS
 
 	const uint8_t *source = display_connector->buffer.buffer;
 	uint32_t *pixels = display_connector->pixels;
+	const int width = display_connector->buffer.width;
 
 	// Note: EVDI only have those 4 pixel formats, so for PSP is always going to be PSPDISP_PIXEL_FORMAT_8888 (R,G,B,A in memory), but we may need to swap bytes
 	// Note: Converted into a separate buffer, because in place the overlap of 2 dirty rectangles would be swapped twice (back to the original)
@@ -116,7 +150,7 @@ void pspdisp_display_connector_evdi_on_update_ready(int buffer_to_be_updated, PS
 			for (int i = 0; i < num_rects; i++) {
 				for (int y = rects[i].y1; y < rects[i].y2; y++) {
 					const uint32_t *source_row = (const uint32_t *) (source + y * display_connector->buffer.stride);
-					uint32_t *row = pixels + y * PSPDISP_DISPLAY_WIDTH;
+					uint32_t *row = pixels + y * width;
 
 					for (int x = rects[i].x1; x < rects[i].x2; x++) {
 						uint32_t pixel = source_row[x]; // 0xXXRRGGBB
@@ -134,7 +168,7 @@ void pspdisp_display_connector_evdi_on_update_ready(int buffer_to_be_updated, PS
 			for (int i = 0; i < num_rects; i++) {
 				for (int y = rects[i].y1; y < rects[i].y2; y++) {
 					const uint32_t *source_row = (const uint32_t *) (source + y * display_connector->buffer.stride);
-					uint32_t *row = pixels + y * PSPDISP_DISPLAY_WIDTH;
+					uint32_t *row = pixels + y * width;
 
 					for (int x = rects[i].x1; x < rects[i].x2; x++) {
 						row[x] = source_row[x] | 0xFF000000u;
@@ -146,7 +180,7 @@ void pspdisp_display_connector_evdi_on_update_ready(int buffer_to_be_updated, PS
 			return; // Only when the mode changed since the frame was asked for, with an unsupported pixel format (see `pspdisp_display_connector_evdi_on_mode_changed()`)
 	}
 
-	display_connector->frame_handler(pixels, PSPDISP_DISPLAY_WIDTH, PSPDISP_PIXEL_FORMAT_8888, rectangles, rectangles_length, display_connector->handler_data);
+	display_connector->frame_handler(pixels, width, display_connector->buffer.height, width, PSPDISP_PIXEL_FORMAT_8888, rectangles, rectangles_length, display_connector->handler_data);
 }
 
 /**
@@ -194,13 +228,13 @@ void pspdisp_display_connector_evdi_on_dpms(int dpms_mode, PSPdispDisplayConnect
  *
  * EVDI ignores a new request while the last one was not answered, so it waits for `pspdisp_display_connector_evdi_on_update_ready()`.
  * When a frame is already ready, EVDI answers right away (and sends no event), so the frame is handled here.
- * Nothing is asked for while the pixel format of the mode isn't converted (or before the first mode), so EVDI keeps the dirty rectangles until a mode that is.
+ * Nothing is asked for while the pixel format of the mode isn't converted (or before the first mode, without a buffer), so EVDI keeps the dirty rectangles until a mode that is.
  *
  * @param display_connector The connector.
  */
 void pspdisp_display_connector_evdi_request_frame(PSPdispDisplayConnector *display_connector) {
 	if (display_connector->update_requested) return; // Still waiting for the last one
-	if (!pspdisp_display_connector_evdi_format_supported(display_connector->mode.pixel_format)) return; // Not grabbed, the dirty rectangles stay on EVDI
+	if (display_connector->buffer.buffer == NULL || !pspdisp_display_connector_evdi_format_supported(display_connector->mode.pixel_format)) return; // Not grabbed, the dirty rectangles stay on EVDI
 
 	if (evdi_request_update(display_connector->handle, PSPDISP_EVDI_BUFFER_ID)) {
 		pspdisp_display_connector_evdi_on_update_ready(PSPDISP_EVDI_BUFFER_ID, display_connector); // Already ready, EVDI sends no event
@@ -254,7 +288,8 @@ gboolean pspdisp_display_connector_evdi_dispatch(GSource *source, GSourceFunc ca
 void pspdisp_display_connector_evdi_finalize(GSource *source) {
 	PSPdispDisplayConnector *display_connector = (PSPdispDisplayConnector *) source;
 
-	evdi_unregister_buffer(display_connector->handle, display_connector->buffer.id);
+	if (display_connector->buffer.buffer != NULL)
+		evdi_unregister_buffer(display_connector->handle, PSPDISP_EVDI_BUFFER_ID);
 	evdi_close(display_connector->handle); // Last, it frees the handle
 	g_free(display_connector->buffer.buffer);
 	g_free(display_connector->pixels);
@@ -305,8 +340,9 @@ bool pspdisp_display_connector_evdi_add_device() {
 /**
  * @brief Create the virtual display on EVDI, and the source of its events.
  *
- * Opens an EVDI device (not attached to a parent device, like a USB dock), registers a buffer of the PSP resolution to grab the frames, and connects the display with the EDID.
- * The display is limited to the PSP pixel area, so the compositor only sets modes that fit the PSP.
+ * Opens an EVDI device (not attached to a parent device, like a USB dock), and connects the display with the EDID.
+ * The display is limited to the area of the biggest mode of the EDID, so the compositor sets no bigger mode.
+ * The buffer where the frames are grabbed is registered with each mode, of its size (see `pspdisp_display_connector_evdi_on_mode_changed()`).
  * When no EVDI device is free, it may ask the user for the root permission to create one.
  *
  * @param edid The identification given to the computer.
@@ -316,7 +352,7 @@ bool pspdisp_display_connector_evdi_add_device() {
  * @param data Given to the handlers.
  * @return The source of the display events (not attached yet), or `NULL` if it failed.
  */
-GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler, PSPdispLostHandler lost_handler, gpointer data) {
+GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispConnectorFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler, PSPdispLostHandler lost_handler, gpointer data) {
 	evdi_handle handle = evdi_open_attached_to_fixed(NULL, 0);
 
 	// libevdi may fail to open because:
@@ -343,23 +379,13 @@ GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispFrameHandler
 		.dpms_handler         = (void (*)(int, void*)) pspdisp_display_connector_evdi_on_dpms,
 		.user_data            = display_connector,
 	};
-	const uint32_t pixel_count = PSPDISP_DISPLAY_WIDTH * PSPDISP_DISPLAY_HEIGHT; // Pixels of the PSP screen
 	display_connector->handle = handle;
-	display_connector->buffer = (struct evdi_buffer) {
-		.id = PSPDISP_EVDI_BUFFER_ID,
-		.buffer = g_new0(uint32_t, pixel_count),
-		.width = PSPDISP_DISPLAY_WIDTH,
-		.height = PSPDISP_DISPLAY_HEIGHT,
-		.stride = PSPDISP_DISPLAY_WIDTH * 4,
-		.rects = NULL,
-		.rect_count = 0,
-	};
-	display_connector->pixels = g_new0(uint32_t, pixel_count);
+	display_connector->buffer = (struct evdi_buffer) {}; // No buffer until the first mode
+	display_connector->pixels = NULL;
 	display_connector->mode = (struct evdi_mode) {}; // No mode until the compositor sets one
 	display_connector->update_requested = false;
 
-	evdi_register_buffer(display_connector->handle, display_connector->buffer);
-	evdi_connect(display_connector->handle, (const unsigned char *) &edid, sizeof(PSPdispEDID), pixel_count);
+	evdi_connect(display_connector->handle, (const unsigned char *) &edid, sizeof(PSPdispEDID), (PSPDISP_DISPLAY_WIDTH * PSPDISP_DISPLAY_MAX_SCALE) * (PSPDISP_DISPLAY_HEIGHT * PSPDISP_DISPLAY_MAX_SCALE));
 
 	display_connector->fd_tag = g_source_add_unix_fd(source, evdi_get_event_ready(display_connector->handle), G_IO_IN);
 	g_source_set_ready_time(source, g_get_monotonic_time() + PSPDISP_EVDI_FRAME_INTERVAL); // The first frame request
