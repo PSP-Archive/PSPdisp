@@ -659,7 +659,7 @@ int main(int argc, char **argv) {
 
 	GThread *usb_thread = daemon.usb != NULL ? g_thread_new("pspdisp-usb", (GThreadFunc) pspdisp_daemon_usb_thread, &daemon) : NULL;
 	GThread *wlan_thread = g_thread_new("pspdisp-wlan", (GThreadFunc) pspdisp_daemon_wlan_thread, &daemon);
-	g_main_loop_run(daemon.loop); // Until a signal
+	g_main_loop_run(daemon.loop); // Until the user asks the daemon to stop (see `pspdisp_daemon_on_stop()`)
 
 	// The cancellation aborts the waits for a PSP and the running transfer
 	if (usb_thread != NULL)
