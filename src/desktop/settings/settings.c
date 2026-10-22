@@ -9,12 +9,13 @@
 /*
  * The settings of PSPdisp, shared by the desktop app (which edits them) and the daemon (which streams with them, and saves what the PSP changes).
  *
- * They live in a folder, `pspdisp` in the folder of the settings of the user by default (see `pspdisp_settings_dir_default()`), as key files (the INI format, as the old desktop app):
+ * They live in a folder, `pspdisp` in the folder of the settings of the user by default (see `pspdisp_settings_dir_resolve()`), as key files (the INI format, as the old desktop app):
  *   - `pspdisp.conf`, the settings (see `PSPdispSettings`).
  *   - The `.preset` files of `presets`, named sets of streaming settings, chosen from the desktop app or on the PSP (see `pspdisp_settings_presets()`).
  *   - The `.control` files of `control`, what the PSP buttons press on the keyboard and the mouse, in the format of the old desktop app (see `controller/control_file.c`).
  *
  * Both programs may write the settings at the same time, so a write only changes the keys it's about, in the file as it is on the disk, under a lock (see `pspdisp_settings_edit()`).
+ * A read shares that lock, so a write doesn't replace the file while it's read (see `pspdisp_settings_lock()`).
  * Both run as the user, so the files are the user's ones.
  */
 
@@ -40,7 +41,10 @@
 #define PSPDISP_SETTINGS_FILE_NAME   "pspdisp.conf" // The settings, in the folder of the settings
 #define PSPDISP_SETTINGS_PRESETS_DIR "presets"      // The presets (`*.preset`), in the folder of the settings
 #define PSPDISP_SETTINGS_CONTROL_DIR "control"      // The control files (`*.control`), in the folder of the settings
-#define PSPDISP_SETTINGS_LOCK_NAME   ".lock"        // Locked while a program writes the settings, in the folder of the settings
+#define PSPDISP_SETTINGS_LOCK_NAME   ".lock"        // Locked while a program reads or writes the settings, in the folder of the settings
+
+// The help of the environment variable of the folder of the settings, a line for the environment variables section of `--help` (see `pspdisp_settings_dir_resolve()`)
+#define PSPDISP_SETTINGS_ENVIRONMENT_HELP "  XDG_CONFIG_HOME          Folder of the settings of the user (default: ~/.config on Unix, C:\\Users\\<user>\\AppData\\Local on Windows)\n"
 
 #define PSPDISP_SETTINGS_PASSWORD_SIZE 32 // Max characters of the WLAN password, as the PSP sends it
 #define PSPDISP_SETTINGS_MAX_PORT_OFFSET 9 // Max port offset of the WLAN mode, as the PSP sets it
@@ -598,6 +602,39 @@ void pspdisp_settings_install_defaults(const char *dir) {
 }
 
 /**
+ * @brief Lock the settings file against the other program, until `pspdisp_settings_unlock()`.
+ *
+ * A write locks it alone, so two writes don't lose the change of each other.
+ * The reads share it, so a write doesn't replace the file while it's read, which fails on Windows.
+ * If it can't be locked, the file is used without the lock.
+ *
+ * @param dir The folder of the settings.
+ * @param exclusive If it's for a write, otherwise it's for a read.
+ * @return The lock, -1 if it failed.
+ */
+int pspdisp_settings_lock(const char *dir, bool exclusive) {
+	char *path = g_build_filename(dir, PSPDISP_SETTINGS_LOCK_NAME, NULL);
+
+	int lock = g_open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644);
+	if (lock >= 0)
+		flock(lock, exclusive ? LOCK_EX : LOCK_SH);
+
+	g_free(path);
+	return lock;
+}
+
+/**
+ * @brief Unlock the settings file, locked by `pspdisp_settings_lock()`.
+ *
+ * @param lock The lock, -1 for none.
+ */
+void pspdisp_settings_unlock(int lock) {
+	if (lock < 0) return;
+
+	close(lock); // Also unlocks on Unix
+}
+
+/**
  * @brief Load the settings, the defaults for what's not in the file (or all of them without a file).
  *
  * @param dir The folder of the settings.
@@ -612,7 +649,9 @@ bool pspdisp_settings_load(const char *dir, PSPdispSettings *settings, GError **
 
 	pspdisp_settings_defaults(settings);
 
+	const int lock = pspdisp_settings_lock(dir, false);
 	bool loaded = g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, &failure);
+	pspdisp_settings_unlock(lock);
 	if (loaded)
 		pspdisp_settings_read(file, settings);
 
@@ -645,13 +684,7 @@ bool pspdisp_settings_edit(const char *dir, PSPdispSettingsEditor editor, gpoint
 		return false;
 	}
 
-	char *lock_path = g_build_filename(dir, PSPDISP_SETTINGS_LOCK_NAME, NULL);
-	int lock = open(lock_path, O_RDWR | O_CREAT | O_CLOEXEC, 0644);
-
-	if (lock >= 0)
-		flock(lock, LOCK_EX);
-	g_free(lock_path);
-
+	const int lock = pspdisp_settings_lock(dir, true);
 	char *path = pspdisp_settings_file_path(dir);
 	GKeyFile *file = g_key_file_new();
 	char *before = NULL;
@@ -679,9 +712,7 @@ bool pspdisp_settings_edit(const char *dir, PSPdispSettingsEditor editor, gpoint
 	g_free(before);
 	g_key_file_free(file);
 	g_free(path);
-
-	if (lock >= 0)
-		close(lock); // Also unlocks
+	pspdisp_settings_unlock(lock);
 	return done;
 }
 
@@ -1010,23 +1041,14 @@ bool pspdisp_settings_preset_delete(const char *dir, const char *file_name, GErr
 }
 
 /**
- * @brief Get the default folder of the settings: `pspdisp` in the folder of the settings of the user (`g_get_user_config_dir()`).
- *
- * @return The folder, free it with `g_free()`.
- */
-char *pspdisp_settings_dir_default() {
-	return g_build_filename(g_get_user_config_dir(), "pspdisp", NULL);
-}
-
-/**
  * @brief Find the folder of the settings.
  *
- * @param option The folder given on the command line (`NULL` for the default one).
+ * @param option The folder given on the command line (`NULL` for the default one, `pspdisp` in `g_get_user_config_dir()`).
  * @return The folder, free it with `g_free()`.
  */
 char *pspdisp_settings_dir_resolve(const char *option) {
 	if (option != NULL)
 		return g_canonicalize_filename(option, NULL);
 
-	return pspdisp_settings_dir_default();
+	return g_build_filename(g_get_user_config_dir(), "pspdisp", NULL);
 }
