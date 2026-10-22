@@ -9,7 +9,7 @@
 /*
  * The desktop app: the settings of PSPdisp, as the options window and the tray menu of the old desktop app, and what the daemon is doing (see `app.c`).
  *
- * It runs as the user, as the daemon, sharing the folder of the settings (`~/.config/pspdisp` by default, or the one given with `--config-dir`, as the daemon).
+ * It runs as the user, as the daemon, sharing the folder of the settings (the default one of the user, or the one given with `--config-dir`, as the daemon).
  */
 
 #include <gtk/gtk.h>
@@ -29,7 +29,7 @@ char *pspdisp_gtk_option_config_dir = NULL; // `--config-dir`
  * @brief The options of the command line.
  */
 GOptionEntry pspdisp_gtk_options[] = {
-	{ "config-dir", 'c', 0, G_OPTION_ARG_FILENAME, &pspdisp_gtk_option_config_dir, "Folder of the settings, shared with the daemon (default: ~/.config/pspdisp)", "DIR" },
+	{ "config-dir", 'c', 0, G_OPTION_ARG_FILENAME, &pspdisp_gtk_option_config_dir, "Folder of the settings, shared with the daemon (default: ${XDG_CONFIG_HOME}/pspdisp)", "DIR" },
 	G_OPTION_ENTRY_NULL
 };
 
@@ -85,6 +85,7 @@ void pspdisp_gtk_application_activate(GtkApplication *app, gpointer user_data) {
 int pspdisp_gtk_application_run(int argc, char **argv) {
 	GtkApplication *app = gtk_application_new("com.pspdisp.desktop", G_APPLICATION_DEFAULT_FLAGS);
 	g_application_add_main_option_entries(G_APPLICATION(app), pspdisp_gtk_options); // Parsed into their variables before "activate"
+	g_application_set_option_context_description(G_APPLICATION(app), "Environment variables:\n" PSPDISP_SETTINGS_ENVIRONMENT_HELP);
 	g_signal_connect(app, "activate", G_CALLBACK(pspdisp_gtk_application_activate), NULL);
 	int status = g_application_run(G_APPLICATION(app), argc, argv);
 	g_object_unref(app);

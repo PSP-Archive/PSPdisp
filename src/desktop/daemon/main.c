@@ -91,7 +91,7 @@ gboolean pspdisp_daemon_option_version = FALSE; // `--version`
  * @brief The options of the command line.
  */
 GOptionEntry pspdisp_daemon_options[] = {
-	{ "config-dir", 'c', 0, G_OPTION_ARG_FILENAME, &pspdisp_daemon_option_config_dir, "Folder of the settings, shared with the desktop app (default: ~/.config/pspdisp)", "DIR" },
+	{ "config-dir", 'c', 0, G_OPTION_ARG_FILENAME, &pspdisp_daemon_option_config_dir, "Folder of the settings, shared with the desktop app (default: ${XDG_CONFIG_HOME}/pspdisp)", "DIR" },
 	{ "version", 'v', 0, G_OPTION_ARG_NONE, &pspdisp_daemon_option_version, "Print the version and quit", NULL },
 	G_OPTION_ENTRY_NULL
 };
@@ -588,6 +588,7 @@ int main(int argc, char **argv) {
 
 	g_option_context_add_main_entries(options, pspdisp_daemon_options, NULL);
 	g_option_context_set_summary(options, "Waits for a PSP running the PSPdisp app, in USB or WLAN mode, then streams a virtual display and the desktop sound to it.\nIts settings are edited by the desktop app.");
+	g_option_context_set_description(options, "Environment variables:\n" PSPDISP_SETTINGS_ENVIRONMENT_HELP);
 
 	if (!g_option_context_parse(options, &argc, &argv, &error)) {
 		g_printerr("%s\n", error->message);

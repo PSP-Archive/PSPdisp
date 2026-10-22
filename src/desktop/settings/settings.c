@@ -9,7 +9,7 @@
 /*
  * The settings of PSPdisp, shared by the desktop app (which edits them) and the daemon (which streams with them, and saves what the PSP changes).
  *
- * They live in a folder, `~/.config/pspdisp` by default (see `pspdisp_settings_dir_resolve()`), as key files (the INI format, as the old desktop app):
+ * They live in a folder, `pspdisp` in the folder of the settings of the user by default (see `pspdisp_settings_dir_default()`), as key files (the INI format, as the old desktop app):
  *   - `pspdisp.conf`, the settings (see `PSPdispSettings`).
  *   - The `.preset` files of `presets`, named sets of streaming settings, chosen from the desktop app or on the PSP (see `pspdisp_settings_presets()`).
  *   - The `.control` files of `control`, what the PSP buttons press on the keyboard and the mouse, in the format of the old desktop app (see `controller/control_file.c`).
@@ -1010,14 +1010,23 @@ bool pspdisp_settings_preset_delete(const char *dir, const char *file_name, GErr
 }
 
 /**
+ * @brief Get the default folder of the settings: `pspdisp` in the folder of the settings of the user (`g_get_user_config_dir()`).
+ *
+ * @return The folder, free it with `g_free()`.
+ */
+char *pspdisp_settings_dir_default() {
+	return g_build_filename(g_get_user_config_dir(), "pspdisp", NULL);
+}
+
+/**
  * @brief Find the folder of the settings.
  *
- * @param option The folder given on the command line (`NULL` for none).
+ * @param option The folder given on the command line (`NULL` for the default one).
  * @return The folder, free it with `g_free()`.
  */
 char *pspdisp_settings_dir_resolve(const char *option) {
 	if (option != NULL)
 		return g_canonicalize_filename(option, NULL);
 
-	return g_build_filename(g_get_user_config_dir(), "pspdisp", NULL);
+	return pspdisp_settings_dir_default();
 }
