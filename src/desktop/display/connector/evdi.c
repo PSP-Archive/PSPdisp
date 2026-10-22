@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <stdarg.h>
 #include <unistd.h>
 #include <evdi_lib.h>
 #include <drm/drm_fourcc.h>
@@ -306,6 +307,27 @@ GSourceFuncs pspdisp_display_connector_evdi_source_funcs = {
 };
 
 /**
+ * @brief Write a message of libevdi in the log of the program, as a debug message, called by libevdi instead of printing it.
+ *
+ * libevdi tells its own failures, some of them expected (e.g. creating a device as the user, before polkit is asked), and the connector warns about what failed.
+ *
+ * @param user_data Unused.
+ * @param format The format of the message, as `printf()`.
+ * @param ... The values of the format.
+ */
+void pspdisp_display_connector_evdi_log(void *user_data, const char *format, ...) {
+	(void) user_data;
+	va_list arguments;
+
+	va_start(arguments, format);
+	char *message = g_strdup_vprintf(format, arguments);
+	va_end(arguments);
+
+	g_debug("libevdi: %s", message);
+	g_free(message);
+}
+
+/**
  * @brief Create an EVDI device, which may ask the user for the root permission (through polkit).
  *
  * @return `true` if a device was created.
@@ -353,6 +375,7 @@ bool pspdisp_display_connector_evdi_add_device() {
  * @return The source of the display events (not attached yet), or `NULL` if it failed.
  */
 GSource *pspdisp_display_connector_connect(PSPdispEDID edid, PSPdispConnectorFrameHandler frame_handler, PSPdispDPMSHandler dpms_handler, PSPdispLostHandler lost_handler, gpointer data) {
+	evdi_set_logging((struct evdi_logging) { .function = pspdisp_display_connector_evdi_log, .user_data = NULL });
 	evdi_handle handle = evdi_open_attached_to_fixed(NULL, 0);
 
 	// libevdi may fail to open because:
