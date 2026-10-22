@@ -646,6 +646,8 @@ int main(int argc, char **argv) {
 		g_warning("The USB mode is unavailable");
 
 	pspdisp_daemon_system_watch_stop(G_SOURCE_FUNC(pspdisp_daemon_on_stop), &daemon);
+	if (status_server != NULL)
+		pspdisp_status_server_watch_stop(status_server, G_SOURCE_FUNC(pspdisp_daemon_on_stop), &daemon); // The desktop app stops it too
 
 	// The settings, then the transports they ask for
 	daemon.snapshot_store = pspdisp_daemon_snapshot_store_new(settings_dir, (PSPdispDaemonSnapshotHandler) pspdisp_daemon_on_snapshot, &daemon);

@@ -13,6 +13,7 @@
  * It sends the status to each app connected about every second, and right away when it changes (e.g. the PSP asks to open the menu of PSPdisp).
  * The app knows the daemon runs while it's connected: when the daemon stops or dies, the connection closes, and the app tries again every `PSPDISP_STATUS_INTERVAL`.
  * Each status is a key file, ended by a null character.
+ * The other way, the app sends requests, each a word ended by a null character: `PSPDISP_STATUS_REQUEST_STOP` stops the daemon, as Ctrl+C in its terminal.
  * Only one daemon listens: a second one finds the socket answering, and doesn't start.
  */
 
@@ -26,6 +27,7 @@
 #include "../settings/settings.c"
 
 #define PSPDISP_STATUS_INTERVAL 1000 // Time between two statuses sent by the daemon, and between two tries of the desktop app to connect to it, in milliseconds
+#define PSPDISP_STATUS_REQUEST_STOP "stop" // Request of the desktop app: stop the daemon
 
 /**
  * @brief The status of the daemon.
@@ -146,6 +148,8 @@ typedef struct {
 	GPtrArray *apps; // The apps connected (`PSPdispStatusApp *`)
 	GBytes *last; // The last message, sent to each app as it connects (`NULL` before the first)
 	GCancellable *cancellable; // Cancelled when it's destroyed, so the sends still running end without touching it
+	GSourceFunc stop_handler; // Stops the daemon, on a stop request of an app (`NULL` for none)
+	gpointer stop_data; // Given to `stop_handler`
 } PSPdispStatusServer;
 
 /**
@@ -154,6 +158,8 @@ typedef struct {
 typedef struct {
 	PSPdispStatusServer *server; // The socket it's connected to
 	GSocketConnection *connection; // The connection
+	GDataInputStream *input; // The requests of the app
+	GCancellable *reading; // Cancelled when the app is freed, so the read of its next request ends without touching it
 	GBytes *sending; // The message being sent (`NULL` if none)
 	GBytes *pending; // The newest message, sent after `sending` (`NULL` if none), an older one is dropped
 } PSPdispStatusApp;
@@ -166,6 +172,9 @@ void pspdisp_status_app_send(PSPdispStatusApp *app, GBytes *message);
  * @param app The app.
  */
 void pspdisp_status_app_free(PSPdispStatusApp *app) {
+	g_cancellable_cancel(app->reading);
+	g_object_unref(app->reading);
+	g_object_unref(app->input);
 	g_io_stream_close(G_IO_STREAM(app->connection), NULL, NULL);
 	g_object_unref(app->connection);
 	g_clear_pointer(&app->sending, g_bytes_unref);
@@ -224,7 +233,41 @@ void pspdisp_status_app_send(PSPdispStatusApp *app, GBytes *message) {
 }
 
 /**
- * @brief Take an app that connected, and send it the last status, called by GIO on the main context.
+ * @brief Handle a request of an app, then wait for the next one, called by GIO on the main context once one was read.
+ *
+ * @param input The requests of the app.
+ * @param result The result of the read.
+ * @param app The app, freed when the read was cancelled.
+ */
+void pspdisp_status_app_on_request(GDataInputStream *input, GAsyncResult *result, PSPdispStatusApp *app) {
+	gsize length = 0;
+	GError *error = NULL;
+	char *text = g_data_input_stream_read_upto_finish(input, result, &length, &error);
+
+	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+		g_error_free(error);
+		return;
+	}
+
+	// The null character that ends the request is still to take, it's missing when the app closed the connection (the next status sent finds it gone)
+	if (text != NULL)
+		g_data_input_stream_read_byte(input, NULL, &error);
+
+	if (text == NULL || error != NULL) {
+		g_clear_error(&error);
+		g_free(text);
+		return;
+	}
+
+	if (g_strcmp0(text, PSPDISP_STATUS_REQUEST_STOP) == 0 && app->server->stop_handler != NULL)
+		app->server->stop_handler(app->server->stop_data);
+	g_free(text);
+
+	g_data_input_stream_read_upto_async(input, "", 1, G_PRIORITY_DEFAULT, app->reading, (GAsyncReadyCallback) pspdisp_status_app_on_request, app);
+}
+
+/**
+ * @brief Take an app that connected, send it the last status and wait for its requests, called by GIO on the main context.
  *
  * @param service The service of the server.
  * @param connection The connection of the app.
@@ -239,7 +282,10 @@ gboolean pspdisp_status_server_on_incoming(GSocketService *service, GSocketConne
 	PSPdispStatusApp *app = g_new0(PSPdispStatusApp, 1);
 	app->server = server;
 	app->connection = g_object_ref(connection);
+	app->input = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(connection)));
+	app->reading = g_cancellable_new();
 	g_ptr_array_add(server->apps, app);
+	g_data_input_stream_read_upto_async(app->input, "", 1, G_PRIORITY_DEFAULT, app->reading, (GAsyncReadyCallback) pspdisp_status_app_on_request, app);
 
 	if (server->last != NULL)
 		pspdisp_status_app_send(app, server->last);
@@ -294,6 +340,18 @@ PSPdispStatusServer *pspdisp_status_server_new(GError **error) {
 	g_signal_connect(service, "incoming", G_CALLBACK(pspdisp_status_server_on_incoming), server);
 	g_socket_service_start(service);
 	return server;
+}
+
+/**
+ * @brief Call a handler on the main context each time a desktop app asks the daemon to stop.
+ *
+ * @param server The server.
+ * @param handler Stops the daemon.
+ * @param data Given to the handler.
+ */
+void pspdisp_status_server_watch_stop(PSPdispStatusServer *server, GSourceFunc handler, gpointer data) {
+	server->stop_handler = handler;
+	server->stop_data = data;
 }
 
 /**
@@ -436,6 +494,24 @@ void pspdisp_status_client_connect(PSPdispStatusClient *client) {
 
 	g_object_unref(address);
 	g_free(path);
+}
+
+/**
+ * @brief Ask the daemon to stop, as Ctrl+C in its terminal.
+ *
+ * @param client The client.
+ * @param error Where to tell why it failed.
+ * @return `true` if the request was sent.
+ */
+bool pspdisp_status_client_stop(PSPdispStatusClient *client, GError **error) {
+	if (client->connection == NULL) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_CONNECTED, "the daemon doesn't run");
+		return false;
+	}
+
+	// With its null character, which ends it
+	GOutputStream *output = g_io_stream_get_output_stream(G_IO_STREAM(client->connection));
+	return g_output_stream_write_all(output, PSPDISP_STATUS_REQUEST_STOP, sizeof(PSPDISP_STATUS_REQUEST_STOP), NULL, NULL, error);
 }
 
 /**

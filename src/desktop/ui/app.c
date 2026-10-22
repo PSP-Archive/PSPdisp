@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <signal.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include "../settings/settings.c"
@@ -575,10 +574,10 @@ void pspdisp_ui_start_daemon(PSPdispUI *ui) {
  * @param ui The app.
  */
 void pspdisp_ui_stop_daemon(PSPdispUI *ui) {
-	if (!ui->running || ui->status.pid <= 0) return;
+	if (!ui->running) return;
 
-	if (kill(ui->status.pid, SIGTERM) != 0 && errno != ESRCH) {
-		GError *error = g_error_new_literal(G_IO_ERROR, g_io_error_from_errno(errno), g_strerror(errno));
+	GError *error = NULL;
+	if (!pspdisp_status_client_stop(ui->status_client, &error)) {
 		pspdisp_ui_error(ui, "The daemon can't be stopped", error);
 		g_error_free(error);
 	}
