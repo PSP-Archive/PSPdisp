@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# com.pspdisp.desktop.desktop - Desktop entry of the PSPdisp desktop app (Linux)
+#
+# Copyright © 2026 Arthur Neto
+#
+# Puts the desktop app in the menus of the desktop, with its icon (com.pspdisp.desktop.svg, in the hicolor icon theme).
+# Its name is the ID of the app, which the desktop matches with the windows of the app to show them with this icon (on Wayland, the only way a window gets its icon).
+# Installed by `make install`.
+
+[Desktop Entry]
+Type=Application
+Name=PSPdisp
+GenericName=PSP Display
+Comment=Use a PSP as a display of the computer, with its sound and its controls
+Exec=pspdisp
+Icon=com.pspdisp.desktop
+Terminal=false
+Categories=Utility;
+StartupNotify=true
