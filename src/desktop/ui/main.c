@@ -22,6 +22,8 @@
 #include "./page/control.c"
 #include "./page/presets.c"
 
+#define PSPDISP_UI_APP_ID "com.pspdisp.desktop" // ID of the app, also the name of its icon (`com.pspdisp.desktop.svg`) and of its desktop entry (`com.pspdisp.desktop.desktop`)
+
 PSPdispUI pspdisp_gtk_ui; // The app
 char *pspdisp_gtk_option_config_dir = NULL; // `--config-dir`
 
@@ -55,7 +57,7 @@ void pspdisp_gtk_application_activate(GtkApplication *app, gpointer user_data) {
 
 	GtkWidget *window = gtk_application_window_new(app);
 	gtk_window_set_title(GTK_WINDOW(window), "PSPdisp");
-	gtk_window_set_icon_name(GTK_WINDOW(window), "video-display");
+	gtk_window_set_icon_name(GTK_WINDOW(window), PSPDISP_UI_APP_ID); // From the icon theme (hicolor), where `make install` puts it
 	gtk_window_set_default_size(GTK_WINDOW(window), 760, 640);
 	ui->window = GTK_WINDOW(window);
 
@@ -83,7 +85,7 @@ void pspdisp_gtk_application_activate(GtkApplication *app, gpointer user_data) {
  * @return The exit status of the app, 0 when it ended well.
  */
 int pspdisp_gtk_application_run(int argc, char **argv) {
-	GtkApplication *app = gtk_application_new("com.pspdisp.desktop", G_APPLICATION_DEFAULT_FLAGS);
+	GtkApplication *app = gtk_application_new(PSPDISP_UI_APP_ID, G_APPLICATION_DEFAULT_FLAGS);
 	g_application_add_main_option_entries(G_APPLICATION(app), pspdisp_gtk_options); // Parsed into their variables before "activate"
 	g_application_set_option_context_description(G_APPLICATION(app), "Environment variables:\n" PSPDISP_SETTINGS_ENVIRONMENT_HELP);
 	g_signal_connect(app, "activate", G_CALLBACK(pspdisp_gtk_application_activate), NULL);
