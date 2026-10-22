@@ -37,7 +37,7 @@ void pspdisp_daemon_system_watch_stop(GSourceFunc handler, gpointer data) {
  * @brief Set the nice value of all the threads of the daemon.
  *
  * On Linux each thread has its own nice value, so each one is set (the threads created after inherit it).
- * Raising it needs the `CAP_SYS_NICE` capability (or a `RLIMIT_NICE` limit allowing it), which the user usually doesn't have.
+ * Raising it needs the `CAP_SYS_NICE` capability or a `RLIMIT_NICE` limit allowing it, which the user usually doesn't have, so a warning tells when it's refused.
  *
  * @param higher If the priority is higher than the one of the other programs.
  */
@@ -45,15 +45,21 @@ void pspdisp_daemon_system_set_priority(bool higher) {
 	const int nice = higher ? PSPDISP_DAEMON_SYSTEM_HIGHER_PRIORITY : 0;
 	GDir *tasks = g_dir_open("/proc/self/task", 0, NULL);
 	const char *task;
+	int failure = 0; // The error of the first thread refused (0 if none), told once for all of them
 
 	while (tasks != NULL && (task = g_dir_read_name(tasks)) != NULL) {
-		if (setpriority(PRIO_PROCESS, g_ascii_strtoull(task, NULL, 10), nice) != 0)
-			g_debug("%s(): failed to set the priority of the thread %s: %s", __FUNCTION__, task, g_strerror(errno));
+		if (setpriority(PRIO_PROCESS, g_ascii_strtoull(task, NULL, 10), nice) != 0 && failure == 0)
+			failure = errno;
 	}
 	if (tasks != NULL)
 		g_dir_close(tasks);
-	else
-		setpriority(PRIO_PROCESS, 0, nice);
+	else if (setpriority(PRIO_PROCESS, 0, nice) != 0)
+		failure = errno;
+
+	if (failure == EACCES || failure == EPERM)
+		g_warning("%s(): can't raise the priority to nice %d without CAP_SYS_NICE or a nice limit allowing it (see limits.conf), the \"Higher process priority\" setting has no effect", __FUNCTION__, nice);
+	else if (failure != 0)
+		g_warning("%s(): failed to set the priority to nice %d: %s", __FUNCTION__, nice, g_strerror(failure));
 }
 
 /**
