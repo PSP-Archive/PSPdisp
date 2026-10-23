@@ -13,7 +13,8 @@
  * The link waits for a PSP to be plugged, opens it and does the handshake of USBHostFS (see `pspdisp_usb_handshake()`), then the data goes through those endpoints as it is.
  *
  * It goes through GUsb, the GObject library over libusb, the same on every platform.
- * The plugs and unplugs are the signals of a GUsb context, emitted on the context of the watch, which only runs while the link waits for a PSP (see `pspdisp_usb_watch_wait()`), so they're queued meanwhile, and nothing is polled while no PSP is plugged.
+ * The plugs and unplugs are the signals of a GUsb context, emitted on the global default context (GUsb adds them there with `g_idle_add()`), so they only come while its main loop runs (e.g. the one of the daemon).
+ * They're queued for the link, and each one wakes up the context the link waits on (see `pspdisp_usb_watch_wait()`), so nothing is polled while no PSP is plugged.
  * A PSP is known by its path, the platform ID GUsb gives it, the same on its plug and on its unplug.
  * The data goes through the asynchronous bulk transfers of GUsb, each waited for on a context of its own.
  * A plugged PSP that doesn't answer (e.g. the app is still starting its driver, or it stopped answering) is tried again every `PSPDISP_USB_RETRY_INTERVAL`.
@@ -53,9 +54,9 @@
  * @brief Watch of the PSPs being plugged and unplugged, created by `pspdisp_usb_watch_new()`.
  */
 typedef struct {
-	GMainContext *context; // Where GUsb emits the plugs and unplugs, run by `pspdisp_usb_watch_next()` and `pspdisp_usb_watch_wait()`
+	GMainContext *context; // What the link waits on, run by `pspdisp_usb_watch_wait()`, woken up by each plug and unplug
 	GUsbContext *usb; // The GUsb context, with its devices
-	GQueue *events; // Plugs and unplugs of the PSPs not taken yet (`PSPdispUSBEvent *`), oldest first
+	GAsyncQueue *events; // Plugs and unplugs of the PSPs not taken yet (`PSPdispUSBEvent *`), oldest first, pushed from the thread of the global default context
 } PSPdispUSBWatch;
 
 /**
@@ -96,7 +97,7 @@ void pspdisp_usb_event_free(PSPdispUSBEvent *event) {
 }
 
 /**
- * @brief Queue the plug or the unplug of a USB device, if it's a PSP, called by GUsb on the context of the watch.
+ * @brief Queue the plug or the unplug of a USB device, if it's a PSP, and wake up the link waiting for it, called by GUsb on the thread of the global default context.
  *
  * @param usb Unused, the GUsb context.
  * @param device The device.
@@ -110,7 +111,8 @@ void pspdisp_usb_watch_queue(GUsbContext *usb, GUsbDevice *device, PSPdispUSBWat
 	PSPdispUSBEvent *event = g_new0(PSPdispUSBEvent, 1);
 	event->plugged = plugged;
 	event->path = g_strdup(g_usb_device_get_platform_id(device));
-	g_queue_push_tail(watch->events, event);
+	g_async_queue_push(watch->events, event);
+	g_main_context_wakeup(watch->context); // Ends the wait of the link, on its own thread (see `pspdisp_usb_watch_wait()`)
 }
 
 /**
@@ -140,31 +142,26 @@ void pspdisp_usb_watch_on_removed(GUsbContext *usb, GUsbDevice *device, PSPdispU
  *
  * The PSPs already plugged are given first by `pspdisp_usb_watch_next()`, as plugs.
  * One plugged while the watch starts may be given twice, the USB link ignores the second one.
+ * The ones plugged and unplugged after it only come while the global default context runs (e.g. the main loop of the daemon).
  *
  * @return The new watch, free it with `pspdisp_usb_watch_destroy()`, or `NULL` if it failed.
  */
 PSPdispUSBWatch *pspdisp_usb_watch_new() {
-	GMainContext *context = g_main_context_new();
 	GError *error = NULL;
-
-	// GUsb takes the thread default context when it's created, then the one set
-	g_main_context_push_thread_default(context);
 	GUsbContext *usb = g_usb_context_new(&error);
-	g_main_context_pop_thread_default(context);
 
 	if (usb == NULL) {
 		g_warning("%s(): failed to watch the USB devices with GUsb: %s", __FUNCTION__, error->message);
 		g_error_free(error);
-		g_main_context_unref(context);
 		return NULL;
 	}
 
 	PSPdispUSBWatch *watch = g_new0(PSPdispUSBWatch, 1);
-	watch->context = context;
+	watch->context = g_main_context_new();
 	watch->usb = usb;
-	watch->events = g_queue_new();
+	watch->events = g_async_queue_new_full((GDestroyNotify) pspdisp_usb_event_free);
 
-	g_usb_context_set_main_context(usb, context);
+	// GUsb emits them on the global default context whatever context it's given (`g_usb_context_set_main_context()` is only for its synchronous transfers)
 	g_signal_connect(usb, "device-added", G_CALLBACK(pspdisp_usb_watch_on_added), watch);
 	g_signal_connect(usb, "device-removed", G_CALLBACK(pspdisp_usb_watch_on_removed), watch);
 	g_usb_context_enumerate(usb); // The devices already plugged, as plugs
@@ -180,12 +177,12 @@ void pspdisp_usb_watch_destroy(PSPdispUSBWatch *watch) {
 	g_signal_handlers_disconnect_by_data(watch->usb, watch);
 	g_object_unref(watch->usb);
 	g_main_context_unref(watch->context);
-	g_queue_free_full(watch->events, (GDestroyNotify) pspdisp_usb_event_free);
+	g_async_queue_unref(watch->events); // With the events not taken
 	g_free(watch);
 }
 
 /**
- * @brief Take the next plug or unplug of a PSP, without waiting: the ones GUsb emitted on the context of the watch.
+ * @brief Take the next plug or unplug of a PSP, without waiting.
  *
  * @param watch The watch.
  * @param plugged Where to write if the PSP was plugged (`true`) or unplugged (`false`).
@@ -193,12 +190,7 @@ void pspdisp_usb_watch_destroy(PSPdispUSBWatch *watch) {
  * @return `true` if there was one, `false` if there's none for now.
  */
 bool pspdisp_usb_watch_next(PSPdispUSBWatch *watch, bool *plugged, char **path) {
-	// The signals GUsb queued, each dispatched once
-	while (g_main_context_iteration(watch->context, FALSE)) {
-		// Queued by the handlers of the signals
-	}
-
-	PSPdispUSBEvent *event = g_queue_pop_head(watch->events);
+	PSPdispUSBEvent *event = g_async_queue_try_pop(watch->events);
 	if (event == NULL) return false;
 
 	*plugged = event->plugged;
@@ -232,7 +224,7 @@ gboolean pspdisp_usb_watch_on_cancelled(GCancellable *cancellable, gpointer data
 }
 
 /**
- * @brief Wait for a plug or an unplug, once `pspdisp_usb_watch_next()` gave all it had, by running the context of the watch, where GUsb emits them.
+ * @brief Wait for a plug or an unplug, once `pspdisp_usb_watch_next()` gave all it had.
  *
  * It returns when one comes, after the timeout, or once cancelled, whichever comes first.
  *
@@ -254,7 +246,8 @@ void pspdisp_usb_watch_wait(PSPdispUSBWatch *watch, int timeout, GCancellable *c
 		g_source_attach(cancelled_source, watch->context);
 	}
 
-	while (!over && g_queue_is_empty(watch->events))
+	// Each plug and unplug wakes it up (see `pspdisp_usb_watch_queue()`), even one queued before it blocks
+	while (!over && g_async_queue_length(watch->events) == 0)
 		g_main_context_iteration(watch->context, TRUE);
 
 	if (timeout_source != NULL) {
@@ -441,6 +434,8 @@ typedef struct {
 
 /**
  * @brief Start watching the USB of the computer for PSPs.
+ *
+ * The PSPs plugged and unplugged after it only come while the global default context runs (e.g. the main loop of the daemon).
  *
  * @return The USB, free it with `pspdisp_usb_destroy()`, or `NULL` if it failed.
  */
