@@ -10,6 +10,7 @@
 
 #include <stdarg.h>
 #include <unistd.h>
+#include <gio/gio.h>
 #include <evdi_lib.h>
 #include <drm/drm_fourcc.h>
 #include <drm/drm_mode.h>
@@ -20,11 +21,6 @@
 #define PSPDISP_EVDI_BUFFER_ID  1 // ID of the only buffer registered on EVDI, where the frames are grabbed into
 #define PSPDISP_EVDI_MAX_RECTS 16 // Max dirty rectangles EVDI gives per frame (`MAX_DIRTS` on the EVDI kernel module and library, not exported)
 #define PSPDISP_EVDI_FRAME_INTERVAL (G_USEC_PER_SEC / PSPDISP_DISPLAY_FREQUENCY) // Time between 2 frame requests, in microseconds
-
-// PSPDISP_EVDI_ADD_HELPER: path of the helper that loads the EVDI module if needed and creates an EVDI device, as root through pkexec (given by the build)
-#ifndef PSPDISP_EVDI_ADD_HELPER
-	#error "PSPDISP_EVDI_ADD_HELPER must be defined by the build, e.g. -DPSPDISP_EVDI_ADD_HELPER='\"/usr/local/lib/pspdisp/pspdisp-evdi-add\"'"
-#endif
 
 /**
  * @brief Display connector using EVDI, the source returned by `pspdisp_display_connector_connect()`.
@@ -333,19 +329,26 @@ void pspdisp_display_connector_evdi_log(void *user_data, const char *format, ...
  * @return `true` if a device was created.
  */
 bool pspdisp_display_connector_evdi_add_device() {
-	if (!g_file_test(PSPDISP_EVDI_ADD_HELPER, G_FILE_TEST_IS_EXECUTABLE)) {
-		g_warning("%s(): no free EVDI device, and %s isn't installed to create one (see the README)", __FUNCTION__, PSPDISP_EVDI_ADD_HELPER);
+	// The module creates this folder when it's loaded, which is up to the system (see the README)
+	if (!g_file_test("/sys/devices/evdi", G_FILE_TEST_IS_DIR)) {
+		g_warning("%s(): no free EVDI device, and the EVDI module isn't loaded to create one (see the README)", __FUNCTION__);
 		return false;
 	}
 
 	g_message("No free EVDI device, creating one (polkit asks for the password)");
 
-	// The helper also loads the EVDI module when it isn't loaded
-	const char *argv[] = { "pkexec", PSPDISP_EVDI_ADD_HELPER, NULL };
+	// Writing 1 to the add file of the module creates a device, which only root can do, so tee writes it through pkexec (`echo 1 | pkexec tee /sys/devices/evdi/add`, as the password prompt shows)
 	GError *error = NULL;
-	int status;
+	GSubprocess *process = g_subprocess_new(G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_SILENCE, &error, "pkexec", "tee", "/sys/devices/evdi/add", NULL);
+	const bool created = process != NULL && g_subprocess_communicate_utf8(process, "1", NULL, NULL, NULL, &error) && g_spawn_check_wait_status(g_subprocess_get_status(process), &error);
+	g_clear_object(&process);
 
-	if (g_spawn_sync(NULL, (char **) argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, &status, &error) && g_spawn_check_wait_status(status, &error)) return true;
+	if (created) {
+		// udev gives the new card to the user at the computer (the uaccess ACL), so wait for it before the card is opened
+		const char *argv[] = { "udevadm", "settle", "--timeout=5", NULL };
+		g_spawn_sync(NULL, (char **) argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL, NULL, NULL);
+		return true;
+	}
 
 	// pkexec exits with 126 when the password prompt is dismissed, and 127 when it's not allowed (e.g. no polkit agent out of the desktop session)
 	if (g_error_matches(error, G_SPAWN_EXIT_ERROR, 126))
