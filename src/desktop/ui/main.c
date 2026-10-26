@@ -22,7 +22,7 @@
 #include "./page/control.c"
 #include "./page/presets.c"
 
-#define PSPDISP_UI_APP_ID "com.pspdisp.desktop" // ID of the app, also the name of its icon (`com.pspdisp.desktop.svg`) and of its desktop entry (`com.pspdisp.desktop.desktop`)
+#define PSPDISP_UI_APP_ID "com.pspdisp.ui" // ID of the app, also the name of its icon (`com.pspdisp.ui.svg`) and of its desktop entry (`com.pspdisp.ui.desktop`)
 
 PSPdispUI pspdisp_gtk_ui; // The app
 char *pspdisp_gtk_option_config_dir = NULL; // `--config-dir`
